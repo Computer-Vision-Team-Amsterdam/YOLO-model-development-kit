@@ -3,7 +3,7 @@ from typing import Dict, Iterable, Optional, Set, Tuple
 import numpy as np
 from cvtoolkit.datasets.yolo_labels_dataset import YoloLabelsDataset
 
-from yolo_model_development_kit.performance_evaluation_pipeline.metrics.metrics_utils import (  # noqa: E402
+from yolo_model_development_kit.performance_evaluation_pipeline.metrics import (
     BoxSize,
     ObjectClass,
 )

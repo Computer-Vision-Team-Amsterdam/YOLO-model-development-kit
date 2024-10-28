@@ -4,18 +4,16 @@ from typing import Dict, Iterable, Tuple
 
 from pycocotools.coco import COCO
 
-from yolo_model_development_kit.performance_evaluation_pipeline.metrics.custom_coco_evaluator import (  # noqa: E402
-    CustomCOCOeval,
-)
-from yolo_model_development_kit.performance_evaluation_pipeline.metrics.metrics_utils import (  # noqa: E402
+from yolo_model_development_kit.performance_evaluation_pipeline.metrics import (
     BoxSize,
+    CustomCOCOeval,
     ObjectClass,
 )
 
 logger = logging.getLogger("performance_evaluation")
 
 
-def run_custom_coco_eval(
+def execute_custom_coco_eval(
     coco_ground_truth_json: str,
     coco_predictions_json: str,
     predicted_img_shape: Tuple[int, int],

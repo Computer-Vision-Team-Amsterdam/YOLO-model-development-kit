@@ -8,13 +8,13 @@ from mldesigner import Input, Output, command_component
 
 sys.path.append("../../..")
 
-from yolo_model_development_kit.performance_evaluation_pipeline.metrics.metrics_utils import (  # noqa: E402
+from yolo_model_development_kit.performance_evaluation_pipeline.metrics import (  # noqa: E402
     ObjectClass,
 )
-from yolo_model_development_kit.performance_evaluation_pipeline.source.yolo_evaluation import (  # noqa: E402
+from yolo_model_development_kit.performance_evaluation_pipeline.source import (  # noqa: E402
     YoloEvaluator,
 )
-from yolo_model_development_kit.settings.settings import (  # noqa: E402
+from yolo_model_development_kit.settings import (  # noqa: E402
     YoloModelDevelopmentKitSettings,
 )
 

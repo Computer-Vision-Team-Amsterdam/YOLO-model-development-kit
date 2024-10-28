@@ -7,7 +7,7 @@ from typing import Dict, List, Optional, Tuple
 
 from PIL import Image
 
-from yolo_model_development_kit.performance_evaluation_pipeline.metrics.metrics_utils import (
+from yolo_model_development_kit.performance_evaluation_pipeline.metrics import (
     ObjectClass,
 )
 

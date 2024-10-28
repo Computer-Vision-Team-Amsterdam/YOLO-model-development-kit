@@ -6,26 +6,18 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 import numpy as np
 import pandas as pd
 
-from yolo_model_development_kit.performance_evaluation_pipeline.metrics.metrics_utils import (
+from yolo_model_development_kit.performance_evaluation_pipeline.metrics import (
     ObjectClass,
+    PerImageEvaluator,
+    PerPixelEvaluator,
     compute_fb_score,
 )
-from yolo_model_development_kit.performance_evaluation_pipeline.metrics.per_image_stats import (
-    PerImageEvaluator,
-)
-from yolo_model_development_kit.performance_evaluation_pipeline.metrics.per_pixel_stats import (
-    PerPixelEvaluator,
-)
-from yolo_model_development_kit.performance_evaluation_pipeline.source.plot_utils import (
-    save_fscore_curve,
-    save_pr_curve,
-)
-from yolo_model_development_kit.performance_evaluation_pipeline.source.run_custom_coco_eval import (
-    run_custom_coco_eval,
-)
-from yolo_model_development_kit.performance_evaluation_pipeline.source.yolo_to_coco import (
+from yolo_model_development_kit.performance_evaluation_pipeline.source import (
     convert_yolo_dataset_to_coco_json,
     convert_yolo_predictions_to_coco_json,
+    execute_custom_coco_eval,
+    save_fscore_curve,
+    save_pr_curve,
 )
 
 logger = logging.getLogger("performance_evaluation")
@@ -392,7 +384,7 @@ class YoloEvaluator:
                 logger.info(
                     f"Running custom COCO evaluation for {self.model_name} / {split if split != '' else 'all'} / {target_cls_name}"
                 )
-                eval = run_custom_coco_eval(
+                eval = execute_custom_coco_eval(
                     coco_ground_truth_json=gt_json_files[i],
                     coco_predictions_json=pred_json_files[i],
                     predicted_img_shape=self.ground_truth_image_shape,

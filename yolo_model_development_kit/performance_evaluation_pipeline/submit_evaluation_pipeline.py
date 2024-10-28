@@ -5,10 +5,10 @@ from azure.ai.ml import Input, Output
 from azure.ai.ml.constants import AssetTypes
 from azure.ai.ml.dsl import pipeline
 
-from yolo_model_development_kit.performance_evaluation_pipeline.components.evaluate_model import (
+from yolo_model_development_kit.performance_evaluation_pipeline.components import (
     evaluate_model,
 )
-from yolo_model_development_kit.settings.settings import YoloModelDevelopmentKitSettings
+from yolo_model_development_kit.settings import YoloModelDevelopmentKitSettings
 
 YoloModelDevelopmentKitSettings.set_from_yaml("config.yml")
 settings = YoloModelDevelopmentKitSettings.get_settings()

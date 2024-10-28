@@ -5,7 +5,7 @@ import numpy as np
 import numpy.typing as npt
 from cvtoolkit.datasets.yolo_labels_dataset import YoloLabelsDataset
 
-from yolo_model_development_kit.performance_evaluation_pipeline.metrics.metrics_utils import (
+from yolo_model_development_kit.performance_evaluation_pipeline.metrics import (
     BoxSize,
     ObjectClass,
     generate_binary_mask,

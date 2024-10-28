@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from yolo_model_development_kit.performance_evaluation_pipeline.metrics.metrics_utils import (
+from yolo_model_development_kit.performance_evaluation_pipeline.metrics import (
     ObjectClass,
 )
 
