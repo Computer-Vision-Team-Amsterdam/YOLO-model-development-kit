@@ -11,8 +11,8 @@ sys.path.append("../../..")
 from yolo_model_development_kit.performance_evaluation_pipeline.metrics.metrics_utils import (  # noqa: E402
     ObjectClass,
 )
-from yolo_model_development_kit.performance_evaluation_pipeline.source.oor_evaluation import (  # noqa: E402
-    OOREvaluator,
+from yolo_model_development_kit.performance_evaluation_pipeline.source.yolo_evaluation import (  # noqa: E402
+    YoloEvaluator,
 )
 from yolo_model_development_kit.settings.settings import (  # noqa: E402
     YoloModelDevelopmentKitSettings,
@@ -91,7 +91,7 @@ def evaluate_model(
 
     os.makedirs(output_dir, exist_ok=True)
 
-    oor_eval = OOREvaluator(
+    yolo_eval = YoloEvaluator(
         ground_truth_base_folder=ground_truth_base_dir,
         predictions_base_folder=predictions_base_dir,
         output_folder=output_dir,
@@ -108,18 +108,18 @@ def evaluate_model(
     )
 
     # Total Blurred Area evaluation
-    tba_results = oor_eval.evaluate_tba()
-    oor_eval.save_tba_results_to_csv(results=tba_results)
+    tba_results = yolo_eval.evaluate_tba()
+    yolo_eval.save_tba_results_to_csv(results=tba_results)
 
     # Per Image evaluation
-    per_image_results = oor_eval.evaluate_per_image()
-    oor_eval.save_per_image_results_to_csv(results=per_image_results)
+    per_image_results = yolo_eval.evaluate_per_image()
+    yolo_eval.save_per_image_results_to_csv(results=per_image_results)
 
     # Custom COCO evaluation
-    coco_results = oor_eval.evaluate_coco()
-    oor_eval.save_coco_results_to_csv(results=coco_results)
+    coco_results = yolo_eval.evaluate_coco()
+    yolo_eval.save_coco_results_to_csv(results=coco_results)
 
     # Plot precision/recall curves
     if eval_settings["plot_pr_curves"]:
-        oor_eval.plot_tba_pr_f_curves(show_plot=False)
-        oor_eval.plot_per_image_pr_f_curves(show_plot=False)
+        yolo_eval.plot_tba_pr_f_curves(show_plot=False)
+        yolo_eval.plot_per_image_pr_f_curves(show_plot=False)

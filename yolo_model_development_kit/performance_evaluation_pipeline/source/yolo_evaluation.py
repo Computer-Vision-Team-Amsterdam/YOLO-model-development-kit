@@ -41,12 +41,12 @@ DEFAULT_SENSITIVE_CLASSES = [
 ]
 
 
-class OOREvaluator:
+class YoloEvaluator:
     """
     This class is used to run evaluation of a trained YOLO model based on ground
     truth annotations and model predictions.
 
-    OOREvaluator supports three evaluation methods:
+    YoloEvaluator supports three evaluation methods:
 
     * Total Blurred Area evaluation for sensitive classes. This tells us the
       percentage of bounding boxes that are covered by predictions.
