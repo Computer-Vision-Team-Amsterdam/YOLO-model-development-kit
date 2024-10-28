@@ -1,7 +1,9 @@
 from cvtoolkit.settings.settings_helper import GenericSettings, Settings
 from pydantic import BaseModel
 
-from yolo_model_development_kit.settings import YoloModelDevelopmentKitSettingsSpec
+from yolo_model_development_kit.settings.settings_schema import (
+    YoloModelDevelopmentKitSettingsSpec,
+)
 
 
 class YoloModelDevelopmentKitSettings(Settings):  # type: ignore

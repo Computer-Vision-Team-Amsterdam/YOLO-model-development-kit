@@ -12,12 +12,16 @@ from yolo_model_development_kit.performance_evaluation_pipeline.metrics import (
     PerPixelEvaluator,
     compute_fb_score,
 )
-from yolo_model_development_kit.performance_evaluation_pipeline.source import (
-    convert_yolo_dataset_to_coco_json,
-    convert_yolo_predictions_to_coco_json,
-    execute_custom_coco_eval,
+from yolo_model_development_kit.performance_evaluation_pipeline.source.plot_utils import (
     save_fscore_curve,
     save_pr_curve,
+)
+from yolo_model_development_kit.performance_evaluation_pipeline.source.run_custom_coco_eval import (
+    execute_custom_coco_eval,
+)
+from yolo_model_development_kit.performance_evaluation_pipeline.source.yolo_to_coco import (
+    convert_yolo_dataset_to_coco_json,
+    convert_yolo_predictions_to_coco_json,
 )
 
 logger = logging.getLogger("performance_evaluation")
