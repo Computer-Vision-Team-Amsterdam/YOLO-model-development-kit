@@ -108,18 +108,22 @@ def evaluate_model(
     )
 
     # Total Blurred Area evaluation
-    tba_results = yolo_eval.evaluate_tba()
-    yolo_eval.save_tba_results_to_csv(results=tba_results)
+    if len(sensitive_classes) > 0:
+        tba_results = yolo_eval.evaluate_tba()
+        yolo_eval.save_tba_results_to_csv(results=tba_results)
+        # Plot precision/recall curves
+        if eval_settings["plot_pr_curves"]:
+            yolo_eval.plot_tba_pr_f_curves(show_plot=False)
 
     # Per Image evaluation
-    per_image_results = yolo_eval.evaluate_per_image()
-    yolo_eval.save_per_image_results_to_csv(results=per_image_results)
+    if len(target_classes) > 0:
+        per_image_results = yolo_eval.evaluate_per_image()
+        yolo_eval.save_per_image_results_to_csv(results=per_image_results)
+        # Plot precision/recall curves
+        if eval_settings["plot_pr_curves"]:
+            yolo_eval.plot_per_image_pr_f_curves(show_plot=False)
 
     # Custom COCO evaluation
-    coco_results = yolo_eval.evaluate_coco()
-    yolo_eval.save_coco_results_to_csv(results=coco_results)
-
-    # Plot precision/recall curves
-    if eval_settings["plot_pr_curves"]:
-        yolo_eval.plot_tba_pr_f_curves(show_plot=False)
-        yolo_eval.plot_per_image_pr_f_curves(show_plot=False)
+    if (len(sensitive_classes) > 0) or (len(target_classes) > 0):
+        coco_results = yolo_eval.evaluate_coco()
+        yolo_eval.save_coco_results_to_csv(results=coco_results)
