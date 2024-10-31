@@ -5,7 +5,10 @@ from azure.ai.ml.constants import AssetTypes
 from azure.ai.ml.dsl import pipeline
 
 from yolo_model_development_kit import aml_interface, settings
-from yolo_model_development_kit.training_pipeline.components import train_model
+from yolo_model_development_kit.training_pipeline.components import (
+    sweep_model,
+    train_model,
+)
 
 
 @pipeline()
@@ -36,9 +39,14 @@ def training_pipeline():
         type=AssetTypes.URI_FOLDER,
         path=model_weights_path,
     )
-    train_model_step = train_model(
-        mounted_dataset=training_data, model_weights=model_weights
-    )
+    if settings["training_pipeline"]["sweep_mode"]:
+        train_model_step = sweep_model(
+            mounted_dataset=training_data, model_weights=model_weights
+        )
+    else:
+        train_model_step = train_model(
+            mounted_dataset=training_data, model_weights=model_weights
+        )
     train_model_step.outputs.yolo_yaml_path = Output(
         type="uri_folder", mode="rw_mount", path=model_weights_path
     )
