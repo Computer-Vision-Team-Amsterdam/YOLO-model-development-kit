@@ -31,16 +31,16 @@ training_pipeline:
     img_size: 1280
     batch: 0.85
     epochs: 500
-    patience: 100
     n_classes: 5
+    name_classes: ["person", "license plate", "container", "mobile toilet", "scaffolding"]
+    # The following settings are ignored in sweep mode.
+    patience: 100
     cos_lr: True
     dropout: 0.0
     seed: 0
     box: 7.5
     cls: 0.5
     dfl: 1.5
-    name_classes: ["person", "license plate", "container", "mobile toilet", "scaffolding"]
-    rect: False
   inputs:
     datastore_path: "dataset_oor_v2_2"
     training_data_rel_path: "processed-dataset-oor-v2-2"
@@ -50,6 +50,7 @@ training_pipeline:
   outputs:
     project_datastore_path: "dataset_oor_v2_2"
     project_rel_path: "model"
+  sweep_mode: False
 
 wandb:
   api_key: ""
