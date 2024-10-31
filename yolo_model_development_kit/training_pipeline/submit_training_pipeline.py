@@ -1,14 +1,11 @@
 import os
 
-from aml_interface.aml_interface import AMLInterface
 from azure.ai.ml import Input, Output
 from azure.ai.ml.constants import AssetTypes
 from azure.ai.ml.dsl import pipeline
 
-from yolo_model_development_kit import settings
+from yolo_model_development_kit import aml_interface, settings
 from yolo_model_development_kit.training_pipeline.components import train_model
-
-aml_interface = AMLInterface()
 
 
 @pipeline()
