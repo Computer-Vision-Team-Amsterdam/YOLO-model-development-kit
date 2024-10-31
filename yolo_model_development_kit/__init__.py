@@ -11,3 +11,5 @@ config_path = os.path.abspath(
 )
 YoloModelDevelopmentKitSettings.set_from_yaml(config_path)
 settings = YoloModelDevelopmentKitSettings.get_settings()
+
+__all__ = [aml_interface, settings]
