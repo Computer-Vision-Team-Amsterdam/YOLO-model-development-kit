@@ -8,22 +8,13 @@ from mldesigner import Input, Output, command_component
 
 sys.path.append("../../..")
 
+from yolo_model_development_kit import settings  # noqa: E402
 from yolo_model_development_kit.performance_evaluation_pipeline.metrics import (  # noqa: E402
     ObjectClass,
 )
 from yolo_model_development_kit.performance_evaluation_pipeline.source import (  # noqa: E402
     YoloEvaluator,
 )
-from yolo_model_development_kit.settings import (  # noqa: E402
-    YoloModelDevelopmentKitSettings,
-)
-
-config_path = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "..", "..", "config.yml")
-)
-
-YoloModelDevelopmentKitSettings.set_from_yaml(config_path)
-settings = YoloModelDevelopmentKitSettings.get_settings()
 
 azure_logging_configurer = AzureLoggingConfigurer(settings["logging"])
 azure_logging_configurer.setup_oor_logging()

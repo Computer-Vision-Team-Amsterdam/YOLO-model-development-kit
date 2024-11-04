@@ -1,19 +1,13 @@
 import os
 
-from aml_interface.aml_interface import AMLInterface
 from azure.ai.ml import Input, Output
 from azure.ai.ml.constants import AssetTypes
 from azure.ai.ml.dsl import pipeline
 
+from yolo_model_development_kit import aml_interface, settings
 from yolo_model_development_kit.performance_evaluation_pipeline.components import (
     evaluate_model,
 )
-from yolo_model_development_kit.settings import YoloModelDevelopmentKitSettings
-
-YoloModelDevelopmentKitSettings.set_from_yaml("config.yml")
-settings = YoloModelDevelopmentKitSettings.get_settings()
-
-aml_interface = AMLInterface()
 
 
 @pipeline()
