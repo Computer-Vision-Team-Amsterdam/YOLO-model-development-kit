@@ -10,15 +10,3 @@ from .metrics_utils import (
 )
 from .per_image_stats import PerImageEvaluator
 from .per_pixel_stats import PerPixelEvaluator, PixelStats
-
-__all__ = [
-    "CustomCOCOeval",
-    "ObjectClass",
-    "BoxSize",
-    "parse_labels",
-    "generate_binary_mask",
-    "compute_fb_score",
-    "PerImageEvaluator",
-    "PixelStats",
-    "PerPixelEvaluator",
-]
