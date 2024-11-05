@@ -10,6 +10,7 @@ sys.path.append("../../..")
 
 from yolo_model_development_kit import settings  # noqa: E402
 from yolo_model_development_kit.performance_evaluation_pipeline.metrics import (  # noqa: E402
+    BoxSize,
     ObjectClass,
 )
 from yolo_model_development_kit.performance_evaluation_pipeline.source import (  # noqa: E402
@@ -66,7 +67,9 @@ def evaluate_model(
     output_dir: Output(type=AssetTypes.URI_FOLDER)
         Location where output will be stored.
     """
+
     eval_settings = settings["performance_evaluation"]
+    thresholds_json_path = eval_settings["thresholds_json_path"]
     categories_json_path = eval_settings["categories_json_path"]
     dataset_name = eval_settings["dataset_name"]
     model_name = eval_settings["model_name"]
@@ -85,6 +88,7 @@ def evaluate_model(
 
     # Load categories JSON file once
     ObjectClass.load_categories(categories_json_path)
+    BoxSize.load_thresholds(thresholds_json_path)
 
     yolo_eval = YoloEvaluator(
         ground_truth_base_folder=ground_truth_base_dir,
