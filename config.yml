@@ -47,10 +47,11 @@ training_pipeline:
     model_weights_rel_path: "model"
     model_name: "best_yolo11m_coco_161024.pt"
     config_file: "train_data_augment_config.json" # can be an empty string or omitted entirely
+    sweep_config: "sweep_config.json"
   outputs:
     project_datastore_path: "dataset_oor_v2_2"
     project_rel_path: "model"
-  sweep_mode: False
+  sweep_mode: False  # Set to true to run a hyperparameter sweep based on inputs/sweep_config
 
 wandb:
   api_key: ""

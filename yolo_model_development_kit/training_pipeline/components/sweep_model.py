@@ -18,6 +18,18 @@ from yolo_model_development_kit import settings  # noqa: E402
 aml_experiment_settings = settings["aml_experiment_details"]
 
 
+def extract_parameter_keys(sweep_config: Dict[str, Any]) -> Any:
+    """Extract parameter names from the sweep config dict."""
+    return sweep_config["parameters"].keys()
+
+
+def load_sweep_configuration(json_file: str) -> Dict[str, Any]:
+    """Load a sweep config JSON file."""
+    with open(json_file, "r") as file:
+        config = json.load(file)
+    return config
+
+
 @command_component(
     name="sweep_model",
     display_name="Perform HP sweep with wandb on a YOLO model.",
@@ -32,7 +44,7 @@ def sweep_model(
     project_path: Output(type=AssetTypes.URI_FOLDER),  # type: ignore # noqa: F821
 ):
     """
-    Pipeline step to perform hyperparameter tuning sweep with wandb on a YOLO model.
+    Pipeline step to perform hyperparameter tuning sweep with WandB on a YOLO model.
 
     Parameters
     ----------
@@ -54,8 +66,8 @@ def sweep_model(
 
     ultralytics_settings.update({"runs_dir": project_path})
 
-    n_classes = settings["sweep_pipeline"]["model_parameters"]["n_classes"]
-    name_classes = settings["sweep_pipeline"]["model_parameters"]["name_classes"]
+    n_classes = settings["training_pipeline"]["model_parameters"]["n_classes"]
+    name_classes = settings["training_pipeline"]["model_parameters"]["name_classes"]
     data = dict(
         path=f"{mounted_dataset}",
         train="images/train/",
@@ -68,10 +80,10 @@ def sweep_model(
     with open(f"{yaml_path}", "w") as outfile:
         yaml.dump(data, outfile, default_flow_style=False)
 
-    model_name = settings["sweep_pipeline"]["inputs"]["model_name"]
+    model_name = settings["training_pipeline"]["inputs"]["model_name"]
     pretrained_model_path = os.path.join(model_weights, model_name)
-    model_parameters = settings["sweep_pipeline"]["model_parameters"]
-    sweep_trials = settings["sweep_pipeline"]["sweep_trials"]
+    model_parameters = settings["training_pipeline"]["model_parameters"]
+    sweep_trials = settings["training_pipeline"]["sweep_trials"]
 
     train_params = {
         "data": yaml_path,
@@ -82,16 +94,8 @@ def sweep_model(
         "batch": model_parameters.get("batch", -1),
     }
 
-    def extract_parameter_keys(sweep_config: Dict[str, Any]) -> Any:
-        return sweep_config["parameters"].keys()
-
-    def load_sweep_configuration(json_file: str) -> Dict[str, Any]:
-        with open(json_file, "r") as file:
-            config = json.load(file)
-        return config
-
     # Define the search space
-    config_file = settings["sweep_pipeline"]["inputs"]["sweep_config"]
+    config_file = settings["training_pipeline"]["inputs"]["sweep_config"]
     sweep_configuration = load_sweep_configuration(config_file)
 
     # Start the sweep

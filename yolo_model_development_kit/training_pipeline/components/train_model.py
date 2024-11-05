@@ -19,8 +19,20 @@ aml_experiment_settings = settings["aml_experiment_details"]
 
 
 def load_training_parameters(json_file: Optional[str]) -> Dict:
-    """Load parameters from a JSON file if it exists, returning an empty dictionary if
-    the file is not provided, is empty or it doesn't exist."""
+    """
+    Load parameters from a JSON file and return them as a dictionary. The method
+    will return an empty dictionary if the file is not provided, is empty or it
+    doesn't exist.
+
+    Parameters
+    ----------
+    json_file: Optional[str]
+        Path to JSON file.
+
+    Returns
+    -------
+    Dictionary with loaded parameters.
+    """
     if not json_file:  # If no config file is provided
         return {}
 
