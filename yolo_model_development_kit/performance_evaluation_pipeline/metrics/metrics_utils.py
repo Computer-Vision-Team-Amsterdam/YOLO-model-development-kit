@@ -1,4 +1,4 @@
-from enum import Enum
+import json
 from typing import Dict, List, Tuple, Union
 
 import numpy as np
@@ -6,33 +6,52 @@ import numpy.typing as npt
 import pandas as pd
 
 
-class ObjectClass(Enum):
-    """Convenience class to represent objects of interest. Class labels can be
-    accessed as `<ObjectClass>.value`, class names as `<ObjectClass>.name`."""
+class ObjectClass:
+    """Dynamic class to represent object categories for evaluation."""
 
-    person = 0
-    license_plate = 1
-    container = 2
-    mobile_toilet = 3
-    scaffolding = 4
+    _categories = {}
 
-    def __repr__(self):
-        return self.value
+    @classmethod
+    def load_categories(cls, json_path):
+        """Load categories from a JSON file."""
+        with open(json_path, "r") as file:
+            categories = json.load(file)
+            cls._categories = {
+                cat["id"]: cat["name"] for cat in categories["categories"]
+            }
+
+    @classmethod
+    def get_name(cls, cat_id):
+        """Get the category name by ID."""
+        return cls._categories.get(cat_id, "Unknown")
+
+    @classmethod
+    def get_id(cls, name):
+        for class_id, class_name in cls._categories.items():
+            if class_name == name:
+                return class_id
+        return None
+
+    @classmethod
+    def all_ids(cls):
+        """Return all category IDs."""
+        return list(cls._categories.keys())
+
+    @classmethod
+    def all_names(cls):
+        """Return all category names."""
+        return list(cls._categories.values())
 
 
 class BoxSize:
     """
     This class is used to represent bounding box size categories 'small',
     'medium', 'large', and 'all'. The bounds of each category are given as
-    fraction of the image surface.
-
-    Objects of this class can be created by passing the two relevant bounds, or
-    by passing an ObjectClass. For example, to get the 'medium' bounds for a
-    'person': `BoxSize.from_objectclass(ObjectClass.person).medium`.
+    fraction of the image surface. They are dynamically loaded from a JSON file.
 
     Parameters
     ----------
-    bounds: Tuple[float, float] = (0.005, 0.01)
+    bounds: Tuple[float, float]
         The two relevant bounds between small and medium, and medium and large.
     """
 
@@ -40,38 +59,43 @@ class BoxSize:
     small: Tuple[float, float]
     medium: Tuple[float, float]
     large: Tuple[float, float]
+    thresholds: Dict[str, Tuple[float, float]] = {}
 
-    def __init__(self, bounds: Tuple[float, float] = (0.005, 0.01)):
+    def __init__(self, bounds: Tuple[float, float]):
         self.small = (0.0, bounds[0])
         self.medium = bounds
         self.large = (bounds[1], 1.0)
 
     @classmethod
-    def from_objectclass(cls, object_class: ObjectClass):
+    def load_thresholds(cls, file_path: str) -> None:
+        """Load bounding box thresholds from a JSON file."""
+        with open(file_path, "r") as f:
+            cls.thresholds = {
+                name: tuple(bounds) for name, bounds in json.load(f).items()
+            }
+
+    @classmethod
+    def from_objectclass(cls, object_class_name: str):
         """
-        Create a BoxSize object from an ObjectClass instance. This will return a
+        Create a BoxSize object based on the object's name. This will return a
         BoxSize instance with bounds set to the appropriate values for that
-        ObjectClass instance. These values have been set to the 1/3rd and 2/3rd
-        quantiles of the bounding box size distribution for that class in the
-        training dataset.
+        object name.
 
         Parameters
         ----------
-        object_class: ObjectClass
-            The ObjectClass to get the BoxSize for, e.g. `BoxSize.from_objectclass(ObjectClass.person)`.
+        object_class_name: str
+            The name of the object to get the BoxSize for. e.g. `BoxSize.from_objectclass(ObjectClass.get_name(target_class))`.
 
         Returns
         -------
         BoxSize instance with the appropriate bounds.
         """
-        switch = {
-            ObjectClass.person: (0.000665, 0.003397),
-            ObjectClass.license_plate: (0.000108, 0.000436),
-            ObjectClass.container: (0.003424, 0.022598),
-            ObjectClass.mobile_toilet: (0.000854, 0.004376),
-            ObjectClass.scaffolding: (0.010298, 0.125452),
-        }
-        return cls(switch.get(object_class))
+        bounds = cls.thresholds.get(object_class_name)
+        if not bounds:
+            raise ValueError(
+                f"No size bounds found for class '{object_class_name}' in the thresholds."
+            )
+        return cls(bounds)
 
     def to_dict(self, all_only: bool = False) -> Dict[str, Tuple[float, float]]:
         """

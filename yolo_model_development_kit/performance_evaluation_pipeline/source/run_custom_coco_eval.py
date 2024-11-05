@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Dict, Iterable, Tuple
+from typing import Dict, List, Tuple
 
 from pycocotools.coco import COCO
 
@@ -17,7 +17,7 @@ def execute_custom_coco_eval(
     coco_ground_truth_json: str,
     coco_predictions_json: str,
     predicted_img_shape: Tuple[int, int],
-    classes: Iterable[ObjectClass] = ObjectClass,
+    classes: List[int] = None,
     print_summary: bool = False,
     precision: int = 3,
 ) -> Dict[str, float]:
@@ -34,7 +34,7 @@ def execute_custom_coco_eval(
     predicted_img_shape: Tuple[int, int]
         Shape of images in the coco_predictions_json. Should equal the shape of
         ground truth images. Used as a sanity check.
-    classes: Iterable[ObjectClass] = ObjectClass
+    classes: List[int] = None
         Which classes to evaluate (default is all).
     print_summary: bool = False
         Whether or not to have CustomCOCOeval print a summary of results.
@@ -94,8 +94,11 @@ def execute_custom_coco_eval(
     # Set evaluation params
     image_names = [image["id"] for image in data["images"]]
     evaluation.params.imgIds = image_names  # image IDs to evaluate
-    evaluation.params.catIds = [obj.value for obj in classes]
-    class_labels = [obj.name for obj in classes]
+    # If no specific classes are passed, use all available class IDs.
+    if classes is None:
+        classes = ObjectClass.all_ids()
+    evaluation.params.catIds = list(classes)
+    class_labels = [ObjectClass.get_name(cat_id) for cat_id in classes]
     evaluation.params.catLbls = class_labels
 
     # We need to overwrite the default area ranges for the bounding box size differentiation
@@ -103,9 +106,11 @@ def execute_custom_coco_eval(
     areaRng = []
     for areaRngLbl in evaluation.params.areaRngLbl:
         aRng = {"areaRngLbl": areaRngLbl}
-        for obj_cls in ObjectClass:
-            box = BoxSize.from_objectclass(obj_cls).__getattribute__(areaRngLbl)
-            aRng[obj_cls.value] = (box[0] * img_area, box[1] * img_area)
+        for class_id in classes:
+            # Dynamically retrieve the size range for each category.
+            box_size = BoxSize.from_objectclass(ObjectClass.get_name(class_id))
+            box_range = box_size.__getattribute__(areaRngLbl)
+            aRng[str(class_id)] = (box_range[0] * img_area, box_range[1] * img_area)
         areaRng.append(aRng)
     evaluation.params.areaRng = areaRng
 
