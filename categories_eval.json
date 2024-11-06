@@ -2,11 +2,11 @@
 "categories": [
     {
       "id": 1,
-      "name": "man"
+      "name": "person"
     },
     {
-      "id": 22,
-      "name": "woman"
+      "id": 2,
+      "name": "license plate"
     }
   ]
 }

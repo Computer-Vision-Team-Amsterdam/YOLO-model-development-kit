@@ -13,12 +13,17 @@ class ObjectClass:
 
     @classmethod
     def load_categories(cls, json_path):
-        """Load categories from a JSON file."""
-        with open(json_path, "r") as file:
-            categories = json.load(file)
+        """Load categories from a COCO JSON file.
+        This implies that categories start at 1.
+        The function assumes the JSON file uses COCO convention, i.e., categories start at 1.
+        """
+        with open(json_path, "r") as f:
+            categories = json.load(f)
+            # Adjusting IDs to zero-indexed as per YOLO convention
             cls._categories = {
-                cat["id"]: cat["name"] for cat in categories["categories"]
+                cat["id"] - 1: cat["name"] for cat in categories["categories"]
             }
+        print("Loaded categories:", cls._categories)
 
     @classmethod
     def get_name(cls, cat_id):
@@ -68,33 +73,38 @@ class BoxSize:
 
     @classmethod
     def load_thresholds(cls, file_path: str) -> None:
-        """Load bounding box thresholds from a JSON file."""
+        """Load bounding box thresholds from a JSON file with 'categories' as a list of dicts."""
         with open(file_path, "r") as f:
+            data = json.load(f)
             cls.thresholds = {
-                name: tuple(bounds) for name, bounds in json.load(f).items()
+                category["id"] - 1: tuple(category["bounds"])
+                for category in data["categories"]
             }
 
     @classmethod
     def from_objectclass(cls, object_class_name: str):
         """
-        Create a BoxSize object based on the object's name. This will return a
-        BoxSize instance with bounds set to the appropriate values for that
+        Create a BoxSize object based on the object's name, using ID-based lookup.
+        This will return a BoxSize instance with bounds set to the appropriate values for that
         object name.
 
         Parameters
         ----------
         object_class_name: str
-            The name of the object to get the BoxSize for. e.g. `BoxSize.from_objectclass(ObjectClass.get_name(target_class))`.
+            The name of the object to get the BoxSize for.
+            e.g. `BoxSize.from_objectclass(ObjectClass.get_name(target_class))`.
 
         Returns
         -------
         BoxSize instance with the appropriate bounds.
         """
-        bounds = cls.thresholds.get(object_class_name)
-        if not bounds:
+        class_id = ObjectClass.get_id(object_class_name)
+        if class_id is None or class_id not in cls.thresholds:
             raise ValueError(
-                f"No size bounds found for class '{object_class_name}' in the thresholds."
+                f"No size bounds found for class '{object_class_name}' in the thresholds. "
+                "Make sure all evaluated classes have corresponding thresholds defined."
             )
+        bounds = cls.thresholds[class_id]
         return cls(bounds)
 
     def to_dict(self, all_only: bool = False) -> Dict[str, Tuple[float, float]]:

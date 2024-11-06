@@ -106,6 +106,10 @@ def evaluate_model(
         sensitive_classes_conf=sensitive_classes_conf,
     )
 
+    print("Expected target classes:", yolo_eval.target_classes)
+    print("Expected sensitive classes:", yolo_eval.sensitive_classes)
+    print("Loaded categories IDs:", ObjectClass.all_ids())
+
     # Total Blurred Area evaluation
     if len(sensitive_classes) > 0:
         tba_results = yolo_eval.evaluate_tba()

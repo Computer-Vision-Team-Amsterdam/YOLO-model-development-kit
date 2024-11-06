@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Union
 
 from pycocotools.coco import COCO
 
@@ -103,14 +103,14 @@ def execute_custom_coco_eval(
 
     # We need to overwrite the default area ranges for the bounding box size differentiation
     img_area = height * width
-    areaRng = []
+    areaRng: List[Dict[Union[str, int], Any]] = []
     for areaRngLbl in evaluation.params.areaRngLbl:
-        aRng = {"areaRngLbl": areaRngLbl}
+        aRng: Dict[Union[str, int], Tuple[float, float]] = {"areaRngLbl": areaRngLbl}
         for class_id in classes:
             # Dynamically retrieve the size range for each category.
             box_size = BoxSize.from_objectclass(ObjectClass.get_name(class_id))
             box_range = box_size.__getattribute__(areaRngLbl)
-            aRng[str(class_id)] = (box_range[0] * img_area, box_range[1] * img_area)
+            aRng[class_id] = (box_range[0] * img_area, box_range[1] * img_area)
         areaRng.append(aRng)
     evaluation.params.areaRng = areaRng
 

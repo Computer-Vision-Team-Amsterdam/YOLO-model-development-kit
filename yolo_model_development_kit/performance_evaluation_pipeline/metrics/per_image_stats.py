@@ -125,9 +125,15 @@ class PerImageEvaluator:
                 self.pred_dataset.filter_by_class(target_class)
             )
 
-            box_sizes = BoxSize.from_objectclass(
-                ObjectClass.get_name(target_class)
-            ).to_dict(single_size_only)
+            target_class_name = ObjectClass.get_name(target_class)
+            if target_class_name == "Unknown":
+                print(
+                    f"Warning: Class ID {target_class} not found in loaded categories."
+                )
+
+            box_sizes = BoxSize.from_objectclass(target_class_name).to_dict(
+                single_size_only
+            )
 
             for box_size_name, box_size in box_sizes.items():
                 self.gt_dataset.reset_filter()
