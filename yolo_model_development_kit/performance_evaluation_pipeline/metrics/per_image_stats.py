@@ -1,3 +1,4 @@
+import logging
 from typing import Dict, List, Optional, Set, Tuple
 
 import numpy as np
@@ -7,6 +8,8 @@ from yolo_model_development_kit.performance_evaluation_pipeline.metrics import (
     BoxSize,
     ObjectClass,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class PerImageEvaluator:
@@ -127,9 +130,10 @@ class PerImageEvaluator:
 
             target_class_name = ObjectClass.get_name(target_class)
             if target_class_name == "Unknown":
-                print(
+                logger.warning(
                     f"Warning: Class ID {target_class} not found in loaded categories."
                 )
+                continue
 
             box_sizes = BoxSize.from_objectclass(target_class_name).to_dict(
                 single_size_only

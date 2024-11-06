@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import Optional, Tuple
 
@@ -8,6 +9,8 @@ import pandas as pd
 from yolo_model_development_kit.performance_evaluation_pipeline.metrics import (
     ObjectClass,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def _extract_plot_df(
@@ -71,11 +74,14 @@ def save_pr_curve(
     """
     Plot and save the precision and recall curve for a particular split and target_class.
     """
+
+    target_class_name = ObjectClass.get_name(target_class)
+    if target_class_name == "Unknown":
+        raise ValueError(f"Class ID {target_class} not found in loaded categories.")
+
     plot_df = _extract_plot_df(
         results_df=results_df, split=split, target_class=target_class
     )[["Precision", "Recall"]]
-
-    target_class_name = ObjectClass.get_name(target_class)
 
     (title, filename) = _generate_plot_title_and_filename(
         result_type=result_type,
@@ -109,11 +115,14 @@ def save_fscore_curve(
     """
     Plot and save the F-score curve for a particular split and target_class.
     """
+
+    target_class_name = ObjectClass.get_name(target_class)
+    if target_class_name == "Unknown":
+        raise ValueError(f"Class ID {target_class} not found in loaded categories.")
+
     plot_df = _extract_plot_df(
         results_df=results_df, split=split, target_class=target_class
     )[["F1", "F0.5", "F2"]]
-
-    target_class_name = ObjectClass.get_name(target_class)
 
     (title, filename) = _generate_plot_title_and_filename(
         result_type=result_type,

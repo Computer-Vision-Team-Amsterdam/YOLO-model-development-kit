@@ -34,7 +34,6 @@ class ObjectClass:
             cls._categories = {
                 cat["id"] - 1: cat["name"] for cat in categories["categories"]
             }
-        print("Loaded categories:", cls._categories)
 
     @classmethod
     def get_name(cls, cat_id):
@@ -43,6 +42,7 @@ class ObjectClass:
 
     @classmethod
     def get_id(cls, name):
+        """Get the category ID by name."""
         for class_id, class_name in cls._categories.items():
             if class_name == name:
                 return class_id
@@ -101,7 +101,6 @@ class BoxSize:
                 category["id"] - 1: tuple(category["bounds"])
                 for category in data["categories"]
             }
-        print("Loaded thresholds:", cls.thresholds)
 
     @classmethod
     def from_objectclass(cls, object_class_name: str):
@@ -128,6 +127,11 @@ class BoxSize:
             )
         bounds = cls.thresholds[class_id]
         return cls(bounds)
+
+    @classmethod
+    def get_thresholds(cls) -> Dict[str, Tuple[float, float]]:
+        """Returns the current thresholds as a dictionary."""
+        return cls.thresholds.copy()
 
     def to_dict(self, all_only: bool = False) -> Dict[str, Tuple[float, float]]:
         """

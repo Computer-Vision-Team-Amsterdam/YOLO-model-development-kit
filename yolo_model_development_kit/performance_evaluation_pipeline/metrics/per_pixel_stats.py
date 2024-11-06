@@ -289,6 +289,11 @@ class PerPixelEvaluator:
             ).get_filtered_labels()
 
             target_class_name = ObjectClass.get_name(target_class)
+            if target_class_name == "Unknown":
+                logger.warning(
+                    f"Warning: Class ID {target_class} not found in loaded categories."
+                )
+                continue
 
             box_sizes = BoxSize.from_objectclass(target_class_name).to_dict(
                 single_size_only
