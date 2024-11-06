@@ -27,9 +27,40 @@ performance_evaluation:
   sensitive_classes_conf: null  # null means all predictions are used, only for TBA evaluation
   plot_pr_curves: True
 
+training_pipeline:
+  model_parameters:
+    img_size: 1280
+    batch: 0.85
+    epochs: 500
+    n_classes: 5
+    name_classes: ["person", "license plate", "container", "mobile toilet", "scaffolding"]
+    # The following settings are ignored in sweep mode and will instead be taken from the sweep_config file.
+    patience: 100
+    cos_lr: True
+    dropout: 0.0
+    seed: 0
+    box: 7.5
+    cls: 0.5
+    dfl: 1.5
+  inputs:
+    datastore_path: "dataset_oor_v2_2"
+    training_data_rel_path: "processed-dataset-oor-v2-2"
+    model_weights_rel_path: "model"
+    model_name: "best_yolo11m_coco_161024.pt"
+    config_file: "train_data_augment_config.json" # can be an empty string or omitted entirely
+    sweep_config: "sweep_config.json"
+  outputs:
+    project_datastore_path: "dataset_oor_v2_2"
+    project_rel_path: "model"
+  sweep_mode: False  # Set to true to run a hyperparameter sweep based on inputs/sweep_config
+
+wandb:
+  api_key: ""
+  mode: "offline"
+
 logging:
   loglevel_own: DEBUG  # override loglevel for packages defined in `own_packages`
-  own_packages: ["__main__", "yolo_model_development_kit", "performance_evaluation"]
+  own_packages: ["__main__", "yolo_model_development_kit", "performance_evaluation", "training_pipeline"]
   basic_config:
     # log config as arguments to `logging.basicConfig`
     level: WARNING

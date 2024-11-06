@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel
 
@@ -49,6 +49,33 @@ class PerformanceEvaluationSpec(SettingsSpecModel):
     plot_pr_curves: bool = True
 
 
+class TrainingModelParameters(SettingsSpecModel):
+    img_size: int = 1024
+    batch: Union[float, int] = -1
+    epochs: int = 100
+    n_classes: int = 3
+    name_classes: List[str] = ["person", "license plate", "container"]
+    patience: int = 25
+    cos_lr: bool = False
+    dropout: float = 0.0
+    seed: int = 0
+    box: float = 7.5
+    cls: float = 0.5
+    dfl: float = 1.5
+
+
+class TrainingPipelineSpec(SettingsSpecModel):
+    model_parameters: TrainingModelParameters
+    inputs: Dict[str, str] = None
+    outputs: Dict[str, str] = None
+    sweep_mode: bool = False
+
+
+class WandbSpec(SettingsSpecModel):
+    api_key: str
+    mode: str = "disabled"
+
+
 class YoloModelDevelopmentKitSettingsSpec(SettingsSpecModel):
     class Config:
         extra = "forbid"
@@ -57,3 +84,5 @@ class YoloModelDevelopmentKitSettingsSpec(SettingsSpecModel):
     aml_experiment_details: AMLExperimentDetailsSpec
     logging: LoggingSpec = LoggingSpec()
     performance_evaluation: PerformanceEvaluationSpec = None
+    training_pipeline: TrainingPipelineSpec = None
+    wandb: WandbSpec = None
