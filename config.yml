@@ -33,7 +33,7 @@ training_pipeline:
     epochs: 500
     n_classes: 5
     name_classes: ["person", "license plate", "container", "mobile toilet", "scaffolding"]
-    # The following settings are ignored in sweep mode.
+    # The following settings are ignored in sweep mode and will instead be taken from the sweep_config file.
     patience: 100
     cos_lr: True
     dropout: 0.0
