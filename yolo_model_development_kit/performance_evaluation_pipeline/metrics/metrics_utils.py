@@ -1,4 +1,5 @@
 import json
+import os
 from typing import Dict, List, Tuple, Union
 
 import numpy as np
@@ -17,8 +18,18 @@ class ObjectClass:
         This implies that categories start at 1.
         The function assumes the JSON file uses COCO convention, i.e., categories start at 1.
         """
+        if not os.path.exists(json_path):
+            raise FileNotFoundError(f"The specified file '{json_path}' was not found.")
         with open(json_path, "r") as f:
-            categories = json.load(f)
+            try:
+                categories = json.load(f)
+                if not categories.get("categories"):
+                    raise ValueError(
+                        "The categories JSON file is empty or improperly formatted."
+                    )
+            except json.JSONDecodeError:
+                raise ValueError(f"The file '{json_path}' is not a valid JSON file.")
+
             # Adjusting IDs to zero-indexed as per YOLO convention
             cls._categories = {
                 cat["id"] - 1: cat["name"] for cat in categories["categories"]
@@ -74,12 +85,23 @@ class BoxSize:
     @classmethod
     def load_thresholds(cls, file_path: str) -> None:
         """Load bounding box thresholds from a JSON file with 'categories' as a list of dicts."""
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"The specified file '{file_path}' was not found.")
         with open(file_path, "r") as f:
-            data = json.load(f)
+            try:
+                data = json.load(f)
+                if not data.get("categories"):
+                    raise ValueError(
+                        "The thresholds JSON file is empty or improperly formatted."
+                    )
+            except json.JSONDecodeError:
+                raise ValueError(f"The file '{file_path}' is not a valid JSON file.")
+
             cls.thresholds = {
                 category["id"] - 1: tuple(category["bounds"])
                 for category in data["categories"]
             }
+        print("Loaded thresholds:", cls.thresholds)
 
     @classmethod
     def from_objectclass(cls, object_class_name: str):
