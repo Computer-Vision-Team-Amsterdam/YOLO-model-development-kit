@@ -1,0 +1,12 @@
+{
+"categories": [
+    {
+      "id": 1,
+      "name": "person"
+    },
+    {
+      "id": 2,
+      "name": "license plate"
+    }
+  ]
+}

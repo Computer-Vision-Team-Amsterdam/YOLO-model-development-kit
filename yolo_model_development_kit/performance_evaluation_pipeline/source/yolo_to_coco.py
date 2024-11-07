@@ -12,9 +12,6 @@ from yolo_model_development_kit.performance_evaluation_pipeline.metrics import (
     ObjectClass,
 )
 
-# Define the categories for the COCO dataset
-CATEGORIES = [{"id": obj_cls.value, "name": obj_cls.name} for obj_cls in ObjectClass]
-
 
 def convert_yolo_predictions_to_coco_json(
     predictions_dir: str,
@@ -109,6 +106,12 @@ def _convert_dataset_split(image_dir: str, label_dir: str) -> Dict:
     image_list: List[Dict] = []
     annotation_list: List[Dict] = []
 
+    # Get dynamically loaded categories from ObjectClass
+    categories = [
+        {"id": cat_id, "name": ObjectClass.get_name(cat_id)}
+        for cat_id in ObjectClass.all_ids()
+    ]
+
     # Loop through the images in the input directory
     for image_file in os.listdir(image_dir):
 
@@ -153,7 +156,7 @@ def _convert_dataset_split(image_dir: str, label_dir: str) -> Dict:
     coco_dataset = {
         "info": {},
         "licenses": [],
-        "categories": CATEGORIES,
+        "categories": categories,
         "images": image_list,
         "annotations": annotation_list,
     }

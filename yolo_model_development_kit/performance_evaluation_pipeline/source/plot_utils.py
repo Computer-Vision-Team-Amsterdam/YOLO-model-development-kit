@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import Optional, Tuple
 
@@ -9,14 +10,17 @@ from yolo_model_development_kit.performance_evaluation_pipeline.metrics import (
     ObjectClass,
 )
 
+logger = logging.getLogger(__name__)
+
 
 def _extract_plot_df(
-    results_df: pd.DataFrame, split: str, target_class: ObjectClass
+    results_df: pd.DataFrame, split: str, target_class: int
 ) -> pd.DataFrame:
+    target_class_name = ObjectClass.get_name(target_class)
     plot_df = results_df[
         (results_df["Size"] == "all")
         & (results_df["Split"] == split)
-        & (results_df["Object Class"] == target_class.name)
+        & (results_df["Object Class"] == target_class_name)
     ].set_index("Conf")
 
     return plot_df
@@ -59,7 +63,7 @@ def _generate_plot_title_and_filename(
 def save_pr_curve(
     results_df: pd.DataFrame,
     split: str,
-    target_class: ObjectClass,
+    target_class: int,
     model_name: str,
     result_type: str,
     dataset: str = "",
@@ -70,6 +74,11 @@ def save_pr_curve(
     """
     Plot and save the precision and recall curve for a particular split and target_class.
     """
+
+    target_class_name = ObjectClass.get_name(target_class)
+    if target_class_name == "Unknown":
+        raise ValueError(f"Class ID {target_class} not found in loaded categories.")
+
     plot_df = _extract_plot_df(
         results_df=results_df, split=split, target_class=target_class
     )[["Precision", "Recall"]]
@@ -80,7 +89,7 @@ def save_pr_curve(
         dataset=dataset,
         split=split,
         model_name=model_name,
-        target_class=target_class.name,
+        target_class=target_class_name,
         filename=filename,
     )
 
@@ -96,7 +105,7 @@ def save_fscore_curve(
     results_df: pd.DataFrame,
     dataset: str,
     split: str,
-    target_class: ObjectClass,
+    target_class: int,
     model_name: str,
     result_type: str,
     output_dir: str = "",
@@ -106,6 +115,11 @@ def save_fscore_curve(
     """
     Plot and save the F-score curve for a particular split and target_class.
     """
+
+    target_class_name = ObjectClass.get_name(target_class)
+    if target_class_name == "Unknown":
+        raise ValueError(f"Class ID {target_class} not found in loaded categories.")
+
     plot_df = _extract_plot_df(
         results_df=results_df, split=split, target_class=target_class
     )[["F1", "F0.5", "F2"]]
@@ -116,7 +130,7 @@ def save_fscore_curve(
         dataset=dataset,
         split=split,
         model_name=model_name,
-        target_class=target_class.name,
+        target_class=target_class_name,
         filename=filename,
     )
 
