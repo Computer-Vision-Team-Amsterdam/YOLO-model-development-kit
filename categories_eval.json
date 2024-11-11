@@ -3,12 +3,12 @@
     {
       "id": 1,
       "name": "person",
-      "bounds": [0.000665, 0.003397]
+      "thresholds": [0.000665, 0.003397]
     },
     {
       "id": 2,
       "name": "license plate",
-      "bounds": [0.000108, 0.000436]
+      "thresholds": [0.000108, 0.000436]
     }
   ]
 }
