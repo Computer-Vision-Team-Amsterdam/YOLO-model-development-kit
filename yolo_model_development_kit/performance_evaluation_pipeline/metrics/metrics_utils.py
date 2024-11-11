@@ -38,7 +38,8 @@ class ObjectClass:
 
             # Adjusting IDs to zero-indexed as per YOLO convention
             cls._categories = {
-                cat["id"] - 1: {"name": cat["name"], "bounds": tuple(cat["bounds"])}
+                cat["id"]
+                - 1: {"name": cat["name"], "thresholds": tuple(cat["thresholds"])}
                 for cat in categories["categories"]
             }
 
