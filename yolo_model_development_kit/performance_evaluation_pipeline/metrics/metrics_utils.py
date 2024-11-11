@@ -19,9 +19,8 @@ class ObjectClass:
 
     @classmethod
     def load_categories(cls, json_path):
-        """Load categories and box size thresholds from a COCO JSON file.
-        This implies that categories start at 1.
-        The function assumes the JSON file uses COCO convention, i.e., categories start at 1.
+        """Load categories and box size thresholds from a JSON file.
+        The function assumes the YOLO convention, so categories start at 0.
         """
 
         if not os.path.exists(json_path):
@@ -36,10 +35,13 @@ class ObjectClass:
             except json.JSONDecodeError:
                 raise ValueError(f"The file '{json_path}' is not a valid JSON file.")
 
-            # Adjusting IDs to zero-indexed as per YOLO convention
             cls._categories = {
-                cat["id"]
-                - 1: {"name": cat["name"], "thresholds": tuple(cat["thresholds"])}
+                cat["id"]: {
+                    "name": cat["name"],
+                    "thresholds": tuple(
+                        cat.get("thresholds", (0.0, 1.0))
+                    ),  # Default if 'thresholds' is missing
+                }
                 for cat in categories["categories"]
             }
 
@@ -71,7 +73,7 @@ class ObjectClass:
     @classmethod
     def get_name(cls, cat_id):
         """Get the category name by ID."""
-        return cls._categories.get(cat_id, "Unknown")
+        return cls._categories.get(cat_id, {}).get("name", "Unknown")
 
     @classmethod
     def get_id(cls, name):
@@ -87,7 +89,7 @@ class ObjectClass:
         details = cls._categories.get(cat_id)
         if details and "thresholds" in details:
             return details["thresholds"]
-        return None
+        return (0.0, 1.0)  # Default to the whole image
 
     @classmethod
     def all_ids(cls):
