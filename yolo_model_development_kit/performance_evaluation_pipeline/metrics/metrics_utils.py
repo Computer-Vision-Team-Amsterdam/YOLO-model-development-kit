@@ -11,6 +11,7 @@ class ObjectClass:
     """Dynamic class to represent object categories for evaluation."""
 
     _categories = {}
+    _grouped_categories_by_type = {}
 
     @classmethod
     def load_categories(cls, json_path):
@@ -34,6 +35,93 @@ class ObjectClass:
             cls._categories = {
                 cat["id"] - 1: cat["name"] for cat in categories["categories"]
             }
+
+    @classmethod
+    def load_categories_from_dict(cls, category_dict):
+        """Load categories directly from a dictionary."""
+        # Directly set categories using the provided dictionary
+        cls._categories = {int(k) - 1: v for k, v in category_dict.items()}
+
+    @classmethod
+    def apply_groupings(cls, grouping_json_path, group_types):
+        """Apply multiple groupings based on the JSON file.
+
+        Parameters
+        ----------
+        grouping_json_path: str
+            Path to the grouping JSON file.
+        group_types: list
+            List of group types to apply.
+
+        Example JSON file:
+        {
+            "main_group": {
+                "group_type_1": {
+                    "group_id": 1,
+                    "group_name": "group_1",
+                    "categories": {
+                        "category_1": [1, 2, 3],
+                        "category_2": [4, 5, 6]
+                    }
+                },
+                "group_type_2": {
+                ...
+                }
+            }
+        }
+        """
+        if not os.path.exists(grouping_json_path):
+            raise FileNotFoundError(
+                f"The specified file '{grouping_json_path}' was not found."
+            )
+        with open(grouping_json_path, "r") as f:
+            try:
+                grouping_data = json.load(f)
+                if len(grouping_data) == 0:
+                    raise ValueError(
+                        "The grouping JSON file is empty or improperly formatted."
+                    )
+            except json.JSONDecodeError:
+                raise ValueError(
+                    f"The file '{grouping_json_path}' is not a valid JSON file."
+                )
+
+            # Automatically infer the main group as the first key
+            main_group = list(grouping_data.keys())[
+                0
+            ]  # assuming the first key is the main group
+            print(f"Automatically detected main group: {main_group}")
+
+            # Apply each grouping type from the list
+            for group_type in group_types:
+                if group_type not in grouping_data[main_group]:
+                    raise ValueError(
+                        f"Group type '{group_type}' not found in grouping file."
+                    )
+
+                # Load the specified group type under the main group
+                group_data = grouping_data[main_group][group_type]
+                grouped_categories = {}
+                for group_name, group_items in group_data["categories"].items():
+                    for cat_id in group_items:
+                        if cat_id - 1 in cls._categories:
+                            grouped_categories[cat_id - 1] = group_name
+
+                cls._grouped_categories_by_type[group_type] = grouped_categories
+                print(
+                    f"Applied grouping '{group_type}'. Grouped categories:",
+                    cls._categories,
+                )
+
+    @classmethod
+    def get_group(cls, group_type):
+        """Return a dictionary of categories for a specific group type."""
+        if group_type in cls._grouped_categories:
+            return cls._grouped_categories[group_type]
+        else:
+            raise ValueError(
+                f"Group type '{group_type}' not found in loaded groupings."
+            )
 
     @classmethod
     def get_name(cls, cat_id):

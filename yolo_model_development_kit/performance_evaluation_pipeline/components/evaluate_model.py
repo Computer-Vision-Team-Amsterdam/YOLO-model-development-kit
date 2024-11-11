@@ -71,6 +71,7 @@ def evaluate_model(
     eval_settings = settings["performance_evaluation"]
     thresholds_json_path = eval_settings["thresholds_json_path"]
     categories_json_path = eval_settings["categories_json_path"]
+    grouping_json_path = eval_settings["grouping_json_path"]
     dataset_name = eval_settings["dataset_name"]
     model_name = eval_settings["model_name"]
     ground_truth_img_shape = eval_settings["ground_truth_image_shape"]
@@ -81,53 +82,82 @@ def evaluate_model(
     sensitive_classes = eval_settings["sensitive_classes"]
     target_classes_conf = eval_settings["target_classes_conf"]
     sensitive_classes_conf = eval_settings["sensitive_classes_conf"]
+    use_groupings = eval_settings.get("use_groupings", False)
+    group_types = eval_settings.get("group_types", [])
 
     logger.info(f"Running performance evaluation for model: {model_name}")
+    logger.info(f"Use groupings: {use_groupings}")
+    logger.info(f"Group types: {group_types}")
 
     os.makedirs(output_dir, exist_ok=True)
 
-    # Load categories JSON file once
-    ObjectClass.load_categories(categories_json_path)
+    # Loadthresholds JSON file once
     BoxSize.load_thresholds(thresholds_json_path)
 
-    yolo_eval = YoloEvaluator(
-        ground_truth_base_folder=ground_truth_base_dir,
-        predictions_base_folder=predictions_base_dir,
-        output_folder=output_dir,
-        ground_truth_image_shape=ground_truth_img_shape,
-        predictions_image_shape=predictions_img_shape,
-        dataset_name=dataset_name,
-        model_name=model_name,
-        pred_annotations_rel_path=prediction_labels_rel_path,
-        splits=splits,
-        target_classes=target_classes,
-        sensitive_classes=sensitive_classes,
-        target_classes_conf=target_classes_conf,
-        sensitive_classes_conf=sensitive_classes_conf,
-    )
+    if use_groupings:
+        logger.info("Applying groupings...")
+        ObjectClass.apply_groupings(grouping_json_path, group_types)
+        group_types_to_evaluate = group_types
+    else:
+        # If no groupings, just use the original categories
+        logger.info("Loading original categories...")
+        ObjectClass.load_categories(categories_json_path)
+        group_types_to_evaluate = ["no_grouping"]
 
-    logger.info(f"Target classes: {yolo_eval.target_classes}")
-    logger.info(f"Sensitive classes: {yolo_eval.sensitive_classes}")
-    logger.info(f"Loaded categories IDs: {ObjectClass.all_ids()}")
-    logger.info(f"Loaded thresholds: {BoxSize.get_thresholds()}")
+    for group_type in group_types_to_evaluate:
+        logger.info(f"Starting evaluation for group type: {group_type}")
+        if group_type == "no_grouping":
+            # Use original categories for non-grouped evaluation
+            ObjectClass.load_categories(categories_json_path)
+            current_model_name = f"{model_name}_no_grouping"
+        else:
+            # Load categories for the current group
+            logger.info(f"Loading grouped categories for group type: {group_type}")
+            grouped_categories = ObjectClass.get_group(group_type)
+            ObjectClass.load_categories_from_dict(grouped_categories)
+            logger.info(
+                f"Loaded categories: {ObjectClass.all_names()}, {ObjectClass.all_ids()}"
+            )
+            current_model_name = f"{model_name}_{group_type}"
 
-    # Total Blurred Area evaluation
-    if len(sensitive_classes) > 0:
-        tba_results = yolo_eval.evaluate_tba()
-        yolo_eval.save_tba_results_to_csv(results=tba_results)
-        # Plot precision/recall curves
-        if eval_settings["plot_pr_curves"]:
-            yolo_eval.plot_tba_pr_f_curves(show_plot=False)
+        yolo_eval = YoloEvaluator(
+            ground_truth_base_folder=ground_truth_base_dir,
+            predictions_base_folder=predictions_base_dir,
+            output_folder=output_dir,
+            ground_truth_image_shape=ground_truth_img_shape,
+            predictions_image_shape=predictions_img_shape,
+            dataset_name=dataset_name,
+            model_name=current_model_name,
+            pred_annotations_rel_path=prediction_labels_rel_path,
+            splits=splits,
+            target_classes=target_classes,
+            sensitive_classes=sensitive_classes,
+            target_classes_conf=target_classes_conf,
+            sensitive_classes_conf=sensitive_classes_conf,
+        )
 
-    # Per Image evaluation
-    if len(target_classes) > 0:
-        per_image_results = yolo_eval.evaluate_per_image()
-        yolo_eval.save_per_image_results_to_csv(results=per_image_results)
-        # Plot precision/recall curves
-        if eval_settings["plot_pr_curves"]:
-            yolo_eval.plot_per_image_pr_f_curves(show_plot=False)
+        logger.info(f"Target classes: {yolo_eval.target_classes}")
+        logger.info(f"Sensitive classes: {yolo_eval.sensitive_classes}")
+        logger.info(f"Loaded categories IDs: {ObjectClass.all_ids()}")
+        logger.info(f"Loaded thresholds: {BoxSize.get_thresholds()}")
 
-    # Custom COCO evaluation
-    if (len(sensitive_classes) > 0) or (len(target_classes) > 0):
-        coco_results = yolo_eval.evaluate_coco()
-        yolo_eval.save_coco_results_to_csv(results=coco_results)
+        # Total Blurred Area evaluation
+        if len(sensitive_classes) > 0:
+            tba_results = yolo_eval.evaluate_tba()
+            yolo_eval.save_tba_results_to_csv(results=tba_results)
+            # Plot precision/recall curves
+            if eval_settings["plot_pr_curves"]:
+                yolo_eval.plot_tba_pr_f_curves(show_plot=False)
+
+        # Per Image evaluation
+        if len(target_classes) > 0:
+            per_image_results = yolo_eval.evaluate_per_image()
+            yolo_eval.save_per_image_results_to_csv(results=per_image_results)
+            # Plot precision/recall curves
+            if eval_settings["plot_pr_curves"]:
+                yolo_eval.plot_per_image_pr_f_curves(show_plot=False)
+
+        # Custom COCO evaluation
+        if (len(sensitive_classes) > 0) or (len(target_classes) > 0):
+            coco_results = yolo_eval.evaluate_coco()
+            yolo_eval.save_coco_results_to_csv(results=coco_results)

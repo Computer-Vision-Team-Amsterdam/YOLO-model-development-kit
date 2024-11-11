@@ -36,6 +36,8 @@ class PerformanceEvaluationSpec(SettingsSpecModel):
     outputs: Dict[str, str]
     categories_json_path: str = ""
     thresholds_json_path: str = ""
+    grouping_json_path: str = ""
+    group_types: List[str] = []
     dataset_name: str = ""
     model_name: str
     ground_truth_image_shape: List[int]
@@ -47,6 +49,7 @@ class PerformanceEvaluationSpec(SettingsSpecModel):
     target_classes_conf: Optional[float] = None
     sensitive_classes_conf: Optional[float] = None
     plot_pr_curves: bool = True
+    use_groupings: bool = False
 
 
 class TrainingModelParameters(SettingsSpecModel):
