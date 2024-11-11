@@ -5,7 +5,6 @@ from typing import Any, Dict, List, Tuple, Union
 from pycocotools.coco import COCO
 
 from yolo_model_development_kit.performance_evaluation_pipeline.metrics import (
-    BoxSize,
     CustomCOCOeval,
     ObjectClass,
 )
@@ -109,7 +108,7 @@ def execute_custom_coco_eval(
         for class_id in classes:
             # Dynamically retrieve the size range for each category.
             object_class_name = ObjectClass.get_name(class_id)
-            box_size = BoxSize.from_objectclass(object_class_name)
+            box_size = ObjectClass.get_thresholds(object_class_name)
             box_range = box_size.__getattribute__(areaRngLbl)
             aRng[class_id] = (box_range[0] * img_area, box_range[1] * img_area)
         areaRng.append(aRng)

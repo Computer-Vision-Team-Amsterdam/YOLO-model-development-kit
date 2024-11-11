@@ -35,7 +35,6 @@ class PerformanceEvaluationSpec(SettingsSpecModel):
     inputs: Dict[str, str]
     outputs: Dict[str, str]
     categories_json_path: str = ""
-    thresholds_json_path: str = ""
     dataset_name: str = ""
     model_name: str
     ground_truth_image_shape: List[int]

@@ -1,12 +1,14 @@
 {
-"categories": [
+  "categories": [
     {
       "id": 1,
-      "name": "person"
+      "name": "person",
+      "bounds": [0.000665, 0.003397]
     },
     {
       "id": 2,
-      "name": "license plate"
+      "name": "license plate",
+      "bounds": [0.000108, 0.000436]
     }
   ]
 }
