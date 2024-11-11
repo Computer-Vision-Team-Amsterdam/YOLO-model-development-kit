@@ -26,9 +26,6 @@ from yolo_model_development_kit.performance_evaluation_pipeline.source.yolo_to_c
 
 logger = logging.getLogger("performance_evaluation")
 
-DEFAULT_TARGET_CLASSES = []
-DEFAULT_SENSITIVE_CLASSES = []
-
 
 class YoloEvaluator:
     """
@@ -107,8 +104,8 @@ class YoloEvaluator:
         gt_annotations_rel_path: str = "labels",
         pred_annotations_rel_path: str = "labels",
         splits: Union[List[str], None] = ["train", "val", "test"],
-        target_classes: List[int] = DEFAULT_TARGET_CLASSES,
-        sensitive_classes: List[int] = DEFAULT_SENSITIVE_CLASSES,
+        target_classes: List[int] = [],
+        sensitive_classes: List[int] = [],
         target_classes_conf: Optional[float] = None,
         sensitive_classes_conf: Optional[float] = None,
         single_size_only: bool = False,
