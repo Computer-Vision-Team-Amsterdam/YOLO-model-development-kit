@@ -6,7 +6,6 @@ import numpy.typing as npt
 from cvtoolkit.datasets.yolo_labels_dataset import YoloLabelsDataset
 
 from yolo_model_development_kit.performance_evaluation_pipeline.metrics import (
-    BoxSize,
     ObjectClass,
     generate_binary_mask,
 )
@@ -294,9 +293,7 @@ class PerPixelEvaluator:
                 logger.error(e)
                 raise ValueError(e)
 
-            box_sizes = BoxSize.from_objectclass(target_class_name).to_dict(
-                single_size_only
-            )
+            box_sizes = ObjectClass.to_dict(target_class, single_size_only)
 
             for box_size_name, box_size in box_sizes.items():
                 size_all = box_size_name == "all"

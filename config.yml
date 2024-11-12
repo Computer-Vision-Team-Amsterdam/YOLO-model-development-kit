@@ -15,7 +15,6 @@ performance_evaluation:
     datastore: "dataset_oor_v2_2"
     output_rel_path: "evaluation/v2-2/v2.2_test2"
   categories_json_path: "categories_eval.json"
-  thresholds_json_path: "thresholds.json"
   grouping_json_path: "grouping.json"
   group_types: ["group_by_sex", "group_by_age", "group_by_skin_color"]  # List of group types if use_groupings is True
   dataset_name: "v2-2"

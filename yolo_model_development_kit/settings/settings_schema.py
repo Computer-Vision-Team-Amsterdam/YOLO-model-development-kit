@@ -35,7 +35,6 @@ class PerformanceEvaluationSpec(SettingsSpecModel):
     inputs: Dict[str, str]
     outputs: Dict[str, str]
     categories_json_path: str = ""
-    thresholds_json_path: str = ""
     grouping_json_path: str = ""
     group_types: List[str] = []
     dataset_name: str = ""

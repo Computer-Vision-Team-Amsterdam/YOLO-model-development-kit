@@ -10,7 +10,6 @@ sys.path.append("../../..")
 
 from yolo_model_development_kit import settings  # noqa: E402
 from yolo_model_development_kit.performance_evaluation_pipeline.metrics import (  # noqa: E402
-    BoxSize,
     ObjectClass,
 )
 from yolo_model_development_kit.performance_evaluation_pipeline.source import (  # noqa: E402
@@ -69,7 +68,6 @@ def evaluate_model(
     """
 
     eval_settings = settings["performance_evaluation"]
-    thresholds_json_path = eval_settings["thresholds_json_path"]
     categories_json_path = eval_settings["categories_json_path"]
     grouping_json_path = eval_settings["grouping_json_path"]
     dataset_name = eval_settings["dataset_name"]
@@ -91,8 +89,8 @@ def evaluate_model(
 
     os.makedirs(output_dir, exist_ok=True)
 
-    # Loadthresholds JSON file once
-    BoxSize.load_thresholds(thresholds_json_path)
+    # Load categories JSON file once
+    ObjectClass.load_categories(categories_json_path)
 
     if use_groupings:
         logger.info("Applying groupings...")
@@ -139,7 +137,7 @@ def evaluate_model(
         logger.info(f"Target classes: {yolo_eval.target_classes}")
         logger.info(f"Sensitive classes: {yolo_eval.sensitive_classes}")
         logger.info(f"Loaded categories IDs: {ObjectClass.all_ids()}")
-        logger.info(f"Loaded thresholds: {BoxSize.get_thresholds()}")
+        logger.info(f"Loaded thresholds: {ObjectClass.all_thresholds()}")
 
         # Total Blurred Area evaluation
         if len(sensitive_classes) > 0:
