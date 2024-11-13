@@ -26,16 +26,6 @@ from yolo_model_development_kit.performance_evaluation_pipeline.source.yolo_to_c
 
 logger = logging.getLogger("performance_evaluation")
 
-DEFAULT_TARGET_CLASSES = [
-    ObjectClass.container,
-    ObjectClass.mobile_toilet,
-    ObjectClass.scaffolding,
-]
-DEFAULT_SENSITIVE_CLASSES = [
-    ObjectClass.person,
-    ObjectClass.license_plate,
-]
-
 
 class YoloEvaluator:
     """
@@ -114,8 +104,8 @@ class YoloEvaluator:
         gt_annotations_rel_path: str = "labels",
         pred_annotations_rel_path: str = "labels",
         splits: Union[List[str], None] = ["train", "val", "test"],
-        target_classes: List[ObjectClass] = DEFAULT_TARGET_CLASSES,
-        sensitive_classes: List[ObjectClass] = DEFAULT_SENSITIVE_CLASSES,
+        target_classes: List[int] = [],
+        sensitive_classes: List[int] = [],
         target_classes_conf: Optional[float] = None,
         sensitive_classes_conf: Optional[float] = None,
         single_size_only: bool = False,
@@ -351,8 +341,9 @@ class YoloEvaluator:
 
         custom_coco_result: Dict[str, Dict[str, Dict[str, float]]] = dict()
         coco_eval_classes = {"all": self.all_classes}
-        for obj_cls in self.all_classes:
-            coco_eval_classes[obj_cls.name] = [obj_cls]
+        for class_id in self.all_classes:
+            class_name = ObjectClass.get_name(class_id)
+            coco_eval_classes[class_name] = [class_id]
 
         # The custom COCO evaluation needs annotations in COCO JSON format, so we need to convert.
         ## Set output folders for COCO JSON files.
@@ -461,7 +452,7 @@ class YoloEvaluator:
         self,
         pr_df: pd.DataFrame,
         result_type: str,
-        eval_classes: List[ObjectClass],
+        eval_classes: List[int],
         output_dir: str = "",
         show_plot: bool = False,
     ):

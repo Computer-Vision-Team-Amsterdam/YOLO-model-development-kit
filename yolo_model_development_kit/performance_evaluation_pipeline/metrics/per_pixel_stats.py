@@ -1,12 +1,11 @@
 import logging
-from typing import Dict, Iterable, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import numpy.typing as npt
 from cvtoolkit.datasets.yolo_labels_dataset import YoloLabelsDataset
 
 from yolo_model_development_kit.performance_evaluation_pipeline.metrics import (
-    BoxSize,
     ObjectClass,
     generate_binary_mask,
 )
@@ -249,7 +248,7 @@ class PerPixelEvaluator:
 
     def collect_results_per_class_and_size(
         self,
-        classes: Iterable[ObjectClass] = ObjectClass,
+        classes: List[int] = ObjectClass.all_ids(),
         single_size_only: bool = False,
     ) -> Dict[str, Dict[str, float]]:
         """
@@ -258,7 +257,7 @@ class PerPixelEvaluator:
 
         Parameters
         ----------
-        classes: Iterable[ObjectClass] = ObjectClass,
+        classes: List[int] = ObjectClass.all_ids(),
             Which classes to evaluate (default is all).
         single_size_only: bool = False,
             Whether to differentiate bounding box sizes (small, medium, large)
@@ -285,22 +284,28 @@ class PerPixelEvaluator:
         for target_class in classes:
             self.pred_dataset.reset_filter()
             predicted_target_class = self.pred_dataset.filter_by_class(
-                target_class.value
+                target_class
             ).get_filtered_labels()
 
-            box_sizes = BoxSize.from_objectclass(target_class).to_dict(single_size_only)
+            target_class_name = ObjectClass.get_name(target_class)
+            if target_class_name == "Unknown":
+                e = f"Class ID {target_class} not found in loaded categories. Stopping execution."
+                logger.error(e)
+                raise ValueError(e)
+
+            box_sizes = ObjectClass.to_dict(target_class, single_size_only)
 
             for box_size_name, box_size in box_sizes.items():
                 size_all = box_size_name == "all"
 
                 self.gt_dataset.reset_filter()
                 true_target_class_size = (  # i.e. true_person_small
-                    self.gt_dataset.filter_by_class(class_to_keep=target_class.value)
+                    self.gt_dataset.filter_by_class(class_to_keep=target_class)
                     .filter_by_size_percentage(perc_to_keep=box_size)
                     .get_filtered_labels()
                 )
 
-                results[f"{target_class.name}_{box_size_name}"] = (
+                results[f"{target_class_name}_{box_size_name}"] = (
                     self._get_per_pixel_statistics(
                         true_labels=true_target_class_size,
                         predicted_labels=predicted_target_class,

@@ -66,7 +66,9 @@ def evaluate_model(
     output_dir: Output(type=AssetTypes.URI_FOLDER)
         Location where output will be stored.
     """
+
     eval_settings = settings["performance_evaluation"]
+    categories_json_path = eval_settings["categories_json_path"]
     dataset_name = eval_settings["dataset_name"]
     model_name = eval_settings["model_name"]
     ground_truth_img_shape = eval_settings["ground_truth_image_shape"]
@@ -82,6 +84,9 @@ def evaluate_model(
 
     os.makedirs(output_dir, exist_ok=True)
 
+    # Load categories JSON file once
+    ObjectClass.load_categories(categories_json_path)
+
     yolo_eval = YoloEvaluator(
         ground_truth_base_folder=ground_truth_base_dir,
         predictions_base_folder=predictions_base_dir,
@@ -92,11 +97,16 @@ def evaluate_model(
         model_name=model_name,
         pred_annotations_rel_path=prediction_labels_rel_path,
         splits=splits,
-        target_classes=[ObjectClass(val) for val in target_classes],
-        sensitive_classes=[ObjectClass(val) for val in sensitive_classes],
+        target_classes=target_classes,
+        sensitive_classes=sensitive_classes,
         target_classes_conf=target_classes_conf,
         sensitive_classes_conf=sensitive_classes_conf,
     )
+
+    logger.info(f"Target classes: {yolo_eval.target_classes}")
+    logger.info(f"Sensitive classes: {yolo_eval.sensitive_classes}")
+    logger.info(f"Loaded categories IDs: {ObjectClass.all_ids()}")
+    logger.info(f"Loaded thresholds: {ObjectClass.all_thresholds()}")
 
     # Total Blurred Area evaluation
     if len(sensitive_classes) > 0:

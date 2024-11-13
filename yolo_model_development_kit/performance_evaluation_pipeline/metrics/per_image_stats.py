@@ -1,12 +1,14 @@
-from typing import Dict, Iterable, Optional, Set, Tuple
+import logging
+from typing import Dict, List, Optional, Set, Tuple
 
 import numpy as np
 from cvtoolkit.datasets.yolo_labels_dataset import YoloLabelsDataset
 
 from yolo_model_development_kit.performance_evaluation_pipeline.metrics import (
-    BoxSize,
     ObjectClass,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class PerImageEvaluator:
@@ -87,7 +89,7 @@ class PerImageEvaluator:
 
     def collect_results_per_class_and_size(
         self,
-        classes: Iterable[ObjectClass] = ObjectClass,
+        classes: List[int] = ObjectClass.all_ids(),
         single_size_only: bool = False,
     ) -> Dict[str, Dict[str, float]]:
         """
@@ -97,7 +99,7 @@ class PerImageEvaluator:
 
         Parameters
         ----------
-        classes: Iterable[ObjectClass] = ObjectClass
+        classes: List[int] = ObjectClass.all_ids()
             Which classes to evaluate (default is all).
         single_size_only: bool = False
             Whether to differentiate bounding box sizes (small, medium, large)
@@ -122,21 +124,27 @@ class PerImageEvaluator:
         for target_class in classes:
             self.pred_dataset.reset_filter()
             predictions = self._get_filename_set(
-                self.pred_dataset.filter_by_class(target_class.value)
+                self.pred_dataset.filter_by_class(target_class)
             )
 
-            box_sizes = BoxSize.from_objectclass(target_class).to_dict(single_size_only)
+            target_class_name = ObjectClass.get_name(target_class)
+            if target_class_name == "Unknown":
+                e = f"Class ID {target_class} not found in loaded categories. Stopping execution."
+                logger.error(e)
+                raise ValueError(e)
+
+            box_sizes = ObjectClass.to_dict(target_class, single_size_only)
 
             for box_size_name, box_size in box_sizes.items():
                 self.gt_dataset.reset_filter()
                 ground_truth = self._get_filename_set(
                     self.gt_dataset.filter_by_class(
-                        class_to_keep=target_class.value
+                        class_to_keep=target_class
                     ).filter_by_size_percentage(perc_to_keep=box_size)
                 )
 
-                results[f"{target_class.name}_{box_size_name}"] = self._compute_stats(
-                    ground_truth, predictions, box_size_name
+                results[f"{ObjectClass.get_name(target_class)}_{box_size_name}"] = (
+                    self._compute_stats(ground_truth, predictions, box_size_name)
                 )
 
         return results

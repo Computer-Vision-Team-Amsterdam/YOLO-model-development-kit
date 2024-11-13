@@ -1,4 +1,5 @@
-from enum import Enum
+import json
+import os
 from typing import Dict, List, Tuple, Union
 
 import numpy as np
@@ -6,101 +7,108 @@ import numpy.typing as npt
 import pandas as pd
 
 
-class ObjectClass(Enum):
-    """Convenience class to represent objects of interest. Class labels can be
-    accessed as `<ObjectClass>.value`, class names as `<ObjectClass>.name`."""
-
-    person = 0
-    license_plate = 1
-    container = 2
-    mobile_toilet = 3
-    scaffolding = 4
-
-    def __repr__(self):
-        return self.value
-
-
-class BoxSize:
-    """
-    This class is used to represent bounding box size categories 'small',
-    'medium', 'large', and 'all'. The bounds of each category are given as
+class ObjectClass:
+    """Dynamic class to represent object categories for evaluation.
+    It contains the category name, ID, and bounding box size thresholds.
+    The 'small', 'medium', 'large', and 'all' attributes represent
+    the bounding box size categories. The bounds of each category are given as
     fraction of the image surface.
-
-    Objects of this class can be created by passing the two relevant bounds, or
-    by passing an ObjectClass. For example, to get the 'medium' bounds for a
-    'person': `BoxSize.from_objectclass(ObjectClass.person).medium`.
-
-    Parameters
-    ----------
-    bounds: Tuple[float, float] = (0.005, 0.01)
-        The two relevant bounds between small and medium, and medium and large.
     """
 
-    all: Tuple[float, float] = (0.0, 1.0)
-    small: Tuple[float, float]
-    medium: Tuple[float, float]
-    large: Tuple[float, float]
-
-    def __init__(self, bounds: Tuple[float, float] = (0.005, 0.01)):
-        self.small = (0.0, bounds[0])
-        self.medium = bounds
-        self.large = (bounds[1], 1.0)
+    _categories = {}
 
     @classmethod
-    def from_objectclass(cls, object_class: ObjectClass):
+    def load_categories(cls, json_path):
+        """Load categories and box size thresholds from a JSON file.
+        The function assumes the YOLO convention, so categories start at 0.
         """
-        Create a BoxSize object from an ObjectClass instance. This will return a
-        BoxSize instance with bounds set to the appropriate values for that
-        ObjectClass instance. These values have been set to the 1/3rd and 2/3rd
-        quantiles of the bounding box size distribution for that class in the
-        training dataset.
 
-        Parameters
-        ----------
-        object_class: ObjectClass
-            The ObjectClass to get the BoxSize for, e.g. `BoxSize.from_objectclass(ObjectClass.person)`.
+        if not os.path.exists(json_path):
+            raise FileNotFoundError(f"The specified file '{json_path}' was not found.")
+        with open(json_path, "r") as f:
+            try:
+                categories = json.load(f)
+                if not categories.get("categories"):
+                    raise ValueError(
+                        "The categories JSON file is empty or improperly formatted."
+                    )
+            except json.JSONDecodeError:
+                raise ValueError(f"The file '{json_path}' is not a valid JSON file.")
 
-        Returns
-        -------
-        BoxSize instance with the appropriate bounds.
-        """
-        switch = {
-            ObjectClass.person: (0.000665, 0.003397),
-            ObjectClass.license_plate: (0.000108, 0.000436),
-            ObjectClass.container: (0.003424, 0.022598),
-            ObjectClass.mobile_toilet: (0.000854, 0.004376),
-            ObjectClass.scaffolding: (0.010298, 0.125452),
-        }
-        return cls(switch.get(object_class))
-
-    def to_dict(self, all_only: bool = False) -> Dict[str, Tuple[float, float]]:
-        """
-        Get a dict representation of this instance.
-
-        Parameters
-        ----------
-        all_only: bool = False
-            Whether or not to only return the bounds for 'all'. This is purely a
-            convenience method for the 'single_size_only' case of several
-            metrics and serves no other practical purpose.
-
-        Returns
-        -------
-        A dictionary with the size categories as keys and their bounds as
-        values.
-        """
-        if all_only:
-            return {"all": self.all}
-        else:
-            return {
-                "all": self.all,
-                "small": self.small,
-                "medium": self.medium,
-                "large": self.large,
+            cls._categories = {
+                cat["id"]: {
+                    "name": cat["name"],
+                    "thresholds": tuple(
+                        cat.get("thresholds", (0.0, 1.0))
+                    ),  # Default if 'thresholds' is missing
+                }
+                for cat in categories["categories"]
             }
 
-    def __repr__(self) -> str:
-        return repr(self.medium)
+    @classmethod
+    def to_dict(
+        cls, cat_id: int, all_only: bool = False
+    ) -> Dict[str, Tuple[float, float]]:
+        """Get a dictionary representation of the bounding box size categories for a given category ID."""
+        details = cls._categories.get(cat_id)
+        if not details or "thresholds" not in details:
+            raise ValueError(f"No thresholds found for category ID {cat_id}")
+
+        thresholds = details["thresholds"]
+        small = (0.0, thresholds[0])
+        medium = thresholds
+        large = (thresholds[1], 1.0)
+        all_bounds = (0.0, 1.0)
+
+        if all_only:
+            return {"all": all_bounds}
+        else:
+            return {
+                "all": all_bounds,
+                "small": small,
+                "medium": medium,
+                "large": large,
+            }
+
+    @classmethod
+    def get_name(cls, cat_id):
+        """Get the category name by ID."""
+        return cls._categories.get(cat_id, {}).get("name", "Unknown")
+
+    @classmethod
+    def get_id(cls, name):
+        """Get the category ID by name."""
+        for class_id, details in cls._categories.items():
+            if details.get("name") == name:
+                return class_id
+        return None
+
+    @classmethod
+    def get_thresholds(cls, cat_id):
+        """Get the bounding box size thresholds for a given category ID."""
+        details = cls._categories.get(cat_id)
+        if details and "thresholds" in details:
+            return details["thresholds"]
+        return (0.0, 1.0)  # Default to the whole image
+
+    @classmethod
+    def all_ids(cls):
+        """Return all category IDs."""
+        return list(cls._categories.keys())
+
+    @classmethod
+    def all_names(cls):
+        """Return all category names."""
+        return [cat.name for cat in cls._categories.values()]
+
+    @classmethod
+    def all_thresholds(cls):
+        """Return all category thresholds as a dictionary with category IDs as keys."""
+        return {
+            cat_id: details["thresholds"]
+            for cat_id, details in cls._categories.items()
+            if "thresholds" in details
+        }
 
 
 def parse_labels(
