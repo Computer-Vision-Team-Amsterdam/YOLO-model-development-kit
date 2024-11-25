@@ -89,13 +89,15 @@ def evaluate_model(
 
     os.makedirs(output_dir, exist_ok=True)
 
-    # Load categories JSON file once
-    ObjectClass.load_categories(categories_json_path)
-
     if use_groupings:
-        logger.info("Applying groupings...")
         ObjectClass.apply_groupings(grouping_json_path, group_types)
         group_types_to_evaluate = group_types
+
+        print(f"Group_types_to_evaluate: {group_types_to_evaluate}")
+
+        for group_type in group_types:
+            grouped_categories = ObjectClass.get_group(group_type)
+            print(f"Grouped categories for {group_type}: {grouped_categories}")
     else:
         # If no groupings, just use the original categories
         logger.info("Loading original categories...")
@@ -108,15 +110,53 @@ def evaluate_model(
             # Use original categories for non-grouped evaluation
             ObjectClass.load_categories(categories_json_path)
             current_model_name = f"{model_name}_no_grouping"
+            logger.info(
+                f"Loaded categories with ObjectClass.all_names(): {ObjectClass.all_names()}, ObjectClass.all_ids(): {ObjectClass.all_ids()}"
+            )
         else:
-            # Load categories for the current group
+            # Load categories for the current sub-category
+            ObjectClass.load_categories_from_dict(grouped_categories)
+            current_model_name = f"{model_name}_{group_type}"
+
+            # Set sensitive classes for current group evaluation
+            sensitive_classes = list(grouped_categories.values())
+            logger.info(
+                f"Current sensitive classes for category '{group_type}': {sensitive_classes}"
+            )
+
+            yolo_eval = YoloEvaluator(
+                ground_truth_base_folder=ground_truth_base_dir,
+                predictions_base_folder=predictions_base_dir,
+                output_folder=output_dir,
+                ground_truth_image_shape=ground_truth_img_shape,
+                predictions_image_shape=predictions_img_shape,
+                dataset_name=dataset_name,
+                model_name=current_model_name,
+                pred_annotations_rel_path=prediction_labels_rel_path,
+                splits=splits,
+                target_classes=target_classes,
+                sensitive_classes=sensitive_classes,
+                target_classes_conf=target_classes_conf,
+                sensitive_classes_conf=sensitive_classes_conf,
+            )
+
+            logger.info(f"Target classes: {yolo_eval.target_classes}")
+            logger.info(f"Sensitive classes: {yolo_eval.sensitive_classes}")
+            # logger.info(f"Loaded categories IDs: {ObjectClass.all_ids()}")
+            # logger.info(f"Loaded thresholds: {ObjectClass.all_thresholds()}")
+            """# Load categories for the current group
             logger.info(f"Loading grouped categories for group type: {group_type}")
             grouped_categories = ObjectClass.get_group(group_type)
+            print(f"Grouped categories: {grouped_categories}")
             ObjectClass.load_categories_from_dict(grouped_categories)
             logger.info(
-                f"Loaded categories: {ObjectClass.all_names()}, {ObjectClass.all_ids()}"
+                f"Loaded categories with ObjectClass.all_names(): {ObjectClass.all_names()}, ObjectClass.all_ids(): {ObjectClass.all_ids()}"
             )
             current_model_name = f"{model_name}_{group_type}"
+
+            # Set (flattened) sensitive classes for the current group
+            sensitive_classes = [cat_id for category_list in grouped_categories.values() for cat_id in category_list]
+            logger.info(f"Current sensitive classes for group type '{group_type}': {sensitive_classes}")
 
         yolo_eval = YoloEvaluator(
             ground_truth_base_folder=ground_truth_base_dir,
@@ -137,9 +177,9 @@ def evaluate_model(
         logger.info(f"Target classes: {yolo_eval.target_classes}")
         logger.info(f"Sensitive classes: {yolo_eval.sensitive_classes}")
         logger.info(f"Loaded categories IDs: {ObjectClass.all_ids()}")
-        logger.info(f"Loaded thresholds: {ObjectClass.all_thresholds()}")
+        logger.info(f"Loaded thresholds: {ObjectClass.all_thresholds()}")"""
 
-        # Total Blurred Area evaluation
+        """# Total Blurred Area evaluation
         if len(sensitive_classes) > 0:
             tba_results = yolo_eval.evaluate_tba()
             yolo_eval.save_tba_results_to_csv(results=tba_results)
@@ -158,4 +198,4 @@ def evaluate_model(
         # Custom COCO evaluation
         if (len(sensitive_classes) > 0) or (len(target_classes) > 0):
             coco_results = yolo_eval.evaluate_coco()
-            yolo_eval.save_coco_results_to_csv(results=coco_results)
+            yolo_eval.save_coco_results_to_csv(results=coco_results)"""

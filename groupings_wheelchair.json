@@ -1,0 +1,26 @@
+{
+    "people": {
+        "group_id": 100,
+        "group_name": "People Group",
+        "categories": {
+            "no wheelchair": {
+                "category_id": 101,
+                "classes": [1]
+            },
+            "wheelchair": {
+                "category_id": 102,
+                "classes": [3]
+            }
+        }
+    },
+    "license_plate": {
+        "group_id": 200,
+        "group_name": "License Plate Group",
+        "categories": {
+            "license plate": {
+                "category_id": 201,
+                "classes": [2]
+            }
+        }
+    }
+}

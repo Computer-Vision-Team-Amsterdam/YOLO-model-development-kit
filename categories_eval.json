@@ -1,14 +1,280 @@
 {
   "categories": [
     {
-      "id": 0,
-      "name": "person",
-      "thresholds": [0.000665, 0.003397]
+      "id": 1,
+      "name": "man"
     },
     {
-      "id": 1,
-      "name": "license plate",
-      "thresholds": [0.000108, 0.000436]
+      "id": 2,
+      "name": "man/child"
+    },
+    {
+      "id": 3,
+      "name": "man/child/light"
+    },
+    {
+      "id": 4,
+      "name": "man/child/medium"
+    },
+    {
+      "id": 5,
+      "name": "man/child/dark"
+    },
+    {
+      "id": 6,
+      "name": "man/child/unknown"
+    },
+    {
+      "id": 7,
+      "name": "man/adult"
+    },
+    {
+      "id": 8,
+      "name": "man/adult/light"
+    },
+    {
+      "id": 9,
+      "name": "man/adult/medium"
+    },
+    {
+      "id": 10,
+      "name": "man/adult/dark"
+    },
+    {
+      "id": 11,
+      "name": "man/adult/unknown"
+    },
+    {
+      "id": 12,
+      "name": "man/elder"
+    },
+    {
+      "id": 13,
+      "name": "man/elder/light"
+    },
+    {
+      "id": 14,
+      "name": "man/elder/medium"
+    },
+    {
+      "id": 15,
+      "name": "man/elder/dark"
+    },
+    {
+      "id": 16,
+      "name": "man/elder/unknown"
+    },
+    {
+      "id": 17,
+      "name": "man/unknown"
+    },
+    {
+      "id": 18,
+      "name": "man/unknown/light"
+    },
+    {
+      "id": 19,
+      "name": "man/unknown/medium\""
+    },
+    {
+      "id": 20,
+      "name": "man/unknown/dark\""
+    },
+    {
+      "id": 21,
+      "name": "man/unknown/unknown\""
+    },
+    {
+      "id": 22,
+      "name": "woman"
+    },
+    {
+      "id": 23,
+      "name": "woman/child"
+    },
+    {
+      "id": 24,
+      "name": "woman/child/light"
+    },
+    {
+      "id": 25,
+      "name": "woman/child/medium"
+    },
+    {
+      "id": 26,
+      "name": "woman/child/dark"
+    },
+    {
+      "id": 27,
+      "name": "woman/child/unknown"
+    },
+    {
+      "id": 28,
+      "name": "woman/adult"
+    },
+    {
+      "id": 29,
+      "name": "woman/adult/light"
+    },
+    {
+      "id": 30,
+      "name": "woman/adult/medium"
+    },
+    {
+      "id": 31,
+      "name": "woman/adult/dark"
+    },
+    {
+      "id": 32,
+      "name": "woman/adult/unknown"
+    },
+    {
+      "id": 33,
+      "name": "woman/elder"
+    },
+    {
+      "id": 34,
+      "name": "woman/elder/light"
+    },
+    {
+      "id": 35,
+      "name": "woman/elder/medium"
+    },
+    {
+      "id": 36,
+      "name": "woman/elder/dark"
+    },
+    {
+      "id": 37,
+      "name": "woman/elder/unknown"
+    },
+    {
+      "id": 38,
+      "name": "woman/unknown"
+    },
+    {
+      "id": 39,
+      "name": "woman/unknown/light"
+    },
+    {
+      "id": 40,
+      "name": "woman/unknown/medium"
+    },
+    {
+      "id": 41,
+      "name": "woman/unknown/dark"
+    },
+    {
+      "id": 42,
+      "name": "woman/unknown/unknown"
+    },
+    {
+      "id": 43,
+      "name": "unknown"
+    },
+    {
+      "id": 44,
+      "name": "unknown/child"
+    },
+    {
+      "id": 45,
+      "name": "unknown/child/light"
+    },
+    {
+      "id": 46,
+      "name": "unknown/child/medium"
+    },
+    {
+      "id": 47,
+      "name": "unknown/child/dark"
+    },
+    {
+      "id": 48,
+      "name": "unknown/child/unknown"
+    },
+    {
+      "id": 49,
+      "name": "unknown/adult"
+    },
+    {
+      "id": 50,
+      "name": "unknown/adult/light"
+    },
+    {
+      "id": 51,
+      "name": "unknown/adult/medium"
+    },
+    {
+      "id": 52,
+      "name": "unknown/adult/dark"
+    },
+    {
+      "id": 53,
+      "name": "unknown/adult/unknown"
+    },
+    {
+      "id": 54,
+      "name": "unknown/elder"
+    },
+    {
+      "id": 55,
+      "name": "unknown/elder/light"
+    },
+    {
+      "id": 56,
+      "name": "unknown/elder/medium"
+    },
+    {
+      "id": 57,
+      "name": "unknown/elder/dark"
+    },
+    {
+      "id": 58,
+      "name": "unknown/elder/unknown"
+    },
+    {
+      "id": 59,
+      "name": "unknown/unknown"
+    },
+    {
+      "id": 60,
+      "name": "unknown/unknown/light"
+    },
+    {
+      "id": 61,
+      "name": "unknown/unknown/medium"
+    },
+    {
+      "id": 62,
+      "name": "unknown/unknown/dark"
+    },
+    {
+      "id": 63,
+      "name": "unknown/unknown/unknown"
+    },
+    {
+      "id": 64,
+      "name": "licence_plate"
+    },
+    {
+      "id": 65,
+      "name": "licence_plate/dutch"
+    },
+    {
+      "id": 66,
+      "name": "licence_plate/dutch/yellow"
+    },
+    {
+      "id": 67,
+      "name": "licence_plate/dutch/others"
+    },
+    {
+      "id": 68,
+      "name": "licence_plate/foreign"
+    },
+    {
+      "id": 69,
+      "name": "licence_plate/unknown"
     }
   ]
 }
