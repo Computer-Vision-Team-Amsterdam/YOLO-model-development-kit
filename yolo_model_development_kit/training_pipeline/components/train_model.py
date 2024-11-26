@@ -87,7 +87,11 @@ def train_model(
     """
 
     ultralytics_settings.update({"runs_dir": project_path})
-    wandb.init(job_type="training", config_exclude_keys=["project"])
+    wandb.init(
+        job_type="training",
+        entity=settings["wandb"]["entity"],
+        project=settings["wandb"]["project_name"],
+    )
 
     # Load parameters from the JSON configuration file, if provided
     config_file = settings["training_pipeline"]["inputs"].get("config_file", None)
@@ -111,6 +115,16 @@ def train_model(
     pretrained_model_path = os.path.join(model_weights, model_name)
     model_parameters = settings["training_pipeline"]["model_parameters"]
 
+    project_name = settings["training_pipeline"]["outputs"]["project_name"]
+    if project_name == "":
+        project_name = None
+
+    # The batch_size can be a float between 0 and 1, or a positive int.
+    # This is ambiguous in the config.yml parsing, so we need to fix it here.
+    batch_size = model_parameters.get("batch", -1)
+    if (batch_size >= 1) and (isinstance(batch_size, float)):
+        batch_size = int(batch_size)
+
     model = YOLO(model=pretrained_model_path, task="detect")
 
     # Add W&B Callback for Ultralytics
@@ -129,7 +143,8 @@ def train_model(
         "imgsz": model_parameters.get("img_size", 1024),
         "project": project_path,
         "save_dir": project_path,
-        "batch": model_parameters.get("batch", -1),
+        "name": project_name,
+        "batch": batch_size,
         "patience": model_parameters.get("patience", 100),
         "cos_lr": model_parameters.get("cos_lr", False),
         "dropout": model_parameters.get("dropout", 0.0),

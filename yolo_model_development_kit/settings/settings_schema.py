@@ -73,6 +73,8 @@ class TrainingPipelineSpec(SettingsSpecModel):
 class WandbSpec(SettingsSpecModel):
     api_key: str
     mode: str = "disabled"
+    entity: Optional[str] = None
+    project_name: str
 
 
 class YoloModelDevelopmentKitSettingsSpec(SettingsSpecModel):

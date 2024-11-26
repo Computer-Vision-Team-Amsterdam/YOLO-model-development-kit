@@ -52,11 +52,14 @@ training_pipeline:
   outputs:
     project_datastore_path: "dataset_oor_v2_2"
     project_rel_path: "model"
+    project_name: "yolo11m_base"  # can be an empty string or omitted entirely, will be ignored in sweep mode
   sweep_mode: False  # Set to true to run a hyperparameter sweep based on inputs/sweep_config
 
 wandb:
   api_key: ""
   mode: "offline"
+  entity: "a-lombardo-ggd-amsterdam"  # W&B entity to log the run to (default: null)
+  project_name: "baas_v11"  # W&B project name
 
 logging:
   loglevel_own: DEBUG  # override loglevel for packages defined in `own_packages`
