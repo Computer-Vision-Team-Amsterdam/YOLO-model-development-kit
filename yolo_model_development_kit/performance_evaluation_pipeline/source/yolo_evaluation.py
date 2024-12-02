@@ -231,6 +231,97 @@ class YoloEvaluator:
             )
         return tba_results
 
+    def evaluate_tba_bias_analysis(
+        self,
+        grouping: Dict[str, Dict[str, Any]],
+        upper_half: bool = False,
+        confidence_threshold: Optional[float] = None,
+        single_size_only: Optional[bool] = None,
+    ) -> Dict[str, Dict[str, Dict[str, float]]]:
+        """
+        Run Total Blurred Area evaluation for the sensitive classes. This tells
+        us the percentage of bounding boxes that are covered by predictions.
+
+        The results are summarized in a dictionary as follows:
+
+            {
+                [model_name]_[split]: {
+                    [object_class]_[size]: {
+                        "true_positives": float,
+                        "false_positives": float,
+                        "true_negatives": float,
+                        "false_negatives:": float,
+                        "precision": float,
+                        "recall": float,
+                        "f1_score": float,
+                    }
+                }
+            }
+
+        Parameters
+        ----------
+        upper_half: bool = False
+            Whether to only consider the upper half of bounding boxes (relevant
+            for people, to make sure the face is blurred).
+        confidence_threshold: Optional[float] = None
+            Optional: confidence threshold at which to compute statistics. If
+            omitted, the initial confidence threshold at construction will be
+            used.
+        single_size_only: Optional[bool] = None
+            Optional: set to true to disable differentiation in bounding box
+            sizes. If omitted, the initial confidence threshold at construction
+            will be used.
+
+        Returns
+        -------
+        Results as Dict[str, Dict[str, Dict[str, float]]] as described above.
+        """
+        if not confidence_threshold:
+            confidence_threshold = self.sensitive_classes_conf
+        if not single_size_only:
+            single_size_only = self.single_size_only
+
+        tba_results = dict()
+        for split in self.splits:
+            logger.info(
+                f"Running TBA evaluation for {self.model_name} / {split if split != '' else 'all'}"
+            )
+            ground_truth_folder, prediction_folder = self._get_folders_for_split(split)
+            evaluator = PerPixelEvaluator(
+                ground_truth_path=ground_truth_folder,
+                predictions_path=prediction_folder,
+                image_shape=self.predictions_image_shape,
+                confidence_threshold=confidence_threshold,
+                upper_half=upper_half,
+            )
+            key_prefix = f"{self.model_name}_{split if split != '' else 'all'}"
+
+            # Retrieve group mapping
+            group_mapping = {
+                int(grouping["maps_to"]["class"][0]): [
+                    cat["category_id"] for cat in grouping["categories"].values()
+                ]
+            }
+
+            print(f"Group mapping: {group_mapping}")
+
+            # Iterate over each target class and evaluate against each mapped category
+            for target_class, group_categories in group_mapping.items():
+                for category in group_categories:
+                    print(
+                        f"Running TBA evaluation for class {target_class} vs category {category}"
+                    )
+                    key = f"{key_prefix}_class_{target_class}_vs_{category}"
+                    tba_results[key] = evaluator.collect_results_per_class_and_size(
+                        classes=[target_class],
+                        single_size_only=single_size_only,
+                        use_group_mapping=True,
+                        group_mapping={target_class: [category]},
+                    )
+            print(tba_results.keys())
+
+        return tba_results
+
     def evaluate_per_image(
         self,
         confidence_threshold: Optional[float] = None,
@@ -396,10 +487,38 @@ class YoloEvaluator:
 
         return custom_coco_result
 
-    def save_tba_results_to_csv(self, results: Dict[str, Dict[str, Dict[str, float]]]):
+    def save_tba_results_to_csv(
+        self,
+        results: Dict[str, Dict[str, Dict[str, float]]],
+        use_groupings: bool = False,
+    ):
         """Save TBA results dict as CSV file."""
-        filename = os.path.join(self.output_folder, f"{self.model_name}-tba-eval.csv")
-        _df_to_csv(tba_result_to_df(results), filename)
+        filename = ""
+        if use_groupings:
+            print(f"Inside save_tba_results_to_csv, results: {results}")
+            print(f"results keys: {results.keys()}")
+            # Get the first key
+            first_key = next(iter(results.keys()))
+            # Split the key by underscores and extract the category group
+            category_group = first_key.split("_vs_")[-1]  # Get the part after '_vs_'
+            # Change the last character to '0'
+            new_category_group = (
+                category_group[:-1] + "0"
+            )  # Replace last character with '0'
+
+            target_classes_str = (
+                f"{self.target_classes[0]}"  # assuming there is only one target class
+            )
+            filename = os.path.join(
+                self.output_folder,
+                f"{self.model_name}-{target_classes_str}-{new_category_group}-tba-eval.csv",
+            )
+            _df_to_csv(bias_analysis_tba_result_to_df(results), filename)
+        else:
+            filename = os.path.join(
+                self.output_folder, f"{self.model_name}-tba-eval.csv"
+            )
+            _df_to_csv(tba_result_to_df(results), filename)
 
     def save_per_image_results_to_csv(
         self, results: Dict[str, Dict[str, Dict[str, float]]]
@@ -479,7 +598,9 @@ class YoloEvaluator:
                 show_plot=show_plot,
             )
 
-    def plot_tba_pr_f_curves(self, show_plot: bool = False):
+    def plot_tba_pr_f_curves(
+        self, use_groupings: bool = False, show_plot: bool = False
+    ):
         """
         Plot and save precision and recall curves and f-score curves for the
         total blurred area statistic. This will call evaluate_tba() for each
@@ -488,12 +609,19 @@ class YoloEvaluator:
 
         Parameters
         ----------
+        use_groupings: bool = False
+            If true, calls self.evaluate_tba_bias_analysis() instead of
+            self.evaluate_tba().
         show_plot: bool = False
             Whether or not to show the plot (True) or only save the image
             (False).
         """
         logger.info(f"Plotting TBA precision/recall curves for {self.model_name}")
-        pr_curve_df = self._compute_pr_f_curve_data(self.evaluate_tba)
+        pr_curve_df = None
+        if use_groupings:
+            pr_curve_df = self._compute_pr_f_curve_data(self.evaluate_tba_bias_analysis)
+        else:
+            pr_curve_df = self._compute_pr_f_curve_data(self.evaluate_tba)
         self._plot_pr_f_curves(
             pr_df=pr_curve_df,
             result_type="total blurred area",
@@ -524,6 +652,79 @@ class YoloEvaluator:
             output_dir=self.output_folder,
             show_plot=show_plot,
         )
+
+
+def _bias_analysis_result_to_df(
+    results: Dict[str, Dict[str, Dict[str, float]]]
+) -> pd.DataFrame:
+    """
+    Convert bias analysis results dictionary to Pandas DataFrame.
+    """
+
+    def _stat_to_header(stat: str) -> str:
+        """For nicer column headings we transform 'true_positives' -> 'True Positives' etc."""
+        if stat in ("fpr", "fnr", "tpr", "tnr"):
+            return stat.upper()
+        else:
+            parts = [p.capitalize() for p in stat.split(sep="_")]
+            return " ".join(parts)
+
+    models = list(results.keys())
+    print(f"models: {models}")
+    statistics = list(results[models[0]].values())[0].keys()
+    print(f"statistics: {statistics}")
+
+    print(f"results[model]: {results[models[0]]}")
+
+    header = [
+        "Model",
+        "Split",
+        "Object Class",
+        "Size",
+        "Ground Truth Class",
+    ]
+    header.extend([_stat_to_header(stat) for stat in statistics])
+
+    df = pd.DataFrame(columns=header)
+
+    for model in models:
+        print(f"Inside the for loop, model: {model}")
+        # Splitting based on the known format of the key: [model_name]_[split]_class_[target_class]_vs_[group_id]
+        try:
+            model_name, split, _, target_class, _, group_id = model.rsplit(
+                "_", maxsplit=5
+            )
+        except ValueError:
+            raise ValueError(f"Unexpected model key format: {model}")
+
+        # Extract categories for the current model
+        categories = results[model].keys()
+
+        for cat in categories:
+            # Ensure the key exists in the results dictionary
+            if cat not in results[model]:
+                raise KeyError(
+                    f"Expected key '{cat}' not found in results for model '{model}'."
+                )
+
+            # Split the category key to obtain the ground truth class and size
+            try:
+                _, ground_truth_class, size = cat.split("_", maxsplit=2)
+            except ValueError:
+                raise ValueError(f"Unexpected category key format: {cat}")
+
+            # Create a row of data for each category
+            data: List[Any] = [
+                model_name,  # Model
+                split if split != "all" else "",  # Split (empty if "all")
+                target_class,  # Object Class
+                size,  # Size (all, small, medium, large)
+                ground_truth_class,  # Ground Truth Class
+            ]
+            data.extend([val for val in results[model][cat].values()])
+            df.loc[len(df)] = data
+
+    return df
 
 
 def _default_result_to_df(
@@ -563,6 +764,15 @@ def _default_result_to_df(
             df.loc[len(df)] = data
 
     return df
+
+
+def bias_analysis_tba_result_to_df(
+    results: Dict[str, Dict[str, Dict[str, float]]]
+) -> pd.DataFrame:
+    """
+    Convert TBA results dictionary to Pandas DataFrame.
+    """
+    return _bias_analysis_result_to_df(results=results)
 
 
 def tba_result_to_df(results: Dict[str, Dict[str, Dict[str, float]]]) -> pd.DataFrame:

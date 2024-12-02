@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Dict, List, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union
 
 import numpy as np
 import numpy.typing as npt
@@ -16,6 +16,7 @@ class ObjectClass:
     """
 
     _categories = {}
+    _groupings = {}
 
     @classmethod
     def load_categories(cls, json_path):
@@ -44,6 +45,34 @@ class ObjectClass:
                 }
                 for cat in categories["categories"]
             }
+
+    @classmethod
+    def load_mapping(cls, json_path):
+        """Load mapping between inference and ground truth categories from a JSON file."""
+
+        if not os.path.exists(json_path):
+            raise FileNotFoundError(f"The specified file '{json_path}' was not found.")
+        with open(json_path, "r") as f:
+            try:
+                groupings = json.load(f)
+                if not groupings:
+                    raise ValueError(
+                        "The groupings JSON file is empty or improperly formatted."
+                    )
+            except json.JSONDecodeError:
+                raise ValueError(f"The file '{json_path}' is not a valid JSON file.")
+
+            cls._groupings = groupings
+
+    @classmethod
+    def get_groupings(
+        cls, grouping_key: str
+    ) -> Dict[str, Dict[str, Union[int, List[int]]]]:
+        """Get a specific grouping of categories by key."""
+        grouping = cls._groupings.get(grouping_key)
+        if not grouping:
+            raise ValueError(f"No grouping found for key '{grouping_key}'")
+        return grouping
 
     @classmethod
     def to_dict(
@@ -84,6 +113,25 @@ class ObjectClass:
         return None
 
     @classmethod
+    def get_grouping(cls, grouping_key: str) -> Dict[str, Dict[str, Any]]:
+        """Get a specific grouping of categories by key."""
+        grouping = cls._groupings.get(grouping_key)
+        if not grouping:
+            raise ValueError(f"No grouping found for key '{grouping_key}'")
+        return grouping
+
+    @classmethod
+    def get_category_mapping(cls, grouping_key):
+        """Get a mapping dictionary that maps original class IDs to new category IDs for a specific grouping."""
+        grouping = cls.get_groupings(grouping_key)
+        category_mapping = {}
+        for category, details in grouping["categories"].items():
+            category_id = details["category_id"]
+            for class_id in details["classes"]:
+                category_mapping[class_id] = category_id
+        return category_mapping
+
+    @classmethod
     def get_thresholds(cls, cat_id):
         """Get the bounding box size thresholds for a given category ID."""
         details = cls._categories.get(cat_id)
@@ -109,6 +157,11 @@ class ObjectClass:
             for cat_id, details in cls._categories.items()
             if "thresholds" in details
         }
+
+    @classmethod
+    def all_groupings(cls):
+        """Return all groupings of categories."""
+        return cls._groupings
 
 
 def parse_labels(
