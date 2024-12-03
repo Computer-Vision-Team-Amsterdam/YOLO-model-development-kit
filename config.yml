@@ -6,6 +6,30 @@ aml_experiment_details:
   env_version: 57
   src_dir: "."
 
+inference_pipeline:
+  model_params:
+    batch_size: 1
+    img_size: 1280
+    conf: 0.3
+  inputs:
+    datastore_path: "inference_test"
+    inference_data_rel_path: "datasets/demo_images"
+    model_weights_rel_path: "model_weights"
+    model_name: "yolov8m_1280_v2.2_curious_hill_12.pt"
+  outputs:
+    datastore_path: "inference_test"  # empty string "" means same as input datastore
+    output_rel_path: "inference/demo_images/test/"
+    detections_subfolder: ""
+    labels_subfolder: ""
+  target_classes: [2, 3, 4]
+  sensitive_classes: [0, 1]
+  target_classes_conf: 0.7  # null means conf is taken from model_params
+  sensitive_classes_conf: null  # null means conf is taken from model_params
+  output_image_size: [1280, 720]  # null means keep original size
+  save_detection_images: True
+  save_detection_labels: True
+  save_all_images: False  # If True, all images will be saved regardless of whether they contain target class objects
+
 performance_evaluation:
   inputs:
     datastore: "dataset_oor_v2_2"
