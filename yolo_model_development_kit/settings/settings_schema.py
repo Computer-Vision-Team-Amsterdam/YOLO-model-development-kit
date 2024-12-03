@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from pydantic import BaseModel
 
@@ -29,6 +29,29 @@ class LoggingSpec(SettingsSpecModel):
         "datefmt": "%Y-%m-%d %H:%M:%S",
     }
     ai_instrumentation_key: str = ""
+
+
+class InferenceModelParameters(SettingsSpecModel):
+    batch_size: int = 1
+    img_size: int = 640
+    conf: float = 0.5
+    save_img_flag: bool = False
+    save_txt_flag: bool = False
+    save_conf_flag: bool = False
+
+
+class InferencePipelineSpec(SettingsSpecModel):
+    model_params: InferenceModelParameters
+    inputs: Dict[str, str] = None
+    outputs: Dict[str, str] = None
+    target_classes: List[int] = None
+    sensitive_classes: List[int] = []
+    target_classes_conf: Optional[float] = None
+    sensitive_classes_conf: Optional[float] = None
+    output_image_size: Optional[Tuple[int, int]] = None
+    save_detection_images: bool = False
+    save_detection_labels: bool = True
+    save_all_images: bool = False
 
 
 class PerformanceEvaluationSpec(SettingsSpecModel):
@@ -83,5 +106,6 @@ class YoloModelDevelopmentKitSettingsSpec(SettingsSpecModel):
     aml_experiment_details: AMLExperimentDetailsSpec
     logging: LoggingSpec = LoggingSpec()
     performance_evaluation: PerformanceEvaluationSpec = None
+    inference_pipeline: InferencePipelineSpec = None
     training_pipeline: TrainingPipelineSpec = None
     wandb: WandbSpec = None

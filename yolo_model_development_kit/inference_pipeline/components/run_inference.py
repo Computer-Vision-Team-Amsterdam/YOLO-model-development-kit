@@ -2,7 +2,6 @@ import logging
 import os
 import sys
 
-from aml_interface.azure_logging import AzureLoggingConfigurer
 from azure.ai.ml.constants import AssetTypes
 from mldesigner import Input, Output, command_component
 
@@ -13,8 +12,6 @@ from yolo_model_development_kit.inference_pipeline.source.YOLO_inference import 
     YOLOInference,
 )
 
-azure_logging_configurer = AzureLoggingConfigurer(settings["logging"])
-azure_logging_configurer.setup_oor_logging()
 logger = logging.getLogger("inference_pipeline")
 
 aml_experiment_settings = settings["aml_experiment_details"]
