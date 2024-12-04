@@ -165,8 +165,10 @@ class YOLOInference:
         )
         self._process_batches(folders_and_frames=folders_and_frames)
 
-    def _load_image(self, image_path: Union[os.PathLike, str]) -> InputImage:
-        image = InputImage(image_full_path=str(image_path))
+    def _load_image(
+        self, image_path: Union[os.PathLike, str], child_class=InputImage
+    ) -> InputImage:
+        image = child_class(image_full_path=str(image_path))
         if self.output_image_size:
             image.resize(output_image_size=self.output_image_size)
         return image
