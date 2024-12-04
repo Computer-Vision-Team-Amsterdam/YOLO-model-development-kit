@@ -239,8 +239,8 @@ class YoloEvaluator:
         single_size_only: Optional[bool] = None,
     ) -> Dict[str, Dict[str, Dict[str, float]]]:
         """
-        Run Total Blurred Area evaluation for the sensitive classes. This tells
-        us the percentage of bounding boxes that are covered by predictions.
+        Run Total Blurred Area evaluation for the sensitive classes and for a specific grouping.
+        This tells us the percentage of bounding boxes that are covered by predictions.
 
         The results are summarized in a dictionary as follows:
 
@@ -303,12 +303,12 @@ class YoloEvaluator:
                 ]
             }
 
-            print(f"Group mapping: {group_mapping}")
+            logger.info(f"Group mapping: {group_mapping}")
 
             # Iterate over each target class and evaluate against each mapped category
             for target_class, group_categories in group_mapping.items():
                 for category in group_categories:
-                    print(
+                    logger.info(
                         f"Running TBA evaluation for class {target_class} vs category {category}"
                     )
                     key = f"{key_prefix}_class_{target_class}_vs_{category}"
@@ -318,7 +318,6 @@ class YoloEvaluator:
                         use_group_mapping=True,
                         group_mapping={target_class: [category]},
                     )
-            print(tba_results.keys())
 
         return tba_results
 
@@ -670,11 +669,7 @@ def _bias_analysis_result_to_df(
             return " ".join(parts)
 
     models = list(results.keys())
-    print(f"models: {models}")
     statistics = list(results[models[0]].values())[0].keys()
-    print(f"statistics: {statistics}")
-
-    print(f"results[model]: {results[models[0]]}")
 
     header = [
         "Model",
@@ -688,7 +683,6 @@ def _bias_analysis_result_to_df(
     df = pd.DataFrame(columns=header)
 
     for model in models:
-        print(f"Inside the for loop, model: {model}")
         # Splitting based on the known format of the key: [model_name]_[split]_class_[target_class]_vs_[group_id]
         try:
             model_name, split, _, target_class, _, group_id = model.rsplit(
