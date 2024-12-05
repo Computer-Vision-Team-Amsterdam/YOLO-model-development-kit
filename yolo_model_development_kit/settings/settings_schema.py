@@ -35,6 +35,7 @@ class PerformanceEvaluationSpec(SettingsSpecModel):
     inputs: Dict[str, str]
     outputs: Dict[str, str]
     categories_json_path: str = ""
+    mapping_json_path: str = ""
     dataset_name: str = ""
     model_name: str
     ground_truth_image_shape: List[int]
@@ -46,6 +47,7 @@ class PerformanceEvaluationSpec(SettingsSpecModel):
     target_classes_conf: Optional[float] = None
     sensitive_classes_conf: Optional[float] = None
     plot_pr_curves: bool = True
+    is_bias_analysis: bool = True
 
 
 class TrainingModelParameters(SettingsSpecModel):
