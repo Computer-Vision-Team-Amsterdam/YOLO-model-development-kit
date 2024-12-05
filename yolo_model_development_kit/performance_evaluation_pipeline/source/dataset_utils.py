@@ -35,7 +35,8 @@ def _process_label(label_path, new_labels_path, category_mapping):
 
 def process_labels(original_gt_labels, new_gt_labels_path, category_mapping):
     """
-    Takes mapped ground truth labels and make a new labels folder.
+    Take original ground truth labels, process them according to the mapping
+    and write them in a new label folder.
     """
     # List all labels (.txt files) in the dataset labels folder
     labels_list = os.listdir(original_gt_labels)

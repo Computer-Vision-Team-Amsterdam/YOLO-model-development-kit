@@ -494,16 +494,12 @@ class YoloEvaluator:
         """Save TBA results dict as CSV file."""
         filename = ""
         if use_groupings:
-            print(f"Inside save_tba_results_to_csv, results: {results}")
-            print(f"results keys: {results.keys()}")
-            # Get the first key
+            # Get the first key. We assume it is in the format {model_name}_{split}_class_{target_class}_vs_{category}
             first_key = next(iter(results.keys()))
-            # Split the key by underscores and extract the category group
             category_group = first_key.split("_vs_")[-1]  # Get the part after '_vs_'
-            # Change the last character to '0'
             new_category_group = (
                 category_group[:-1] + "0"
-            )  # Replace last character with '0'
+            )  # Replace last character with '0'. E.g. from 101 to 100, which is the group ID of the category 101
 
             target_classes_str = (
                 f"{self.target_classes[0]}"  # assuming there is only one target class

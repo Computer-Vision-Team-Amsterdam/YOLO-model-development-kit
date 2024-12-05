@@ -23,7 +23,7 @@ performance_evaluation:
   prediction_labels_rel_path: "labels"
   splits: []
   target_classes: []
-  sensitive_classes: [0, 1] # sensitive classes of inference data if is_bias_analysis is True
+  sensitive_classes: []
   target_classes_conf: 0.7  # null means all predictions are used, custom COCO considers this threshold also for sensitive classes
   sensitive_classes_conf: null  # null means all predictions are used, only for TBA evaluation
   plot_pr_curves: False

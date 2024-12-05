@@ -50,12 +50,12 @@ def perform_bias_analysis(
     Parameters
     ----------
 
-    ground_truth_base_dir: Input(type=AssetTypes.URI_FOLDER)
-        Location of ground truth dataset (root folder, is expected to contain
-        `images/` and `labels/` subfolders).
     predictions_base_dir: Input(type=AssetTypes.URI_FOLDER)
         Location of predictions (root folder, is expected to contain `labels/`
         subfolder).
+    ground_truth_base_dir: Output(type=AssetTypes.URI_FOLDER)
+        Location of ground truth dataset (root folder, is expected to contain
+        `images/` and `labels/` subfolders).
     output_dir: Output(type=AssetTypes.URI_FOLDER)
         Location where output will be stored.
     """
@@ -139,9 +139,8 @@ def perform_bias_analysis(
         )
 
         # Total Blurred Area evaluation
-        if len(sensitive_classes) > 0:
-            tba_results = yolo_eval.evaluate_tba_bias_analysis(grouping=grouping)
-            yolo_eval.save_tba_results_to_csv(results=tba_results, use_groupings=True)
-            # Plot precision/recall curves
-            if eval_settings["plot_pr_curves"]:
-                yolo_eval.plot_tba_pr_f_curves(show_plot=False)
+        tba_results = yolo_eval.evaluate_tba_bias_analysis(grouping=grouping)
+        yolo_eval.save_tba_results_to_csv(results=tba_results, use_groupings=True)
+        # Plot precision/recall curves
+        if eval_settings["plot_pr_curves"]:
+            yolo_eval.plot_tba_pr_f_curves(show_plot=False)
