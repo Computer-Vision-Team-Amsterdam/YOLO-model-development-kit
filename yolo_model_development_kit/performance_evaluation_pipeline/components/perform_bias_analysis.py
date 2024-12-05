@@ -141,6 +141,3 @@ def perform_bias_analysis(
         # Total Blurred Area evaluation
         tba_results = yolo_eval.evaluate_tba_bias_analysis(grouping=grouping)
         yolo_eval.save_tba_results_to_csv(results=tba_results, use_groupings=True)
-        # Plot precision/recall curves
-        if eval_settings["plot_pr_curves"]:
-            yolo_eval.plot_tba_pr_f_curves(show_plot=False)

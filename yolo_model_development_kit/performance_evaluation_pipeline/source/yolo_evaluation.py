@@ -593,9 +593,7 @@ class YoloEvaluator:
                 show_plot=show_plot,
             )
 
-    def plot_tba_pr_f_curves(
-        self, use_groupings: bool = False, show_plot: bool = False
-    ):
+    def plot_tba_pr_f_curves(self, show_plot: bool = False):
         """
         Plot and save precision and recall curves and f-score curves for the
         total blurred area statistic. This will call evaluate_tba() for each
@@ -604,19 +602,12 @@ class YoloEvaluator:
 
         Parameters
         ----------
-        use_groupings: bool = False
-            If true, calls self.evaluate_tba_bias_analysis() instead of
-            self.evaluate_tba().
         show_plot: bool = False
             Whether or not to show the plot (True) or only save the image
             (False).
         """
         logger.info(f"Plotting TBA precision/recall curves for {self.model_name}")
-        pr_curve_df = None
-        if use_groupings:
-            pr_curve_df = self._compute_pr_f_curve_data(self.evaluate_tba_bias_analysis)
-        else:
-            pr_curve_df = self._compute_pr_f_curve_data(self.evaluate_tba)
+        pr_curve_df = self._compute_pr_f_curve_data(self.evaluate_tba)
         self._plot_pr_f_curves(
             pr_df=pr_curve_df,
             result_type="total blurred area",
