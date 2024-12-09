@@ -128,8 +128,6 @@ class YOLOInference:
         )
 
         self.output_image_size = inference_settings["output_image_size"]
-        self.mapx = self.mapy = None
-
         self.save_detections = inference_settings["save_detection_images"]
         self.save_labels = inference_settings["save_detection_labels"]
         self.save_all_images = inference_settings["save_all_images"]
@@ -168,6 +166,22 @@ class YOLOInference:
     def _load_image(
         self, image_path: Union[os.PathLike, str], child_class=InputImage
     ) -> InputImage:
+        """This method can be extended in the child class to perform pre-processing of the images before the inference.
+        To do this we can also extend InputImage and add the extra functions are needed, for example a function to defisheye the image.
+        An example of this can be found in the Objectherkenning-Openbare-Ruimte repo.
+
+        Parameters
+        ----------
+        image_path : Union[os.PathLike, str]
+            path where the image is located
+        child_class : _type_, optional
+            Type of object to create, by default InputImage but it can also be a child of InputImage
+
+        Returns
+        -------
+        InputImage
+            the preprocessed image ready to be inferenced
+        """
         image = child_class(image_full_path=str(image_path))
         if self.output_image_size:
             image.resize(output_image_size=self.output_image_size)
