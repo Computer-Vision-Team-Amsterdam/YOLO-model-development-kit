@@ -79,6 +79,8 @@ def evaluate_model(
     sensitive_classes = eval_settings["sensitive_classes"]
     target_classes_conf = eval_settings["target_classes_conf"]
     sensitive_classes_conf = eval_settings["sensitive_classes_conf"]
+    is_multiple_sizes = eval_settings["is_multiple_sizes"]
+    imgsz = eval_settings["imgsz"]
 
     logger.info(f"Running performance evaluation for model: {model_name}")
 
@@ -101,6 +103,8 @@ def evaluate_model(
         sensitive_classes=sensitive_classes,
         target_classes_conf=target_classes_conf,
         sensitive_classes_conf=sensitive_classes_conf,
+        is_multiple_sizes=is_multiple_sizes,
+        imgsz=imgsz,
     )
 
     logger.info(f"Target classes: {yolo_eval.target_classes}")

@@ -13,7 +13,7 @@ performance_evaluation:
     predictions_rel_path: "inference/yolov5"
   outputs:
     datastore: "bias_analysis_sampled_panos"
-    output_rel_path: "evaluation/v5/test"
+    output_rel_path: "evaluation/v5/standard_test"
   categories_json_path: "categories_eval.json"
   mapping_json_path: "groupings_wheelchairs_bias_analysis.json"
   dataset_name: "sampled_panos"
@@ -23,11 +23,13 @@ performance_evaluation:
   prediction_labels_rel_path: "labels"
   splits: []
   target_classes: []
-  sensitive_classes: []
+  sensitive_classes: [0,1]
   target_classes_conf: 0.7  # null means all predictions are used, custom COCO considers this threshold also for sensitive classes
   sensitive_classes_conf: null  # null means all predictions are used, only for TBA evaluation
-  plot_pr_curves: False
-  is_bias_analysis: True
+  plot_pr_curves: True
+  is_bias_analysis: False
+  is_multiple_sizes: True
+  imgsz: [8000,4000]
 
 training_pipeline:
   model_parameters:

@@ -90,6 +90,12 @@ class YoloEvaluator:
     single_size_only: bool = False
         Set to true to disable differentiation in bounding box sizes. Default is
         to evaluate for the sizes S, M, and L.
+    is_multiple_sizes: bool = False
+        Set to true if the dataset contains images of multiple sizes. Default is
+        False.
+    imgsz: Tuple(int,int) = (8000, 4000)
+        Reference size of the images of a dataset with multiple sizes with the same
+        aspect ratio. Default is (8000, 4000).
     """
 
     def __init__(
@@ -109,6 +115,8 @@ class YoloEvaluator:
         target_classes_conf: Optional[float] = None,
         sensitive_classes_conf: Optional[float] = None,
         single_size_only: bool = False,
+        is_multiple_sizes: bool = False,
+        imgsz: Tuple[int, int] = (8000, 4000),
     ):
         self.ground_truth_base_folder = ground_truth_base_folder
         self.predictions_base_folder = predictions_base_folder
@@ -132,6 +140,9 @@ class YoloEvaluator:
         self.target_classes_conf = target_classes_conf
         self.sensitive_classes_conf = sensitive_classes_conf
         self.single_size_only = single_size_only
+
+        self.is_multiple_sizes = is_multiple_sizes
+        self.imgsz = imgsz
 
         self._log_stats()
 
@@ -450,10 +461,14 @@ class YoloEvaluator:
             dataset_dir=self.ground_truth_base_folder,
             splits=self.splits,
             output_dir=gt_output_dir,
+            is_multiple_sizes=self.is_multiple_sizes,
+            imgsz=self.imgsz,
         )
         pred_json_files = convert_yolo_predictions_to_coco_json(
             predictions_dir=self.predictions_base_folder,
-            image_shape=self.ground_truth_image_shape,
+            image_shape=(
+                self.imgsz if self.is_multiple_sizes else self.ground_truth_image_shape
+            ),
             labels_rel_path=self.pred_annotations_rel_path,
             splits=self.splits,
             output_dir=pred_output_dir,
@@ -472,7 +487,11 @@ class YoloEvaluator:
                 eval = execute_custom_coco_eval(
                     coco_ground_truth_json=gt_json_files[i],
                     coco_predictions_json=pred_json_files[i],
-                    predicted_img_shape=self.ground_truth_image_shape,
+                    predicted_img_shape=(
+                        self.imgsz
+                        if self.is_multiple_sizes
+                        else self.ground_truth_image_shape
+                    ),
                     classes=target_cls,
                     print_summary=False,
                 )
