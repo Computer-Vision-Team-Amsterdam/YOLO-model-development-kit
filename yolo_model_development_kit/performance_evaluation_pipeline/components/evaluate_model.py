@@ -84,7 +84,6 @@ def evaluate_model(
 
     os.makedirs(output_dir, exist_ok=True)
 
-    # Load categories JSON file once
     ObjectClass.load_categories(categories_json_path)
 
     yolo_eval = YoloEvaluator(

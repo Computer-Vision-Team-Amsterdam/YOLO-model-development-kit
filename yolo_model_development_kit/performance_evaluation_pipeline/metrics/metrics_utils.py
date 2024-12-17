@@ -39,9 +39,7 @@ class ObjectClass:
             cls._categories = {
                 cat["id"]: {
                     "name": cat["name"],
-                    "thresholds": tuple(
-                        cat.get("thresholds", (0.0, 1.0))
-                    ),  # Default if 'thresholds' is missing
+                    "thresholds": tuple(cat.get("thresholds", (0.0, 1.0))),
                 }
                 for cat in categories["categories"]
             }

@@ -304,7 +304,6 @@ class YoloEvaluator:
 
             logger.info(f"Group mapping: {group_mapping}")
 
-            # Iterate over each target class and evaluate against each mapped category
             for target_class, group_categories in group_mapping.items():
                 for category in group_categories:
                     logger.info(
@@ -675,17 +674,14 @@ def _bias_analysis_result_to_df(
         except ValueError:
             raise ValueError(f"Unexpected model key format: {model}")
 
-        # Extract categories for the current model
         categories = results[model].keys()
 
         for cat in categories:
-            # Ensure the key exists in the results dictionary
             if cat not in results[model]:
                 raise KeyError(
                     f"Expected key '{cat}' not found in results for model '{model}'."
                 )
 
-            # Split the category key to obtain the ground truth class and size
             try:
                 _, ground_truth_class, size = cat.split("_", maxsplit=2)
             except ValueError:

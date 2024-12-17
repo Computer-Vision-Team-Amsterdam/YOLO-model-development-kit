@@ -72,7 +72,6 @@ def execute_custom_coco_eval(
         )
     evaluation = CustomCOCOeval(COCO_gt, COCO_dt, "bbox")
 
-    # Opening JSON file
     with open(coco_ground_truth_json) as f:
         data = json.load(f)
 

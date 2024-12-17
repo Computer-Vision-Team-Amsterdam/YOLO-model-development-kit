@@ -295,19 +295,18 @@ class PerPixelEvaluator:
                 logger.error(e)
                 raise ValueError(e)
 
-            # If group mapping is enabled, map the class ID to the corresponding ground truth IDs
             gt_classes = (
                 group_mapping[target_class]
                 if use_group_mapping and group_mapping and target_class in group_mapping
                 else [target_class]
             )
 
-            print(f"Processing class {target_class_name} with IDs {gt_classes}")
+            logger.info(f"Processing class {target_class_name} with IDs {gt_classes}")
 
             box_sizes = ObjectClass.to_dict(target_class, single_size_only)
 
             for gt_class in gt_classes:
-                print(
+                logger.info(
                     f"Processing gt_class {gt_class} against target_class {target_class_name}"
                 )
 
@@ -328,11 +327,10 @@ class PerPixelEvaluator:
                             size_all=size_all,
                         )
                     )
-                    print(
+                    logger.info(
                         f'Results for {target_class_name}_{gt_class}_{box_size_name}: {results[f"{target_class_name}_{gt_class}_{box_size_name}"]}'
                     )
 
-                    # Reset filter to make sure we're starting fresh for the next class
                     self.gt_dataset.reset_filter()
 
         return results
