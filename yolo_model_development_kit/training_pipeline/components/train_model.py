@@ -7,9 +7,10 @@ import wandb
 import yaml
 from azure.ai.ml.constants import AssetTypes
 from mldesigner import Input, Output, command_component
-from ultralytics import YOLO
 from ultralytics import settings as ultralytics_settings
-from wandb.integration.ultralytics import add_wandb_callback
+
+ultralytics_settings.update({"wandb": True})
+from ultralytics import YOLO  # noqa: E402
 
 sys.path.append("../../..")
 
@@ -52,6 +53,10 @@ def load_training_parameters(json_file: Optional[str]) -> Dict:
     return parameters
 
 
+def _wandb_config_callback(trainer):
+    wandb.config.train = vars(trainer.args)
+
+
 @command_component(
     name="train_model",
     display_name="Train a YOLO model.",
@@ -85,17 +90,11 @@ def train_model(
     project_path:
         Location where to store the outputs of the model.
     """
-
     ultralytics_settings.update({"runs_dir": project_path})
-    wandb.init(
-        job_type="training",
-        entity=settings["wandb"]["entity"],
-        project=settings["wandb"]["project_name"],
-    )
 
-    # Load parameters from the JSON configuration file, if provided
-    config_file = settings["training_pipeline"]["inputs"].get("config_file", None)
-    train_params_from_json = load_training_parameters(config_file)
+    experiment_name = settings["training_pipeline"]["outputs"]["experiment_name"]
+    if experiment_name == "":
+        experiment_name = None
 
     n_classes = settings["training_pipeline"]["model_parameters"]["n_classes"]
     name_classes = settings["training_pipeline"]["model_parameters"]["name_classes"]
@@ -115,26 +114,11 @@ def train_model(
     pretrained_model_path = os.path.join(model_weights, model_name)
     model_parameters = settings["training_pipeline"]["model_parameters"]
 
-    project_name = settings["training_pipeline"]["outputs"]["project_name"]
-    if project_name == "":
-        project_name = None
-
     # The batch_size can be a float between 0 and 1, or a positive int.
     # This is ambiguous in the config.yml parsing, so we need to fix it here.
     batch_size = model_parameters.get("batch", -1)
     if (batch_size >= 1) and (isinstance(batch_size, float)):
         batch_size = int(batch_size)
-
-    model = YOLO(model=pretrained_model_path, task="detect")
-
-    # Add W&B Callback for Ultralytics
-    add_wandb_callback(
-        model,
-        enable_model_checkpointing=False,
-        enable_validation_logging=False,
-        enable_prediction_logging=False,
-        enable_train_validation_logging=False,
-    )
 
     # Prepare parameters for training
     train_params = {
@@ -143,8 +127,9 @@ def train_model(
         "imgsz": model_parameters.get("img_size", 1024),
         "project": project_path,
         "save_dir": project_path,
-        "name": project_name,
+        "name": experiment_name,
         "batch": batch_size,
+        "cache": model_parameters.get("cache", False),
         "patience": model_parameters.get("patience", 100),
         "cos_lr": model_parameters.get("cos_lr", False),
         "dropout": model_parameters.get("dropout", 0.0),
@@ -153,7 +138,23 @@ def train_model(
         "cls": model_parameters.get("cls", 0.5),
         "dfl": model_parameters.get("dfl", 1.5),
     }
+
+    # Load parameters from the JSON configuration file, if provided
+    config_file = settings["training_pipeline"]["inputs"].get("config_file", None)
+    train_params_from_json = load_training_parameters(config_file)
+
     train_params.update(train_params_from_json)  # Update with dynamically loaded params
+
+    # wandb.init(
+    #     job_type="training",
+    #     entity=settings["wandb"]["entity"],
+    #     project=settings["wandb"]["project_name"],
+    #     name=experiment_name,
+    # )
+
+    model = YOLO(model=pretrained_model_path, task="detect")
+
+    model.add_callback("on_train_start", _wandb_config_callback)
 
     # Train the model
     model.train(**train_params)
