@@ -594,7 +594,7 @@ class YoloEvaluator:
             save_pr_curve(
                 results_df=pr_df,
                 dataset=self.dataset_name,
-                split=split,
+                split=(split if split != "" else "all"),
                 target_class=eval_class,
                 model_name=self.model_name,
                 result_type=result_type,
@@ -604,7 +604,7 @@ class YoloEvaluator:
             save_fscore_curve(
                 results_df=pr_df,
                 dataset=self.dataset_name,
-                split=split,
+                split=(split if split != "" else "all"),
                 target_class=eval_class,
                 model_name=self.model_name,
                 result_type=result_type,
