@@ -65,16 +65,6 @@ class ObjectClass:
             cls._groupings = groupings
 
     @classmethod
-    def get_groupings(
-        cls, grouping_key: str
-    ) -> Dict[str, Dict[str, Union[int, List[int]]]]:
-        """Get a specific grouping of categories by key."""
-        grouping = cls._groupings.get(grouping_key)
-        if not grouping:
-            raise ValueError(f"No grouping found for key '{grouping_key}'")
-        return grouping
-
-    @classmethod
     def to_dict(
         cls, cat_id: int, all_only: bool = False
     ) -> Dict[str, Tuple[float, float]]:
@@ -123,7 +113,7 @@ class ObjectClass:
     @classmethod
     def get_category_mapping(cls, grouping_key):
         """Get a mapping dictionary that maps original class IDs to new category IDs for a specific grouping."""
-        grouping = cls.get_groupings(grouping_key)
+        grouping = cls.get_grouping(grouping_key)
         category_mapping = {}
         for category, details in grouping["categories"].items():
             category_id = details["category_id"]

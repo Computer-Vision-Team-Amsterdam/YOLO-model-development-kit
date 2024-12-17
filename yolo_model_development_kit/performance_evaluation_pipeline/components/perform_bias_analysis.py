@@ -61,7 +61,6 @@ def perform_bias_analysis(
     """
 
     eval_settings = settings["performance_evaluation"]
-
     logger.info(f"Running bias analysis for model: {eval_settings["model_name"]}")
 
     os.makedirs(output_dir, exist_ok=True)
@@ -73,13 +72,11 @@ def perform_bias_analysis(
     logger.info(f"Loaded thresholds: {ObjectClass.all_thresholds()}")
     logger.info(f"Loaded groupings: {ObjectClass.all_groupings()}")
 
-    groupings = ObjectClass.all_groupings()
-
     original_gt_labels_path = os.path.join(ground_truth_base_dir, "labels")
     logger.info(f"Original ground truth labels path: {original_gt_labels_path}")
+    groupings = ObjectClass.all_groupings()
 
     for grouping in groupings:
-
         grouping = ObjectClass.get_grouping(grouping)
         group_name = grouping["group_name"]
 
