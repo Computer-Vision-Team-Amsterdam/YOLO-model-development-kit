@@ -41,7 +41,6 @@ def evaluation_pipeline():
     output_path = os.path.join(output_datastore_path, output_rel_path)
 
     if is_bias_analysis:
-
         bias_analysis_step = perform_bias_analysis(
             predictions_base_dir=predictions_data
         )
