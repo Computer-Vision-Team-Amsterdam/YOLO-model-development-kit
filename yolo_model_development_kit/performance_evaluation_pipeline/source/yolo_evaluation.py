@@ -296,7 +296,6 @@ class YoloEvaluator:
             )
             key_prefix = f"{self.model_name}_{split if split != '' else 'all'}"
 
-            # Retrieve group mapping
             group_mapping = {
                 int(grouping["maps_to"]["class"][0]): [
                     cat["category_id"] for cat in grouping["categories"].values()
@@ -490,23 +489,21 @@ class YoloEvaluator:
         self,
         results: Dict[str, Dict[str, Dict[str, float]]],
         use_groupings: bool = False,
+        group_id: Optional[int] = None,
     ):
         """Save TBA results dict as CSV file."""
         filename = ""
         if use_groupings:
-            # Get the first key. We assume it is in the format {model_name}_{split}_class_{target_class}_vs_{category}
-            first_key = next(iter(results.keys()))
-            category_group = first_key.split("_vs_")[-1]  # Get the part after '_vs_'
-            new_category_group = (
-                category_group[:-1] + "0"
-            )  # Replace last character with '0'. E.g. from 101 to 100, which is the group ID of the category 101
-
-            target_classes_str = (
-                f"{self.target_classes[0]}"  # assuming there is only one target class
-            )
+            if group_id is None:
+                raise ValueError("group_id must be provided when use_groupings=True.")
+            if len(self.target_classes) != 1:
+                raise ValueError(
+                    f"Expected exactly one target class, got: {self.target_classes}."
+                )
+            target_classes_str = f"{self.target_classes[0]}"
             filename = os.path.join(
                 self.output_folder,
-                f"{self.model_name}-{target_classes_str}-{new_category_group}-tba-eval.csv",
+                f"{self.model_name}-{target_classes_str}-{group_id}-tba-eval.csv",
             )
             _df_to_csv(bias_analysis_tba_result_to_df(results), filename)
         else:

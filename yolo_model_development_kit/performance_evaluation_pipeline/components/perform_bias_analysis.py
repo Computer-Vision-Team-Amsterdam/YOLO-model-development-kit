@@ -79,6 +79,7 @@ def perform_bias_analysis(
     for grouping in groupings:
         grouping = ObjectClass.get_grouping(grouping)
         group_name = grouping["group_name"]
+        group_id = grouping["group_id"]
 
         target_classes = grouping["maps_to"].get("class", [])
         if not target_classes or len(target_classes) != 1:
@@ -87,7 +88,7 @@ def perform_bias_analysis(
             )
         maps_to_class = int(target_classes[0])
         logger.info(f"Processing grouping: {grouping}")
-        logger.info(f"Grouping_name: {group_name}")
+        logger.info(f"Grouping_name: {group_name}. Group ID: {group_id}")
         logger.info(
             f"Mapping classes in the group {group_name} to class: {maps_to_class}"
         )
@@ -125,4 +126,6 @@ def perform_bias_analysis(
 
         # Total Blurred Area evaluation
         tba_results = yolo_eval.evaluate_tba_bias_analysis(grouping=grouping)
-        yolo_eval.save_tba_results_to_csv(results=tba_results, use_groupings=True)
+        yolo_eval.save_tba_results_to_csv(
+            results=tba_results, use_groupings=True, group_id=group_id
+        )
