@@ -82,11 +82,18 @@ def perform_bias_analysis(
 
         grouping = ObjectClass.get_grouping(grouping)
         group_name = grouping["group_name"]
-        maps_to_class = int(
-            grouping["maps_to"]["class"][0]
-        )  # Assuming there's always one target class in the "maps_to"
+
+        target_classes = grouping["maps_to"].get("class", [])
+        if not target_classes or len(target_classes) != 1:
+            raise ValueError(
+                f"Invalid 'maps_to' for grouping '{group_name}'. Expected exactly one target class, got: {target_classes}."
+            )
+        maps_to_class = int(target_classes[0])
         logger.info(f"Processing grouping: {grouping}")
         logger.info(f"Grouping_name: {group_name}")
+        logger.info(
+            f"Mapping classes in the group {group_name} to class: {maps_to_class}"
+        )
 
         new_labels_path = os.path.join(ground_truth_base_dir, group_name)
         logger.info(f"Creating new labels folder: {new_labels_path}")
@@ -113,9 +120,7 @@ def perform_bias_analysis(
             model_name=eval_settings["model_name"],
             pred_annotations_rel_path=eval_settings["prediction_labels_rel_path"],
             splits=eval_settings["splits"],
-            target_classes=[
-                maps_to_class
-            ],  # Only take the target class the grouping maps to
+            target_classes=[maps_to_class],
             sensitive_classes=eval_settings["sensitive_classes"],
             target_classes_conf=eval_settings["target_classes_conf"],
             sensitive_classes_conf=eval_settings["sensitive_classes_conf"],
