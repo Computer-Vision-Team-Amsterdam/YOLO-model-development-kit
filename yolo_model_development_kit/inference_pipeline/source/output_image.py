@@ -103,7 +103,7 @@ class OutputImage:
         """
         img_height, img_width, _ = self.image.shape
 
-        if categories:
+        if categories is not None:
             colours = [colour_map[category] for category in categories]
         else:
             colours = [(255, 0, 0)] * len(boxes)
