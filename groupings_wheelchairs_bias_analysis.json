@@ -1,0 +1,32 @@
+{
+    "group_by_people_and_wheelchair": {
+        "group_id": 100,
+        "group_name": "group_by_people_and_wheelchair",
+        "categories": {
+            "people": {
+                "category_id": 101,
+                "classes": [0]
+            },
+            "wheelchair": {
+                "category_id": 102,
+                "classes": [2]
+            }
+        },
+        "maps_to": {
+            "class": [0]
+        }
+    },
+    "group_by_license_plate": {
+        "group_id": 200,
+        "group_name": "group_by_license_plate",
+        "categories": {
+            "license_plate": {
+                "category_id": 201,
+                "classes": [1]
+            }
+        },
+        "maps_to": {
+            "class": [1]
+        }
+    }
+}
