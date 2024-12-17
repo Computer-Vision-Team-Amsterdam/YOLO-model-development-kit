@@ -61,27 +61,13 @@ def perform_bias_analysis(
     """
 
     eval_settings = settings["performance_evaluation"]
-    categories_json_path = eval_settings["categories_json_path"]
-    mapping_json_path = eval_settings["mapping_json_path"]
-    dataset_name = eval_settings["dataset_name"]
-    model_name = eval_settings["model_name"]
-    ground_truth_img_shape = eval_settings["ground_truth_image_shape"]
-    predictions_img_shape = eval_settings["predictions_image_shape"]
-    prediction_labels_rel_path = eval_settings["prediction_labels_rel_path"]
-    splits = eval_settings["splits"]
-    sensitive_classes = eval_settings["sensitive_classes"]
-    target_classes_conf = eval_settings["target_classes_conf"]
-    sensitive_classes_conf = eval_settings["sensitive_classes_conf"]
 
-    logger.info(f"Running bias analysis for model: {model_name}")
+    logger.info(f"Running bias analysis for model: {eval_settings["model_name"]}")
 
     os.makedirs(output_dir, exist_ok=True)
 
-    # Load categories JSON file once
-    ObjectClass.load_categories(categories_json_path)
-
-    # Load mapping JSON file once
-    ObjectClass.load_mapping(mapping_json_path)
+    ObjectClass.load_categories(eval_settings["categories_json_path"])
+    ObjectClass.load_mapping(eval_settings["mapping_json_path"])
 
     logger.info(f"Loaded categories IDs: {ObjectClass.all_ids()}")
     logger.info(f"Loaded thresholds: {ObjectClass.all_thresholds()}")
@@ -102,7 +88,6 @@ def perform_bias_analysis(
         logger.info(f"Processing grouping: {grouping}")
         logger.info(f"Grouping_name: {group_name}")
 
-        # Create a new folder for the output of this grouping
         new_labels_path = os.path.join(ground_truth_base_dir, group_name)
         logger.info(f"Creating new labels folder: {new_labels_path}")
         os.makedirs(new_labels_path, exist_ok=True)
@@ -110,32 +95,30 @@ def perform_bias_analysis(
         category_mapping = ObjectClass.get_category_mapping(group_name)
         logger.info(f"Category mapping: {category_mapping}")
 
-        # Process labels based on the specific grouping
         process_labels(
             original_gt_labels=original_gt_labels_path,
             new_gt_labels_path=new_labels_path,
             category_mapping=category_mapping,
         )
 
-        # Change the ground_truth_base_folder to the new labels folder
         current_ground_truth_base_dir = new_labels_path
 
         yolo_eval = YoloEvaluator(
             ground_truth_base_folder=current_ground_truth_base_dir,
             predictions_base_folder=predictions_base_dir,
             output_folder=output_dir,
-            ground_truth_image_shape=ground_truth_img_shape,
-            predictions_image_shape=predictions_img_shape,
-            dataset_name=dataset_name,
-            model_name=model_name,
-            pred_annotations_rel_path=prediction_labels_rel_path,
-            splits=splits,
+            ground_truth_image_shape=eval_settings["ground_truth_image_shape"],
+            predictions_image_shape=eval_settings["predictions_image_shape"],
+            dataset_name=eval_settings["dataset_name"],
+            model_name=eval_settings["model_name"],
+            pred_annotations_rel_path=eval_settings["prediction_labels_rel_path"],
+            splits=eval_settings["splits"],
             target_classes=[
                 maps_to_class
             ],  # Only take the target class the grouping maps to
-            sensitive_classes=sensitive_classes,
-            target_classes_conf=target_classes_conf,
-            sensitive_classes_conf=sensitive_classes_conf,
+            sensitive_classes=eval_settings["sensitive_classes"],
+            target_classes_conf=eval_settings["target_classes_conf"],
+            sensitive_classes_conf=eval_settings["sensitive_classes_conf"],
         )
 
         # Total Blurred Area evaluation
