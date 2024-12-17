@@ -13,19 +13,19 @@ def _process_label(label_path, new_labels_path, category_mapping):
     # Process each line and map the class ID
     new_lines = []
     for line in lines:
-        parts = line.strip().split()
-        original_class_id = int(parts[0])
+        label_fields = line.strip().split()
+        original_class_id = int(label_fields[0])
 
         # Map to new category ID
         if original_class_id in category_mapping:
             new_class_id = category_mapping[original_class_id]
-            parts[0] = str(new_class_id)
+            label_fields[0] = str(new_class_id)
         else:
             # If no mapping is found, skip or keep the original ID
             new_class_id = original_class_id
 
         # Rebuild the line with updated class ID
-        new_lines.append(" ".join(parts))
+        new_lines.append(" ".join(label_fields))
 
     # Write back the updated labels
     new_label_path = os.path.join(new_labels_path, os.path.basename(label_path))
