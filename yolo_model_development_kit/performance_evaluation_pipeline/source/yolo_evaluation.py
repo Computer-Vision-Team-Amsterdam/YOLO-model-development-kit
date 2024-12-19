@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 from yolo_model_development_kit.performance_evaluation_pipeline.metrics import (
-    ObjectClass,
+    CategoryManager,
     PerImageEvaluator,
     PerPixelEvaluator,
     compute_fb_score,
@@ -57,6 +57,8 @@ class YoloEvaluator:
     predictions_base_folder: str
         Location of predictions (root folder, is expected to contain `labels/`
         subfolder).
+    category_manager: CategoryManager
+        CategoryManager object containing object classes.
     output_folder: Optional[Union[str, None]] = None
         Location where output will be stored. If None, the
         predictions_base_folder will be used.
@@ -75,10 +77,9 @@ class YoloEvaluator:
         Name of the folder containing prediction labels.
     splits: Union[List[str], None] = ["train", "val", "test"]
         Which splits to evaluate. Set to `None` if the data contains no splits.
-    target_classes: Iterable[ObjectClass] = DEFAULT_TARGET_CLASSES
-        Which object classes should be evaluated (default is ["container",
-        "mobile_toilet", "scaffolding"]).
-    sensitive_classes: Iterable[ObjectClass] = DEFAULT_SENSITIVE_CLASSES
+    target_classes: List[int] = []
+        Which object classes should be evaluated (default is []).
+    sensitive_classes: List[int] = []
         Which object classes should be treated as sensitive for the Total
         Blurred Area computation (default is ["person", "license_plate"]).
     target_classes_conf: Optional[float] = None
@@ -102,6 +103,7 @@ class YoloEvaluator:
         self,
         ground_truth_base_folder: str,
         predictions_base_folder: str,
+        category_manager: CategoryManager,
         output_folder: Optional[Union[str, None]] = None,
         ground_truth_image_shape: Tuple[int, int] = (3840, 2160),
         predictions_image_shape: Tuple[int, int] = (3840, 2160),
@@ -120,6 +122,7 @@ class YoloEvaluator:
     ):
         self.ground_truth_base_folder = ground_truth_base_folder
         self.predictions_base_folder = predictions_base_folder
+        self.category_manager = category_manager
         self.output_folder = output_folder
         self.ground_truth_image_shape = ground_truth_image_shape
         self.predictions_image_shape = predictions_image_shape
@@ -231,6 +234,7 @@ class YoloEvaluator:
             evaluator = PerPixelEvaluator(
                 ground_truth_path=ground_truth_folder,
                 predictions_path=prediction_folder,
+                category_manager=self.category_manager,
                 image_shape=self.predictions_image_shape,
                 confidence_threshold=confidence_threshold,
                 upper_half=upper_half,
@@ -301,13 +305,13 @@ class YoloEvaluator:
             evaluator = PerPixelEvaluator(
                 ground_truth_path=ground_truth_folder,
                 predictions_path=prediction_folder,
+                category_manager=self.category_manager,
                 image_shape=self.predictions_image_shape,
                 confidence_threshold=confidence_threshold,
                 upper_half=upper_half,
             )
             key_prefix = f"{self.model_name}_{split if split != '' else 'all'}"
 
-            # Retrieve group mapping
             group_mapping = {
                 int(grouping["maps_to"]["class"][0]): [
                     cat["category_id"] for cat in grouping["categories"].values()
@@ -316,7 +320,6 @@ class YoloEvaluator:
 
             logger.info(f"Group mapping: {group_mapping}")
 
-            # Iterate over each target class and evaluate against each mapped category
             for target_class, group_categories in group_mapping.items():
                 for category in group_categories:
                     logger.info(
@@ -386,6 +389,7 @@ class YoloEvaluator:
             evaluator = PerImageEvaluator(
                 ground_truth_path=ground_truth_folder,
                 predictions_path=prediction_folder,
+                category_manager=self.category_manager,
                 image_shape=self.predictions_image_shape,
                 confidence_threshold=confidence_threshold,
             )
@@ -443,7 +447,7 @@ class YoloEvaluator:
         custom_coco_result: Dict[str, Dict[str, Dict[str, float]]] = dict()
         coco_eval_classes = {"all": self.all_classes}
         for class_id in self.all_classes:
-            class_name = ObjectClass.get_name(class_id)
+            class_name = self.category_manager.get_name(class_id)
             coco_eval_classes[class_name] = [class_id]
 
         # The custom COCO evaluation needs annotations in COCO JSON format, so we need to convert.
@@ -459,6 +463,7 @@ class YoloEvaluator:
         ## Run conversion.
         gt_json_files = convert_yolo_dataset_to_coco_json(
             dataset_dir=self.ground_truth_base_folder,
+            category_manager=self.category_manager,
             splits=self.splits,
             output_dir=gt_output_dir,
             is_multiple_sizes=self.is_multiple_sizes,
@@ -487,6 +492,7 @@ class YoloEvaluator:
                 eval = execute_custom_coco_eval(
                     coco_ground_truth_json=gt_json_files[i],
                     coco_predictions_json=pred_json_files[i],
+                    category_manager=self.category_manager,
                     predicted_img_shape=(
                         self.imgsz
                         if self.is_multiple_sizes
@@ -509,23 +515,21 @@ class YoloEvaluator:
         self,
         results: Dict[str, Dict[str, Dict[str, float]]],
         use_groupings: bool = False,
+        group_id: Optional[int] = None,
     ):
         """Save TBA results dict as CSV file."""
         filename = ""
         if use_groupings:
-            # Get the first key. We assume it is in the format {model_name}_{split}_class_{target_class}_vs_{category}
-            first_key = next(iter(results.keys()))
-            category_group = first_key.split("_vs_")[-1]  # Get the part after '_vs_'
-            new_category_group = (
-                category_group[:-1] + "0"
-            )  # Replace last character with '0'. E.g. from 101 to 100, which is the group ID of the category 101
-
-            target_classes_str = (
-                f"{self.target_classes[0]}"  # assuming there is only one target class
-            )
+            if group_id is None:
+                raise ValueError("group_id must be provided when use_groupings=True.")
+            if len(self.target_classes) != 1:
+                raise ValueError(
+                    f"Expected exactly one target class, got: {self.target_classes}."
+                )
+            target_classes_str = f"{self.target_classes[0]}"
             filename = os.path.join(
                 self.output_folder,
-                f"{self.model_name}-{target_classes_str}-{new_category_group}-tba-eval.csv",
+                f"{self.model_name}-{target_classes_str}-{group_id}-tba-eval.csv",
             )
             _df_to_csv(bias_analysis_tba_result_to_df(results), filename)
         else:
@@ -596,6 +600,7 @@ class YoloEvaluator:
                 dataset=self.dataset_name,
                 split=(split if split != "" else "all"),
                 target_class=eval_class,
+                category_manager=self.category_manager,
                 model_name=self.model_name,
                 result_type=result_type,
                 output_dir=output_dir,
@@ -606,6 +611,7 @@ class YoloEvaluator:
                 dataset=self.dataset_name,
                 split=(split if split != "" else "all"),
                 target_class=eval_class,
+                category_manager=self.category_manager,
                 model_name=self.model_name,
                 result_type=result_type,
                 output_dir=output_dir,
@@ -697,17 +703,14 @@ def _bias_analysis_result_to_df(
         except ValueError:
             raise ValueError(f"Unexpected model key format: {model}")
 
-        # Extract categories for the current model
         categories = results[model].keys()
 
         for cat in categories:
-            # Ensure the key exists in the results dictionary
             if cat not in results[model]:
                 raise KeyError(
                     f"Expected key '{cat}' not found in results for model '{model}'."
                 )
 
-            # Split the category key to obtain the ground truth class and size
             try:
                 _, ground_truth_class, size = cat.split("_", maxsplit=2)
             except ValueError:
