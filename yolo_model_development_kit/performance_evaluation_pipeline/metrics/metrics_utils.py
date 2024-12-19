@@ -13,6 +13,7 @@ class CategoryManager:
     The 'small', 'medium', 'large', and 'all' attributes represent
     the bounding box size categories. The bounds of each category are given as
     fraction of the image surface.
+    It also contains the mapping between inference and ground truth categories.
     """
 
     def __init__(self, categories_json_path: str, mappings_json_path: str = None):
