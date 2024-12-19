@@ -155,13 +155,14 @@ class YOLOInference:
             - target classes bounding boxes drawn;
         """
         logger.info(f"Running detection pipeline on {self.images_folder}..")
-        folders_and_frames = self._find_image_paths_and_group_by_folder(
-            root_folder=self.images_folder
-        )
+        if not self.folders_and_frames:  # type: ignore
+            self.folders_and_frames = self._find_image_paths_and_group_by_folder(
+                root_folder=self.images_folder
+            )
         logger.info(
-            f"Total number of images: {sum(len(frames) for frames in folders_and_frames.values())}"
+            f"Total number of images: {sum(len(frames) for frames in self.folders_and_frames.values())}"
         )
-        self._process_batches(folders_and_frames=folders_and_frames)
+        self._process_batches()
 
     def _load_image(
         self, image_path: Union[os.PathLike, str], child_class=InputImage
@@ -187,17 +188,11 @@ class YOLOInference:
             image.resize(output_image_size=self.output_image_size)
         return image
 
-    def _process_batches(self, folders_and_frames: Dict[str, List[str]]) -> None:
+    def _process_batches(self) -> None:
         """
         Process all images in all sub-folders in batches of size batch_size.
-
-        Parameters
-        ----------
-        folders_and_frames: Dict[str, List[str]]
-            Dictionary mapping folder names to the images they contain as
-            `{"folder_name": List[image_names]}`
         """
-        for folder_name, images in folders_and_frames.items():
+        for folder_name, images in self.folders_and_frames.items():
             logger.debug(
                 f"Running inference on folder: {os.path.relpath(folder_name, self.images_folder)}"
             )
