@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 from yolo_model_development_kit.performance_evaluation_pipeline.metrics import (
-    ObjectClass,
+    CategoryManager,
     PerImageEvaluator,
     PerPixelEvaluator,
     compute_fb_score,
@@ -57,6 +57,8 @@ class YoloEvaluator:
     predictions_base_folder: str
         Location of predictions (root folder, is expected to contain `labels/`
         subfolder).
+    category_manager: CategoryManager
+        CategoryManager object containing object classes.
     output_folder: Optional[Union[str, None]] = None
         Location where output will be stored. If None, the
         predictions_base_folder will be used.
@@ -75,10 +77,9 @@ class YoloEvaluator:
         Name of the folder containing prediction labels.
     splits: Union[List[str], None] = ["train", "val", "test"]
         Which splits to evaluate. Set to `None` if the data contains no splits.
-    target_classes: Iterable[ObjectClass] = DEFAULT_TARGET_CLASSES
-        Which object classes should be evaluated (default is ["container",
-        "mobile_toilet", "scaffolding"]).
-    sensitive_classes: Iterable[ObjectClass] = DEFAULT_SENSITIVE_CLASSES
+    target_classes: List[int] = []
+        Which object classes should be evaluated (default is []).
+    sensitive_classes: List[int] = []
         Which object classes should be treated as sensitive for the Total
         Blurred Area computation (default is ["person", "license_plate"]).
     target_classes_conf: Optional[float] = None
@@ -96,6 +97,7 @@ class YoloEvaluator:
         self,
         ground_truth_base_folder: str,
         predictions_base_folder: str,
+        category_manager: CategoryManager,
         output_folder: Optional[Union[str, None]] = None,
         ground_truth_image_shape: Tuple[int, int] = (3840, 2160),
         predictions_image_shape: Tuple[int, int] = (3840, 2160),
@@ -112,6 +114,7 @@ class YoloEvaluator:
     ):
         self.ground_truth_base_folder = ground_truth_base_folder
         self.predictions_base_folder = predictions_base_folder
+        self.category_manager = category_manager
         self.output_folder = output_folder
         self.ground_truth_image_shape = ground_truth_image_shape
         self.predictions_image_shape = predictions_image_shape
@@ -220,6 +223,7 @@ class YoloEvaluator:
             evaluator = PerPixelEvaluator(
                 ground_truth_path=ground_truth_folder,
                 predictions_path=prediction_folder,
+                category_manager=self.category_manager,
                 image_shape=self.predictions_image_shape,
                 confidence_threshold=confidence_threshold,
                 upper_half=upper_half,
@@ -290,6 +294,7 @@ class YoloEvaluator:
             evaluator = PerPixelEvaluator(
                 ground_truth_path=ground_truth_folder,
                 predictions_path=prediction_folder,
+                category_manager=self.category_manager,
                 image_shape=self.predictions_image_shape,
                 confidence_threshold=confidence_threshold,
                 upper_half=upper_half,
@@ -373,6 +378,7 @@ class YoloEvaluator:
             evaluator = PerImageEvaluator(
                 ground_truth_path=ground_truth_folder,
                 predictions_path=prediction_folder,
+                category_manager=self.category_manager,
                 image_shape=self.predictions_image_shape,
                 confidence_threshold=confidence_threshold,
             )
@@ -430,7 +436,7 @@ class YoloEvaluator:
         custom_coco_result: Dict[str, Dict[str, Dict[str, float]]] = dict()
         coco_eval_classes = {"all": self.all_classes}
         for class_id in self.all_classes:
-            class_name = ObjectClass.get_name(class_id)
+            class_name = self.category_manager.get_name(class_id)
             coco_eval_classes[class_name] = [class_id]
 
         # The custom COCO evaluation needs annotations in COCO JSON format, so we need to convert.
@@ -446,6 +452,7 @@ class YoloEvaluator:
         ## Run conversion.
         gt_json_files = convert_yolo_dataset_to_coco_json(
             dataset_dir=self.ground_truth_base_folder,
+            category_manager=self.category_manager,
             splits=self.splits,
             output_dir=gt_output_dir,
         )
@@ -470,6 +477,7 @@ class YoloEvaluator:
                 eval = execute_custom_coco_eval(
                     coco_ground_truth_json=gt_json_files[i],
                     coco_predictions_json=pred_json_files[i],
+                    category_manager=self.category_manager,
                     predicted_img_shape=self.ground_truth_image_shape,
                     classes=target_cls,
                     print_summary=False,
@@ -573,6 +581,7 @@ class YoloEvaluator:
                 dataset=self.dataset_name,
                 split=split,
                 target_class=eval_class,
+                category_manager=self.category_manager,
                 model_name=self.model_name,
                 result_type=result_type,
                 output_dir=output_dir,
@@ -583,6 +592,7 @@ class YoloEvaluator:
                 dataset=self.dataset_name,
                 split=split,
                 target_class=eval_class,
+                category_manager=self.category_manager,
                 model_name=self.model_name,
                 result_type=result_type,
                 output_dir=output_dir,

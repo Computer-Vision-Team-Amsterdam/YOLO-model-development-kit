@@ -7,7 +7,7 @@ import numpy.typing as npt
 import pandas as pd
 
 
-class ObjectClass:
+class CategoryManager:
     """Dynamic class to represent object categories for evaluation.
     It contains the category name, ID, and bounding box size thresholds.
     The 'small', 'medium', 'large', and 'all' attributes represent
@@ -15,11 +15,15 @@ class ObjectClass:
     fraction of the image surface.
     """
 
-    _categories = {}
-    _groupings = {}
+    def __init__(self, categories_json_path: str, mappings_json_path: str = None):
+        self._categories = self._load_categories(categories_json_path)
+        self._groupings = (
+            self._load_mapping(mappings_json_path)
+            if mappings_json_path is not None
+            else {}
+        )
 
-    @classmethod
-    def load_categories(cls, json_path):
+    def _load_categories(self, json_path):
         """Load categories and box size thresholds from a JSON file.
         The function assumes the YOLO convention, so categories start at 0.
         """
@@ -36,7 +40,7 @@ class ObjectClass:
             except json.JSONDecodeError:
                 raise ValueError(f"The file '{json_path}' is not a valid JSON file.")
 
-            cls._categories = {
+            return {
                 cat["id"]: {
                     "name": cat["name"],
                     "thresholds": tuple(cat.get("thresholds", (0.0, 1.0))),
@@ -44,8 +48,7 @@ class ObjectClass:
                 for cat in categories["categories"]
             }
 
-    @classmethod
-    def load_mapping(cls, json_path):
+    def _load_mapping(self, json_path):
         """Load mapping between inference and ground truth categories from a JSON file."""
 
         if not os.path.exists(json_path):
@@ -57,17 +60,15 @@ class ObjectClass:
                     raise ValueError(
                         "The groupings JSON file is empty or improperly formatted."
                     )
+                return groupings
             except json.JSONDecodeError:
                 raise ValueError(f"The file '{json_path}' is not a valid JSON file.")
 
-            cls._groupings = groupings
-
-    @classmethod
     def to_dict(
-        cls, cat_id: int, all_only: bool = False
+        self, cat_id: int, all_only: bool = False
     ) -> Dict[str, Tuple[float, float]]:
         """Get a dictionary representation of the bounding box size categories for a given category ID."""
-        details = cls._categories.get(cat_id)
+        details = self._categories.get(cat_id)
         if not details or "thresholds" not in details:
             raise ValueError(f"No thresholds found for category ID {cat_id}")
 
@@ -87,31 +88,27 @@ class ObjectClass:
                 "large": large,
             }
 
-    @classmethod
-    def get_name(cls, cat_id):
+    def get_name(self, cat_id):
         """Get the category name by ID."""
-        return cls._categories.get(cat_id, {}).get("name", "Unknown")
+        return self._categories.get(cat_id, {}).get("name", "Unknown")
 
-    @classmethod
-    def get_id(cls, name):
+    def get_id(self, name):
         """Get the category ID by name."""
-        for class_id, details in cls._categories.items():
+        for class_id, details in self._categories.items():
             if details.get("name") == name:
                 return class_id
         return None
 
-    @classmethod
-    def get_grouping(cls, grouping_key: str) -> Dict[str, Dict[str, Any]]:
+    def get_grouping(self, grouping_key: str) -> Dict[str, Dict[str, Any]]:
         """Get a specific grouping of categories by key."""
-        grouping = cls._groupings.get(grouping_key)
+        grouping = self._groupings.get(grouping_key)
         if not grouping:
             raise ValueError(f"No grouping found for key '{grouping_key}'")
         return grouping
 
-    @classmethod
-    def get_category_mapping(cls, grouping_key):
+    def get_category_mapping(self, grouping_key):
         """Get a mapping dictionary that maps original class IDs to new category IDs for a specific grouping."""
-        grouping = cls.get_grouping(grouping_key)
+        grouping = self.get_grouping(grouping_key)
         category_mapping = {}
         for category, details in grouping["categories"].items():
             category_id = details["category_id"]
@@ -119,37 +116,32 @@ class ObjectClass:
                 category_mapping[class_id] = category_id
         return category_mapping
 
-    @classmethod
-    def get_thresholds(cls, cat_id):
+    def get_thresholds(self, cat_id):
         """Get the bounding box size thresholds for a given category ID."""
-        details = cls._categories.get(cat_id)
+        details = self._categories.get(cat_id)
         if details and "thresholds" in details:
             return details["thresholds"]
         return (0.0, 1.0)  # Default to the whole image
 
-    @classmethod
-    def all_ids(cls):
+    def all_ids(self):
         """Return all category IDs."""
-        return list(cls._categories.keys())
+        return list(self._categories.keys())
 
-    @classmethod
-    def all_names(cls):
+    def all_names(self):
         """Return all category names."""
-        return [cat.name for cat in cls._categories.values()]
+        return [cat.name for cat in self._categories.values()]
 
-    @classmethod
-    def all_thresholds(cls):
+    def all_thresholds(self):
         """Return all category thresholds as a dictionary with category IDs as keys."""
         return {
             cat_id: details["thresholds"]
-            for cat_id, details in cls._categories.items()
+            for cat_id, details in self._categories.items()
             if "thresholds" in details
         }
 
-    @classmethod
-    def all_groupings(cls):
+    def all_groupings(self):
         """Return all groupings of categories."""
-        return cls._groupings
+        return self._groupings
 
 
 def parse_labels(

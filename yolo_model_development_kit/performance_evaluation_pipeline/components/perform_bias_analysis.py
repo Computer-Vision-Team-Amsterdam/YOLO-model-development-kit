@@ -10,7 +10,7 @@ sys.path.append("../../..")
 
 from yolo_model_development_kit import settings  # noqa: E402
 from yolo_model_development_kit.performance_evaluation_pipeline.metrics import (  # noqa: E402
-    ObjectClass,
+    CategoryManager,
 )
 from yolo_model_development_kit.performance_evaluation_pipeline.source import (  # noqa: E402
     YoloEvaluator,
@@ -65,19 +65,21 @@ def perform_bias_analysis(
 
     os.makedirs(output_dir, exist_ok=True)
 
-    ObjectClass.load_categories(eval_settings["categories_json_path"])
-    ObjectClass.load_mapping(eval_settings["mapping_json_path"])
+    category_manager = CategoryManager(
+        categories_json_path=eval_settings["categories_json_path"],
+        mappings_json_path=eval_settings["mapping_json_path"],
+    )
 
-    logger.info(f"Loaded categories IDs: {ObjectClass.all_ids()}")
-    logger.info(f"Loaded thresholds: {ObjectClass.all_thresholds()}")
-    logger.info(f"Loaded groupings: {ObjectClass.all_groupings()}")
+    logger.info(f"Loaded categories IDs: {category_manager.all_ids()}")
+    logger.info(f"Loaded thresholds: {category_manager.all_thresholds()}")
+    logger.info(f"Loaded groupings: {category_manager.all_groupings()}")
 
     original_gt_labels_path = os.path.join(ground_truth_base_dir, "labels")
     logger.info(f"Original ground truth labels path: {original_gt_labels_path}")
-    groupings = ObjectClass.all_groupings()
+    groupings = category_manager.all_groupings()
 
     for grouping in groupings:
-        grouping = ObjectClass.get_grouping(grouping)
+        grouping = category_manager.get_grouping(grouping)
         group_name = grouping["group_name"]
         group_id = grouping["group_id"]
 
@@ -97,7 +99,7 @@ def perform_bias_analysis(
         logger.info(f"Creating new labels folder: {new_labels_path}")
         os.makedirs(new_labels_path, exist_ok=True)
 
-        category_mapping = ObjectClass.get_category_mapping(group_name)
+        category_mapping = category_manager.get_category_mapping(group_name)
         logger.info(f"Category mapping: {category_mapping}")
 
         process_labels(
@@ -111,6 +113,7 @@ def perform_bias_analysis(
         yolo_eval = YoloEvaluator(
             ground_truth_base_folder=current_ground_truth_base_dir,
             predictions_base_folder=predictions_base_dir,
+            category_manager=category_manager,
             output_folder=output_dir,
             ground_truth_image_shape=eval_settings["ground_truth_image_shape"],
             predictions_image_shape=eval_settings["predictions_image_shape"],

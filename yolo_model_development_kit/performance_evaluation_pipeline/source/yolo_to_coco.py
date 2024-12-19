@@ -9,7 +9,7 @@ from typing import Dict, List, Optional, Tuple
 from PIL import Image
 
 from yolo_model_development_kit.performance_evaluation_pipeline.metrics import (
-    ObjectClass,
+    CategoryManager,
 )
 
 
@@ -76,6 +76,7 @@ def _convert_predictions_split(
 
 def convert_yolo_dataset_to_coco_json(
     dataset_dir: str,
+    category_manager: CategoryManager,
     splits: Optional[List[str]] = ["train", "val", "test"],
     output_dir: Optional[str] = None,
 ) -> List[str]:
@@ -90,7 +91,7 @@ def convert_yolo_dataset_to_coco_json(
         image_dir = os.path.join(dataset_dir, "images", split)
         label_dir = os.path.join(dataset_dir, "labels", split)
 
-        coco_dataset = _convert_dataset_split(image_dir, label_dir)
+        coco_dataset = _convert_dataset_split(image_dir, label_dir, category_manager)
 
         output_file = os.path.join(output_dir, f"coco_gt_{split}.json")
         with open(output_file, "w") as f:
@@ -100,13 +101,15 @@ def convert_yolo_dataset_to_coco_json(
     return output_files
 
 
-def _convert_dataset_split(image_dir: str, label_dir: str) -> Dict:
+def _convert_dataset_split(
+    image_dir: str, label_dir: str, category_manager: CategoryManager
+) -> Dict:
     image_list: List[Dict] = []
     annotation_list: List[Dict] = []
 
     categories = [
-        {"id": cat_id, "name": ObjectClass.get_name(cat_id)}
-        for cat_id in ObjectClass.all_ids()
+        {"id": cat_id, "name": category_manager.get_name(cat_id)}
+        for cat_id in category_manager.all_ids()
     ]
 
     for image_file in os.listdir(image_dir):

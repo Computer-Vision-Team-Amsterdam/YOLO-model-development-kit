@@ -6,7 +6,7 @@ import numpy.typing as npt
 from cvtoolkit.datasets.yolo_labels_dataset import YoloLabelsDataset
 
 from yolo_model_development_kit.performance_evaluation_pipeline.metrics import (
-    ObjectClass,
+    CategoryManager,
     generate_binary_mask,
 )
 
@@ -120,6 +120,8 @@ class PerPixelEvaluator:
         predictions_path: str
             Path to ground truth annotations, either as a folder with YOLO .txt
             annotation files, or as a COCO JSON file.
+        category_manager: CategoryManager,
+            CategoryManager object containing the object classes to evaluate.
         image_shape: Tuple[int, int] = (3840, 2160)
             Shape of the images. Since YOLO .txt annotations contain bounding
             box dimensions as fraction of the image shape, the pixel dimensions
@@ -143,11 +145,13 @@ class PerPixelEvaluator:
         self,
         ground_truth_path: str,
         predictions_path: str,
+        category_manager: CategoryManager,
         image_shape: Tuple[int, int] = (3840, 2160),
         confidence_threshold: Optional[float] = None,
         upper_half: bool = False,
         decimals: int = 3,
     ):
+        self.category_manager = category_manager
         self.img_shape = image_shape
         self.upper_half = upper_half
         self.decimals = decimals
@@ -248,7 +252,7 @@ class PerPixelEvaluator:
 
     def collect_results_per_class_and_size(
         self,
-        classes: List[int] = ObjectClass.all_ids(),
+        classes: List[int] = None,
         single_size_only: bool = False,
         use_group_mapping: bool = False,
         group_mapping: Optional[Dict[int, List[int]]] = None,
@@ -259,7 +263,7 @@ class PerPixelEvaluator:
 
         Parameters
         ----------
-        classes: List[int] = ObjectClass.all_ids(),
+        classes: List[int] = None,
             Which classes to evaluate (default is all).
         single_size_only: bool = False,
             Whether to differentiate bounding box sizes (small, medium, large)
@@ -281,6 +285,9 @@ class PerPixelEvaluator:
                 }
             }
         """
+        if classes is None:
+            classes = self.category_manager.all_ids()
+
         results = {}
 
         for target_class in classes:
@@ -289,7 +296,7 @@ class PerPixelEvaluator:
                 target_class
             ).get_filtered_labels()
 
-            target_class_name = ObjectClass.get_name(target_class)
+            target_class_name = self.category_manager.get_name(target_class)
             if target_class_name == "Unknown":
                 e = f"Class ID {target_class} not found in loaded categories. Stopping execution."
                 logger.error(e)
@@ -303,7 +310,7 @@ class PerPixelEvaluator:
 
             logger.info(f"Processing class {target_class_name} with IDs {gt_classes}")
 
-            box_sizes = ObjectClass.to_dict(target_class, single_size_only)
+            box_sizes = self.category_manager.to_dict(target_class, single_size_only)
 
             for gt_class in gt_classes:
                 logger.info(
