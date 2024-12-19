@@ -10,7 +10,7 @@ sys.path.append("../../..")
 
 from yolo_model_development_kit import settings  # noqa: E402
 from yolo_model_development_kit.performance_evaluation_pipeline.metrics import (  # noqa: E402
-    ObjectClass,
+    CategoryManager,
 )
 from yolo_model_development_kit.performance_evaluation_pipeline.source import (  # noqa: E402
     YoloEvaluator,
@@ -68,45 +68,40 @@ def evaluate_model(
     """
 
     eval_settings = settings["performance_evaluation"]
-    categories_json_path = eval_settings["categories_json_path"]
-    dataset_name = eval_settings["dataset_name"]
-    model_name = eval_settings["model_name"]
-    ground_truth_img_shape = eval_settings["ground_truth_image_shape"]
-    predictions_img_shape = eval_settings["predictions_image_shape"]
-    prediction_labels_rel_path = eval_settings["prediction_labels_rel_path"]
-    splits = eval_settings["splits"]
     target_classes = eval_settings["target_classes"]
     sensitive_classes = eval_settings["sensitive_classes"]
-    target_classes_conf = eval_settings["target_classes_conf"]
-    sensitive_classes_conf = eval_settings["sensitive_classes_conf"]
 
-    logger.info(f"Running performance evaluation for model: {model_name}")
+    logger.info(
+        f"Running performance evaluation for model: {eval_settings["model_name"]}"
+    )
 
     os.makedirs(output_dir, exist_ok=True)
 
-    # Load categories JSON file once
-    ObjectClass.load_categories(categories_json_path)
+    category_manager = CategoryManager(
+        categories_json_path=eval_settings["categories_json_path"]
+    )
 
     yolo_eval = YoloEvaluator(
         ground_truth_base_folder=ground_truth_base_dir,
         predictions_base_folder=predictions_base_dir,
+        category_manager=category_manager,
         output_folder=output_dir,
-        ground_truth_image_shape=ground_truth_img_shape,
-        predictions_image_shape=predictions_img_shape,
-        dataset_name=dataset_name,
-        model_name=model_name,
-        pred_annotations_rel_path=prediction_labels_rel_path,
-        splits=splits,
+        ground_truth_image_shape=eval_settings["ground_truth_image_shape"],
+        predictions_image_shape=eval_settings["predictions_image_shape"],
+        dataset_name=eval_settings["dataset_name"],
+        model_name=eval_settings["model_name"],
+        pred_annotations_rel_path=eval_settings["prediction_labels_rel_path"],
+        splits=eval_settings["splits"],
         target_classes=target_classes,
         sensitive_classes=sensitive_classes,
-        target_classes_conf=target_classes_conf,
-        sensitive_classes_conf=sensitive_classes_conf,
+        target_classes_conf=eval_settings["target_classes_conf"],
+        sensitive_classes_conf=eval_settings["sensitive_classes_conf"],
     )
 
     logger.info(f"Target classes: {yolo_eval.target_classes}")
     logger.info(f"Sensitive classes: {yolo_eval.sensitive_classes}")
-    logger.info(f"Loaded categories IDs: {ObjectClass.all_ids()}")
-    logger.info(f"Loaded thresholds: {ObjectClass.all_thresholds()}")
+    logger.info(f"Loaded categories IDs: {category_manager.all_ids()}")
+    logger.info(f"Loaded thresholds: {category_manager.all_thresholds()}")
 
     # Total Blurred Area evaluation
     if len(sensitive_classes) > 0:

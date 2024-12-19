@@ -7,16 +7,17 @@ import numpy as np
 import pandas as pd
 
 from yolo_model_development_kit.performance_evaluation_pipeline.metrics import (
-    ObjectClass,
+    CategoryManager,
 )
 
 logger = logging.getLogger(__name__)
 
 
 def _extract_plot_df(
-    results_df: pd.DataFrame, split: str, target_class: int
+    results_df: pd.DataFrame,
+    split: str,
+    target_class_name: str,
 ) -> pd.DataFrame:
-    target_class_name = ObjectClass.get_name(target_class)
     plot_df = results_df[
         (results_df["Size"] == "all")
         & (results_df["Split"] == split)
@@ -64,6 +65,7 @@ def save_pr_curve(
     results_df: pd.DataFrame,
     split: str,
     target_class: int,
+    category_manager: CategoryManager,
     model_name: str,
     result_type: str,
     dataset: str = "",
@@ -75,12 +77,12 @@ def save_pr_curve(
     Plot and save the precision and recall curve for a particular split and target_class.
     """
 
-    target_class_name = ObjectClass.get_name(target_class)
+    target_class_name = category_manager.get_name(target_class)
     if target_class_name == "Unknown":
         raise ValueError(f"Class ID {target_class} not found in loaded categories.")
 
     plot_df = _extract_plot_df(
-        results_df=results_df, split=split, target_class=target_class
+        results_df=results_df, split=split, target_class_name=target_class_name
     )[["Precision", "Recall"]]
 
     (title, filename) = _generate_plot_title_and_filename(
@@ -105,6 +107,7 @@ def save_fscore_curve(
     results_df: pd.DataFrame,
     dataset: str,
     split: str,
+    category_manager: CategoryManager,
     target_class: int,
     model_name: str,
     result_type: str,
@@ -116,12 +119,12 @@ def save_fscore_curve(
     Plot and save the F-score curve for a particular split and target_class.
     """
 
-    target_class_name = ObjectClass.get_name(target_class)
+    target_class_name = category_manager.get_name(target_class)
     if target_class_name == "Unknown":
         raise ValueError(f"Class ID {target_class} not found in loaded categories.")
 
     plot_df = _extract_plot_df(
-        results_df=results_df, split=split, target_class=target_class
+        results_df=results_df, split=split, target_class_name=target_class_name
     )[["F1", "F0.5", "F2"]]
 
     (title, filename) = _generate_plot_title_and_filename(
