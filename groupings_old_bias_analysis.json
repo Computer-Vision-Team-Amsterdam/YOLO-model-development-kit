@@ -1,0 +1,111 @@
+{
+    "group_by_sex": {
+        "group_id": 100,
+        "group_name": "group_by_sex",
+        "categories": {
+            "man": {
+                "category_id": 101,
+                "classes": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
+            },
+            "woman": {
+                "category_id": 102,
+                "classes": [22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42]
+            },
+            "unknown": {
+                "category_id": 103,
+                "classes": [43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63]
+            }
+        },
+        "maps_to": {
+            "class": [0]
+        }
+    },
+    "group_by_age": {
+        "group_id": 200,
+        "group_name": "group_by_age",
+        "categories": {
+            "child": {
+                "category_id": 201,
+                "classes": [2, 3, 4, 5, 6, 23, 24, 25, 26, 27, 44, 45, 46, 47, 48]
+            },
+            "adult": {
+                "category_id": 202,
+                "classes": [7, 8, 9, 10, 11, 28, 29, 30, 31, 32, 49, 50, 51, 52, 53]
+            },
+            "elder": {
+                "category_id": 203,
+                "classes": [12, 13, 14, 15, 16, 33, 34, 35, 36, 37, 54, 55, 56, 57, 58]
+            },
+            "unknown": {
+                "category_id": 204,
+                "classes": [17, 18, 19, 20, 21, 38, 39, 40, 41, 42, 59, 60, 61, 62, 63]
+        }
+        },
+        "maps_to": {
+            "class": [0]
+        }
+    },
+    "group_by_skin_color": {
+        "group_id": 300,
+        "group_name": "group_by_skin_color",
+        "categories": {
+            "light": {
+                "category_id": 301,
+                "classes": [3, 8, 13, 18, 24, 29, 34, 39, 45, 50, 55, 60]
+            },
+            "medium": {
+                "category_id": 302,
+                "classes": [4, 9, 14, 19, 25, 30, 35, 40, 46, 51, 56, 61]
+            },
+            "dark": {
+                "category_id": 303,
+                "classes": [5, 10, 15, 20, 26, 31, 36, 41, 47, 52, 57, 62]
+            },
+            "unknown": {
+                "category_id": 304,
+                "classes": [6, 11, 16, 21, 27, 32, 37, 42, 48, 53, 58, 63]
+        }
+        },
+        "maps_to": {
+            "class": [0]
+        }
+    },
+    "group_by_country": {
+        "group_id": 400,
+        "group_name": "group_by_country",
+        "categories": {
+            "dutch": {
+                "category_id": 401,
+                "classes": [65, 66, 67]
+            },
+            "foreign": {
+                "category_id": 402,
+                "classes": [68]
+            },
+            "unknown": {
+                "category_id": 403,
+                "classes": [69]
+        }
+        },
+        "maps_to": {
+            "class": [1]
+        }
+    },
+    "group_by_color": {
+        "group_id": 500,
+        "group_name": "group_by_color",
+        "categories": {
+            "yellow": {
+                "category_id": 501,
+                "classes": [66]
+            },
+            "others": {
+                "category_id": 502,
+                "classes": [67]
+            }
+        },
+        "maps_to": {
+            "class": [1]
+        }
+    }
+}

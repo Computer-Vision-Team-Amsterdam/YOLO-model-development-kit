@@ -2,7 +2,7 @@
 
 from .custom_coco_evaluator import CustomCOCOeval
 from .metrics_utils import (
-    ObjectClass,
+    CategoryManager,
     compute_fb_score,
     generate_binary_mask,
     parse_labels,
