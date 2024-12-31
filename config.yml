@@ -35,10 +35,7 @@ inference_pipeline:
   save_detection_images: False
   save_detection_labels: True
   save_all_images: True  # If True, all images will be saved regardless of whether they contain target class objects
-
-  sahi:
-    use_sahi: False
-    model_type: "ultralytics"
+  use_sahi: True
 
 
 performance_evaluation:
