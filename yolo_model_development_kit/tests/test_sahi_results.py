@@ -76,8 +76,6 @@ def test_model_result_with_sahi_results():
     assert model_result.result.names == mock_category_mapping, "Class names mismatch!"
     assert model_result.result.speed == mock_speed, "Speed values mismatch!"
 
-    print("Test passed: ModelResult works correctly with Results.")
-
 
 if __name__ == "__main__":
     test_model_result_with_sahi_results()
