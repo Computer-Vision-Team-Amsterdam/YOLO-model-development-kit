@@ -327,18 +327,18 @@ class PerPixelEvaluator:
                             .get_filtered_labels()
                         )
 
-                    results[f"{target_class_name}_{gt_class}_{box_size_name}"] = (
-                        self._get_per_pixel_statistics(
-                            true_labels=filtered_labels,
-                            predicted_labels=predicted_target_class,
-                            size_all=size_all,
+                        results[f"{target_class_name}_{gt_class}_{box_size_name}"] = (
+                            self._get_per_pixel_statistics(
+                                true_labels=filtered_labels,
+                                predicted_labels=predicted_target_class,
+                                size_all=size_all,
+                            )
                         )
-                    )
-                    logger.info(
-                        f'Results for {target_class_name}_{gt_class}_{box_size_name}: {results[f"{target_class_name}_{gt_class}_{box_size_name}"]}'
-                    )
+                        logger.info(
+                            f'Results for {target_class_name}_{gt_class}_{box_size_name}: {results[f"{target_class_name}_{gt_class}_{box_size_name}"]}'
+                        )
 
-                    self.gt_dataset.reset_filter()
+                        self.gt_dataset.reset_filter()
             else:
                 box_sizes = self.category_manager.to_dict(
                     target_class, single_size_only
