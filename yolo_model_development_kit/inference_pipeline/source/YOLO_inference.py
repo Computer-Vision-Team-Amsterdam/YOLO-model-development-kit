@@ -121,7 +121,7 @@ class YOLOInference:
                 confidence_threshold=self.inference_params["conf"],
             )
 
-            logger.info(f'Using SAHI model with params: {inference_settings["sahi"]}.')
+            logger.info(f"Using SAHI model with params: {self.sahi}.")
         else:
             self.model = YOLO(model=self.model_path, task="detect")
             logger.info("Using YOLO model.")
