@@ -120,7 +120,6 @@ class YOLOInference:
                 model_path=self.model_path,
                 confidence_threshold=self.inference_params["conf"],
             )
-
             logger.info(f"Using SAHI model with params: {self.sahi}.")
         else:
             self.model = YOLO(model=self.model_path, task="detect")
@@ -138,7 +137,6 @@ class YOLOInference:
             if inference_settings["sensitive_classes_conf"]
             else self.inference_params["conf"]
         )
-
         logger.debug(
             f"Using confidence thresholds: target_classes: {self.target_classes_conf}, "
             f"sensitive_classes: {self.sensitive_classes_conf}"
@@ -157,7 +155,6 @@ class YOLOInference:
             if inference_settings["outputs"]["labels_subfolder"]
             else ""
         )
-
         self.batch_size = inference_settings["model_params"]["batch_size"]
 
     def run_pipeline(self) -> None:
