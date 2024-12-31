@@ -244,7 +244,9 @@ class YOLOInference:
             batch_results.append(sahi_result)
         return batch_results
 
-    def _run_yolo_inference(self, batch_image_paths: List[str]) -> List[Results]:
+    def _run_yolo_inference(
+        self, batch_image_paths: List[str], folder_name: str
+    ) -> List[Results]:
         """
         Run inference using YOLO for a batch of images.
 
@@ -252,6 +254,8 @@ class YOLOInference:
         ----------
         batch_image_paths: List[str]
             List of image paths in the current batch.
+        folder_name: str
+            Name of the folder containing the batch images.
 
         Returns
         -------
@@ -262,9 +266,7 @@ class YOLOInference:
             self._load_image(image_path).image for image_path in batch_image_paths
         ]
         self.inference_params["source"] = batch_images
-        self.inference_params["name"] = (
-            "batch_inference"  # Replace with folder name if needed
-        )
+        self.inference_params["name"] = folder_name
         return self.model(**self.inference_params)
 
     def _process_batches(self, folders_and_frames: Dict[str, List[str]]) -> None:
@@ -291,7 +293,9 @@ class YOLOInference:
                 if self.use_sahi:
                     batch_results = self._run_sahi_inference(batch_image_paths)
                 else:
-                    batch_results = self._run_yolo_inference(batch_image_paths)
+                    batch_results = self._run_yolo_inference(
+                        batch_image_paths, folder_name
+                    )
 
                 self._process_detections(
                     model_results=batch_results,
