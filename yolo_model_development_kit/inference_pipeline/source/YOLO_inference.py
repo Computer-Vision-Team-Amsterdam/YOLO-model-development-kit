@@ -96,6 +96,8 @@ class YOLOInference:
         self.images_folder = images_folder
         self.output_folder = output_folder
         self.model_path = model_path
+        self.use_sahi = inference_settings["use_sahi"]
+        self.sahi = inference_settings["sahi_params"]
 
         self.inference_params = {
             "imgsz": inference_settings["model_params"].get("img_size", 640),
@@ -109,9 +111,20 @@ class YOLOInference:
         }
 
         logger.debug(f"Inference_params: {self.inference_params}")
-        logger.debug(f"YOLO model: {model_path}")
+        logger.debug(f"Model path: {model_path}")
         logger.debug(f"Output folder: {self.output_folder}")
-        self.model = YOLO(model=self.model_path, task="detect")
+
+        if self.use_sahi:
+            self.sahi_model = AutoDetectionModel.from_pretrained(
+                model_type=self.sahi["model_type"],
+                model_path=self.model_path,
+                confidence_threshold=self.inference_params["conf"],
+            )
+
+            logger.info(f'Using SAHI model with params: {inference_settings["sahi"]}.')
+        else:
+            self.model = YOLO(model=self.model_path, task="detect")
+            logger.info("Using YOLO model.")
 
         self.target_classes = inference_settings["target_classes"]
         self.sensitive_classes = inference_settings["sensitive_classes"]
@@ -146,7 +159,6 @@ class YOLOInference:
         )
 
         self.batch_size = inference_settings["model_params"]["batch_size"]
-        self.use_sahi = inference_settings["use_sahi"]
 
     def run_pipeline(self) -> None:
         """
@@ -165,10 +177,7 @@ class YOLOInference:
         logger.info(
             f"Total number of images: {sum(len(frames) for frames in folders_and_frames.values())}"
         )
-        if self.use_sahi:
-            self._process_batches_with_sahi(folders_and_frames=folders_and_frames)
-        else:
-            self._process_batches(folders_and_frames=folders_and_frames)
+        self._process_batches(folders_and_frames=folders_and_frames)
 
     def _load_image(
         self, image_path: Union[os.PathLike, str], child_class=InputImage
@@ -194,72 +203,69 @@ class YOLOInference:
             image.resize(output_image_size=self.output_image_size)
         return image
 
-    def _process_batches_with_sahi(
-        self, folders_and_frames: Dict[str, List[str]]
-    ) -> None:
+    def _run_sahi_inference(self, batch_image_paths: List[str]) -> List[Results]:
         """
-        Process all images in all sub-folders in batches of size batch_size using SAHI.
-        This method differs from _process_batches as we use SAHI inference function.
+        Run inference using SAHI for a batch of images.
 
         Parameters
         ----------
-        folders_and_frames: Dict[str, List[str]]
-            Dictionary mapping folder names to the images they contain as
-            `{"folder_name": List[image_names]}`
+        batch_image_paths: List[str]
+            List of image paths in the current batch.
+
+        Returns
+        -------
+        List[Results]
+            List of Results objects for the batch.
         """
-        model = AutoDetectionModel.from_pretrained(
-            model_type="ultralytics",
-            model_path=self.model_path,
-            device="cuda:0",
-            confidence_threshold=self.inference_params["conf"],
-        )
-        for folder_name, images in folders_and_frames.items():
-            logger.debug(
-                f"Running inference on folder: {os.path.relpath(folder_name, self.images_folder)}"
+        batch_results = []
+        for image_path in batch_image_paths:
+            result = get_sliced_prediction(
+                image=image_path,
+                detection_model=self.sahi_model,
+                slice_height=self.sahi["slice_height"],
+                slice_width=self.sahi["slice_width"],
+                overlap_height_ratio=self.sahi["overlap_height_ratio"],
+                overlap_width_ratio=self.sahi["overlap_width_ratio"],
             )
-            image_paths = [os.path.join(folder_name, image) for image in images]
-            logger.debug(f"Number of images to detect: {len(image_paths)}")
-            processed_images = 0
+            object_prediction_list = result.to_coco_annotations()
+            loaded_image = self._load_image(image_path=image_path).image
+            category_mapping = {
+                prediction.category.id: prediction.category.name
+                for prediction in result.object_prediction_list
+            }
 
-            for i in range(0, len(image_paths), self.batch_size):
-                batch_image_paths = image_paths[i : i + self.batch_size]
-                batch_results = []
+            sahi_result = self.process_sahi_results_to_yolo_results(
+                sahi_results=object_prediction_list,
+                image=loaded_image,
+                image_path=image_path,
+                category_mapping=category_mapping,
+                speed=result.durations_in_seconds,
+            )
+            batch_results.append(sahi_result)
+        return batch_results
 
-                for image_path in batch_image_paths:
-                    result = get_sliced_prediction(
-                        image=image_path,
-                        detection_model=model,
-                        slice_height=2048,
-                        slice_width=2048,
-                        overlap_height_ratio=0.2,
-                        overlap_width_ratio=0.2,
-                        verbose=1,
-                    )
-                    object_prediction_list = result.to_coco_annotations()
-                    loaded_image = self._load_image(image_path=image_path).image
-                    category_mapping = {
-                        prediction.category.id: prediction.category.name
-                        for prediction in result.object_prediction_list
-                    }
+    def _run_yolo_inference(self, batch_image_paths: List[str]) -> List[Results]:
+        """
+        Run inference using YOLO for a batch of images.
 
-                    sahi_result = self.process_sahi_results_to_yolo_results(
-                        sahi_results=object_prediction_list,
-                        image=loaded_image,
-                        image_path=image_path,
-                        category_mapping=category_mapping,
-                        speed=result.durations_in_seconds,
-                    )
+        Parameters
+        ----------
+        batch_image_paths: List[str]
+            List of image paths in the current batch.
 
-                    batch_results.append(sahi_result)
-
-                self._process_detections(
-                    model_results=batch_results,
-                    image_paths=image_paths,
-                )
-                processed_images += len(image_paths)
-
-            logger.debug(f"Number of images processed: {processed_images}")
-            torch.cuda.empty_cache()  # Clear unused memory
+        Returns
+        -------
+        List[Results]
+            List of Results objects for the batch.
+        """
+        batch_images = [
+            self._load_image(image_path).image for image_path in batch_image_paths
+        ]
+        self.inference_params["source"] = batch_images
+        self.inference_params["name"] = (
+            "batch_inference"  # Replace with folder name if needed
+        )
+        return self.model(**self.inference_params)
 
     def _process_batches(self, folders_and_frames: Dict[str, List[str]]) -> None:
         """
@@ -278,20 +284,20 @@ class YOLOInference:
             image_paths = [os.path.join(folder_name, image) for image in images]
             logger.debug(f"Number of images to detect: {len(image_paths)}")
             processed_images = 0
+
             for i in range(0, len(image_paths), self.batch_size):
-                batch_images = [
-                    self._load_image(image_path).image
-                    for image_path in image_paths[i : i + self.batch_size]
-                ]
-                self.inference_params["source"] = batch_images
-                self.inference_params["name"] = folder_name
-                batch_results = self.model(**self.inference_params)
-                torch.cuda.empty_cache()  # Clear unused memory
+                batch_image_paths = image_paths[i : i + self.batch_size]
+
+                if self.use_sahi:
+                    batch_results = self._run_sahi_inference(batch_image_paths)
+                else:
+                    batch_results = self._run_yolo_inference(batch_image_paths)
+
                 self._process_detections(
                     model_results=batch_results,
-                    image_paths=image_paths[i : i + self.batch_size],
+                    image_paths=batch_image_paths,
                 )
-                processed_images += len(batch_images)
+                processed_images += len(batch_image_paths)
 
             logger.debug(f"Number of images processed: {processed_images}")
 
@@ -388,7 +394,6 @@ class YOLOInference:
             Results: A Results object with SAHI detection boxes
         """
 
-        # Convert SAHI results into a tensor
         boxes_data = []
         for result in sahi_results:
             bbox = result["bbox"]
@@ -396,17 +401,13 @@ class YOLOInference:
             x_max = x_min + bbox_width
             y_max = y_min + bbox_height
 
-            # [x1, y1, x2, y2, confidence, class]
             boxes_data.append(
                 [x_min, y_min, x_max, y_max, result["score"], result["category_id"]]
             )
 
-        # Convert the list of boxes to a single tensor
         boxes_tensor = torch.tensor(np.array(boxes_data), dtype=torch.float32)
-
         names = {int(k): v for k, v in category_mapping.items()}
 
-        # Create and return the SAHIResults object
         return Results(
             boxes=boxes_tensor,
             orig_img=image,

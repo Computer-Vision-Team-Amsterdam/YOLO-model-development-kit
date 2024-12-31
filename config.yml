@@ -21,6 +21,12 @@ inference_pipeline:
     output_rel_path: "inference/yolo11m_OLS2"
     detections_subfolder: "test_evaluation_0.01"
     labels_subfolder: "labels"
+  sahi_params:
+    model_type: "ultralytics"
+    slice_height: 2048
+    slice_width: 2048
+    overlap_height_ratio: 0.2
+    overlap_width_ratio: 0.2
   target_classes: [0,1]
   sensitive_classes: []
   target_classes_conf: null  # null means conf is taken from model_params
@@ -29,7 +35,11 @@ inference_pipeline:
   save_detection_images: False
   save_detection_labels: True
   save_all_images: True  # If True, all images will be saved regardless of whether they contain target class objects
-  use_sahi: True
+
+  sahi:
+    use_sahi: False
+    model_type: "ultralytics"
+
 
 performance_evaluation:
   inputs:
