@@ -52,6 +52,7 @@ class InferencePipelineSpec(SettingsSpecModel):
     save_detection_images: bool = False
     save_detection_labels: bool = True
     save_all_images: bool = False
+    use_sahi: bool = False
 
 
 class PerformanceEvaluationSpec(SettingsSpecModel):
@@ -71,6 +72,8 @@ class PerformanceEvaluationSpec(SettingsSpecModel):
     sensitive_classes_conf: Optional[float] = None
     plot_pr_curves: bool = True
     is_bias_analysis: bool = True
+    is_multiple_sizes: bool = False
+    imgsz: List[int]
 
 
 class TrainingModelParameters(SettingsSpecModel):

@@ -1,9 +1,12 @@
 import logging
 import os
-from typing import Dict, List, Union
+from typing import Any, Dict, List, Union
 
+import numpy as np
 import torch
 from cvtoolkit.helpers.file_helpers import IMG_FORMATS
+from sahi import AutoDetectionModel
+from sahi.predict import get_sliced_prediction
 from ultralytics import YOLO
 from ultralytics.engine.results import Results
 
@@ -48,11 +51,11 @@ class YOLOInference:
             Location where output (annotation labels and possible images) will
             be stored.
         model_path: str
-            Location of the pre-trained YOLOv8 model.
+            Location of the pre-trained YOLO model.
         inference_settings: Dict
             Settings for the model, which contains:
                 model_params: Dict
-                    Inference parameters for the YOLOv8 model:
+                    Inference parameters for the YOLO model:
                         img_size, save_img_flag, save_txt_flag, save_conf_flag, conf
                 target_classes: List
                     List of target classes for which bounding boxes will be predicted.
@@ -92,6 +95,7 @@ class YOLOInference:
         """
         self.images_folder = images_folder
         self.output_folder = output_folder
+        self.model_path = model_path
 
         self.inference_params = {
             "imgsz": inference_settings["model_params"].get("img_size", 640),
@@ -107,7 +111,7 @@ class YOLOInference:
         logger.debug(f"Inference_params: {self.inference_params}")
         logger.debug(f"YOLO model: {model_path}")
         logger.debug(f"Output folder: {self.output_folder}")
-        self.model = YOLO(model=model_path, task="detect")
+        self.model = YOLO(model=self.model_path, task="detect")
 
         self.target_classes = inference_settings["target_classes"]
         self.sensitive_classes = inference_settings["sensitive_classes"]
@@ -126,7 +130,6 @@ class YOLOInference:
             f"Using confidence thresholds: target_classes: {self.target_classes_conf}, "
             f"sensitive_classes: {self.sensitive_classes_conf}"
         )
-
         self.output_image_size = inference_settings["output_image_size"]
         self.save_detections = inference_settings["save_detection_images"]
         self.save_labels = inference_settings["save_detection_labels"]
@@ -143,6 +146,7 @@ class YOLOInference:
         )
 
         self.batch_size = inference_settings["model_params"]["batch_size"]
+        self.use_sahi = inference_settings["use_sahi"]
 
     def run_pipeline(self) -> None:
         """
@@ -161,7 +165,10 @@ class YOLOInference:
         logger.info(
             f"Total number of images: {sum(len(frames) for frames in folders_and_frames.values())}"
         )
-        self._process_batches(folders_and_frames=folders_and_frames)
+        if self.use_sahi:
+            self._process_batches_with_sahi(folders_and_frames=folders_and_frames)
+        else:
+            self._process_batches(folders_and_frames=folders_and_frames)
 
     def _load_image(
         self, image_path: Union[os.PathLike, str], child_class=InputImage
@@ -186,6 +193,73 @@ class YOLOInference:
         if self.output_image_size:
             image.resize(output_image_size=self.output_image_size)
         return image
+
+    def _process_batches_with_sahi(
+        self, folders_and_frames: Dict[str, List[str]]
+    ) -> None:
+        """
+        Process all images in all sub-folders in batches of size batch_size using SAHI.
+        This method differs from _process_batches as we use SAHI inference function.
+
+        Parameters
+        ----------
+        folders_and_frames: Dict[str, List[str]]
+            Dictionary mapping folder names to the images they contain as
+            `{"folder_name": List[image_names]}`
+        """
+        model = AutoDetectionModel.from_pretrained(
+            model_type="ultralytics",
+            model_path=self.model_path,
+            device="cuda:0",
+            confidence_threshold=self.inference_params["conf"],
+        )
+        for folder_name, images in folders_and_frames.items():
+            logger.debug(
+                f"Running inference on folder: {os.path.relpath(folder_name, self.images_folder)}"
+            )
+            image_paths = [os.path.join(folder_name, image) for image in images]
+            logger.debug(f"Number of images to detect: {len(image_paths)}")
+            processed_images = 0
+
+            for i in range(0, len(image_paths), self.batch_size):
+                batch_image_paths = image_paths[i : i + self.batch_size]
+                batch_results = []
+
+                for image_path in batch_image_paths:
+                    result = get_sliced_prediction(
+                        image=image_path,
+                        detection_model=model,
+                        slice_height=2048,
+                        slice_width=2048,
+                        overlap_height_ratio=0.2,
+                        overlap_width_ratio=0.2,
+                        verbose=1,
+                    )
+                    object_prediction_list = result.to_coco_annotations()
+                    loaded_image = self._load_image(image_path=image_path).image
+                    category_mapping = {
+                        prediction.category.id: prediction.category.name
+                        for prediction in result.object_prediction_list
+                    }
+
+                    sahi_result = self.process_sahi_results_to_yolo_results(
+                        sahi_results=object_prediction_list,
+                        image=loaded_image,
+                        image_path=image_path,
+                        category_mapping=category_mapping,
+                        speed=result.durations_in_seconds,
+                    )
+
+                    batch_results.append(sahi_result)
+
+                self._process_detections(
+                    model_results=batch_results,
+                    image_paths=image_paths,
+                )
+                processed_images += len(image_paths)
+
+            logger.debug(f"Number of images processed: {processed_images}")
+            torch.cuda.empty_cache()  # Clear unused memory
 
     def _process_batches(self, folders_and_frames: Dict[str, List[str]]) -> None:
         """
@@ -232,7 +306,7 @@ class YOLOInference:
         Parameters
         ----------
         model_results: List[Results]
-            List of YOLOv8 inference Results objects.
+            List of YOLO inference Results objects.
         image_paths: List[str]
             List of input image paths corresponding to the Results.
         """
@@ -293,3 +367,50 @@ class YOLOInference:
                     else:
                         folders_and_frames[foldername].append(filename)
         return folders_and_frames
+
+    @staticmethod
+    def process_sahi_results_to_yolo_results(
+        sahi_results: List[Dict[str, Any]],
+        image: np.ndarray,
+        image_path: str,
+        category_mapping: Dict[str, str],
+        speed: Dict[str, float],
+    ) -> Results:
+        """
+        Converts SAHI results into a YOLO-style Results object.
+
+        Args:
+            sahi_results (List[Dict[str, Any]]): SAHI COCO-style annotations.
+            image (np.ndarray): Original image array.
+            image_path (str): Path to the original image.
+
+        Returns:
+            Results: A Results object with SAHI detection boxes
+        """
+
+        # Convert SAHI results into a tensor
+        boxes_data = []
+        for result in sahi_results:
+            bbox = result["bbox"]
+            x_min, y_min, bbox_width, bbox_height = bbox
+            x_max = x_min + bbox_width
+            y_max = y_min + bbox_height
+
+            # [x1, y1, x2, y2, confidence, class]
+            boxes_data.append(
+                [x_min, y_min, x_max, y_max, result["score"], result["category_id"]]
+            )
+
+        # Convert the list of boxes to a single tensor
+        boxes_tensor = torch.tensor(np.array(boxes_data), dtype=torch.float32)
+
+        names = {int(k): v for k, v in category_mapping.items()}
+
+        # Create and return the SAHIResults object
+        return Results(
+            boxes=boxes_tensor,
+            orig_img=image,
+            path=image_path,
+            names=names,
+            speed=speed,
+        )
