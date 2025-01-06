@@ -10,16 +10,16 @@ inference_pipeline:
   model_params:
     batch_size: 8
     img_size: 2048
-    conf: 0.0001
+    conf: 0.01
   inputs:
-    datastore_path: "bias_analysis_dataset_sampled_panos"
+    datastore_path: "bias_analysis_sampled_panos"
     inference_data_rel_path: "kavel10_kempkes_geo360_sampled_panos"
     model_weights_rel_path: "model"
     model_name: "yolo11m_orbs_lilac_spaceship-2.pt"
   outputs:
-    datastore_path: "bias_analysis_dataset_sampled_panos"  # empty string "" means same as input datastore
-    output_rel_path: "inference/yolo11m_orbs_lilac_spaceship-2"
-    detections_subfolder: "test_SAHI_0.0001"
+    datastore_path: "bias_analysis_sampled_panos"  # empty string "" means same as input datastore
+    output_rel_path: "inference/yolo11m_OLS2_0.01"
+    detections_subfolder: "test_SAHI_0.01"
     labels_subfolder: "labels_sahi"
   sahi_params:
     model_type: "ultralytics"
@@ -28,7 +28,7 @@ inference_pipeline:
     overlap_height_ratio: 0.2
     overlap_width_ratio: 0.2
   target_classes: [0,1]
-  sensitive_classes: []
+  sensitive_classes: [0,1]
   target_classes_conf: null  # null means conf is taken from model_params
   sensitive_classes_conf: null  # null means conf is taken from model_params
   output_image_size: null  # null means keep original size

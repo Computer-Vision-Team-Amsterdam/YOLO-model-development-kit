@@ -406,7 +406,13 @@ class YOLOInference:
                 [x_min, y_min, x_max, y_max, result["score"], result["category_id"]]
             )
 
-        boxes_tensor = torch.tensor(np.array(boxes_data), dtype=torch.float32)
+        if not boxes_data:
+            boxes_tensor = torch.empty(
+                (0, 6), dtype=torch.float32
+            )  # Boxes class expects tensor with shape (0,6)
+        else:
+            boxes_tensor = torch.tensor(np.array(boxes_data), dtype=torch.float32)
+
         names = {int(k): v for k, v in category_mapping.items()}
 
         return Results(
