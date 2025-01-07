@@ -77,5 +77,52 @@ def test_model_result_with_sahi_results():
     assert model_result.result.speed == mock_speed, "Speed values mismatch!"
 
 
+def test_model_result_with_no_detections():
+    image_height, image_width = 720, 1280
+    mock_image = np.zeros((image_height, image_width, 3), dtype=np.uint8)
+    mock_path = "mock_image.jpg"
+    mock_category_mapping = {0: "person", 1: "license plate"}
+    mock_speed = {"slice": 10.0, "prediction": 50.0}
+
+    sahi_results_mock = []
+
+    sahi_results = YOLOInference.process_sahi_results_to_yolo_results(
+        sahi_results=sahi_results_mock,
+        image=mock_image,
+        image_path=mock_path,
+        category_mapping=mock_category_mapping,
+        speed=mock_speed,
+    )
+
+    target_classes = [0, 1]
+    sensitive_classes = [1]
+
+    model_result = ModelResult(
+        model_result=sahi_results,
+        target_classes=target_classes,
+        sensitive_classes=sensitive_classes,
+        target_classes_conf=0.5,
+        sensitive_classes_conf=0.7,
+        save_image=False,
+        save_labels=False,
+        save_all_images=False,
+    )
+
+    assert model_result.result.orig_shape == (
+        image_height,
+        image_width,
+    ), "Original shape mismatch!"
+    assert isinstance(model_result.result.boxes, Boxes), "Boxes type mismatch!"
+    assert model_result.result.path == mock_path, "Image path mismatch!"
+    assert model_result.result.boxes.xyxy.shape[0] == 0, "Boxes should be empty!"
+    assert (
+        model_result.result.boxes.conf.tolist() == []
+    ), "Confidence values should be empty!"
+    assert model_result.result.boxes.cls.tolist() == [], "Class IDs should be empty!"
+    assert model_result.result.names == mock_category_mapping, "Class names mismatch!"
+    assert model_result.result.speed == mock_speed, "Speed values mismatch!"
+
+
 if __name__ == "__main__":
     test_model_result_with_sahi_results()
+    test_model_result_with_no_detections()

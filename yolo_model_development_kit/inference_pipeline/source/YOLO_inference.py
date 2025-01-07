@@ -283,7 +283,6 @@ class YOLOInference:
             image_paths = [os.path.join(folder_name, image) for image in images]
             logger.debug(f"Number of images to detect: {len(image_paths)}")
             processed_images = 0
-
             for i in range(0, len(image_paths), self.batch_size):
                 batch_image_paths = image_paths[i : i + self.batch_size]
 
