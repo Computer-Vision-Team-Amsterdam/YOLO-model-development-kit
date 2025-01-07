@@ -12,22 +12,22 @@ inference_pipeline:
     img_size: 2048
     conf: 0.01
   inputs:
-    datastore_path: "bias_analysis_sampled_panos"
-    inference_data_rel_path: "kavel10_kempkes_geo360_sampled_panos"
-    model_weights_rel_path: "model"
+    datastore_path: "inference_test"
+    inference_data_rel_path: "datasets/demo_images"
+    model_weights_rel_path: "model_weights"
     model_name: "yolo11m_orbs_lilac_spaceship-2.pt"
   outputs:
-    datastore_path: "bias_analysis_sampled_panos"  # empty string "" means same as input datastore
-    output_rel_path: "inference/yolo11m_OLS2_0.01"
-    detections_subfolder: "test_SAHI_0.01"
-    labels_subfolder: "labels_sahi"
+    datastore_path: "inference_test"  # empty string "" means same as input datastore
+    output_rel_path: "inference/demo_images/test_new_inference_pipeline/"
+    detections_subfolder: ""
+    labels_subfolder: ""
   sahi_params:
     model_type: "ultralytics"
     slice_height: 2048
     slice_width: 2048
     overlap_height_ratio: 0.2
     overlap_width_ratio: 0.2
-  target_classes: [0,1]
+  target_classes: []
   sensitive_classes: [0,1]
   target_classes_conf: null  # null means conf is taken from model_params
   sensitive_classes_conf: null  # null means conf is taken from model_params
@@ -45,14 +45,14 @@ performance_evaluation:
     predictions_rel_path: "inference/yolo11s_base"
   outputs:
     datastore: "bias_analysis_sampled_panos"
-    output_rel_path: "evaluation/yolo11s_base/standard_evaluation_0.001"
+    output_rel_path: "evaluation/yolo11s_base/standard_evaluation"
   categories_json_path: "categories_eval.json"
   mapping_json_path: "groupings_wheelchairs_bias_analysis.json"
   dataset_name: "kavel10_kempkes_geo360"
   model_name: "yolo11s_base"
   ground_truth_image_shape: [8000,4000]
   predictions_image_shape: [2048, 1024]
-  prediction_labels_rel_path: "labels_0.001"
+  prediction_labels_rel_path: "labels"
   splits: []
   target_classes: []
   sensitive_classes: [0,1]
