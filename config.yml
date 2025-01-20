@@ -8,7 +8,7 @@ aml_experiment_details:
 
 inference_pipeline:
   model_params:
-    batch_size: 8
+    batch_size: 1 # batch size does not have an effect for SAHI
     img_size: 2048
     conf: 0.01
   inputs:
@@ -35,7 +35,7 @@ inference_pipeline:
   save_detection_images: True
   save_detection_labels: True
   save_all_images: False  # If True, all images will be saved regardless of whether they contain target class objects
-  use_sahi: True
+  use_sahi: False
 
 
 performance_evaluation:

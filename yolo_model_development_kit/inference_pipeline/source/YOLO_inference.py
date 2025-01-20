@@ -95,7 +95,6 @@ class YOLOInference:
         """
         self.images_folder = images_folder
         self.output_folder = output_folder
-        self.model_path = model_path
         self.use_sahi = inference_settings["use_sahi"]
         self.sahi = inference_settings["sahi_params"]
 
@@ -117,12 +116,12 @@ class YOLOInference:
         if self.use_sahi:
             self.sahi_model = AutoDetectionModel.from_pretrained(
                 model_type=self.sahi["model_type"],
-                model_path=self.model_path,
+                model_path=model_path,
                 confidence_threshold=self.inference_params["conf"],
             )
             logger.info(f"Using SAHI model with params: {self.sahi}.")
         else:
-            self.model = YOLO(model=self.model_path, task="detect")
+            self.model = YOLO(model=model_path, task="detect")
             logger.info("Using YOLO model.")
 
         self.target_classes = inference_settings["target_classes"]
