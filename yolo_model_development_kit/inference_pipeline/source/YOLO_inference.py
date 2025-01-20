@@ -199,14 +199,18 @@ class YOLOInference:
             image.resize(output_image_size=self.output_image_size)
         return image
 
-    def _run_sahi_inference(self, batch_image_paths: List[str]) -> List[Results]:
+    def _run_sahi_inference(
+        self, batch_images: List[InputImage], batch_image_paths: List[str]
+    ) -> List[Results]:
         """
         Run inference using SAHI for a batch of images.
 
         Parameters
         ----------
+        batch_images: List[InputImage]
+            List of images in the current batch.
         batch_image_paths: List[str]
-            List of image paths in the current batch.
+            List of images paths in the current batch.
 
         Returns
         -------
@@ -214,9 +218,9 @@ class YOLOInference:
             List of Results objects for the batch.
         """
         batch_results = []
-        for image_path in batch_image_paths:
+        for image, image_path in zip(batch_images, batch_image_paths):
             result = get_sliced_prediction(
-                image=image_path,
+                image=image,
                 detection_model=self.sahi_model,
                 slice_height=self.sahi["slice_height"],
                 slice_width=self.sahi["slice_width"],
@@ -224,7 +228,6 @@ class YOLOInference:
                 overlap_width_ratio=self.sahi["overlap_width_ratio"],
             )
             object_prediction_list = result.to_coco_annotations()
-            loaded_image = self._load_image(image_path=image_path).image
             category_mapping = {
                 prediction.category.id: prediction.category.name
                 for prediction in result.object_prediction_list
@@ -232,7 +235,7 @@ class YOLOInference:
 
             sahi_result = self.process_sahi_results_to_yolo_results(
                 sahi_results=object_prediction_list,
-                image=loaded_image,
+                image=image,
                 image_path=image_path,
                 category_mapping=category_mapping,
                 speed=result.durations_in_seconds,
@@ -241,15 +244,15 @@ class YOLOInference:
         return batch_results
 
     def _run_yolo_inference(
-        self, batch_image_paths: List[str], folder_name: str
+        self, batch_images: List[InputImage], folder_name: str
     ) -> List[Results]:
         """
         Run inference using YOLO for a batch of images.
 
         Parameters
         ----------
-        batch_image_paths: List[str]
-            List of image paths in the current batch.
+        batch_images: List[InputImage]
+            List of images in the current batch.
         folder_name: str
             Name of the folder containing the batch images.
 
@@ -258,9 +261,7 @@ class YOLOInference:
         List[Results]
             List of Results objects for the batch.
         """
-        batch_images = [
-            self._load_image(image_path).image for image_path in batch_image_paths
-        ]
+
         self.inference_params["source"] = batch_images
         self.inference_params["name"] = folder_name
         return self.model(**self.inference_params)
@@ -284,13 +285,17 @@ class YOLOInference:
             processed_images = 0
             for i in range(0, len(image_paths), self.batch_size):
                 batch_image_paths = image_paths[i : i + self.batch_size]
+                batch_images = [
+                    self._load_image(image_path).image
+                    for image_path in batch_image_paths
+                ]
 
                 if self.use_sahi:
-                    batch_results = self._run_sahi_inference(batch_image_paths)
-                else:
-                    batch_results = self._run_yolo_inference(
-                        batch_image_paths, folder_name
+                    batch_results = self._run_sahi_inference(
+                        batch_images, batch_image_paths
                     )
+                else:
+                    batch_results = self._run_yolo_inference(batch_images, folder_name)
 
                 self._process_detections(
                     model_results=batch_results,
@@ -395,8 +400,7 @@ class YOLOInference:
 
         boxes_data = []
         for result in sahi_results:
-            bbox = result["bbox"]
-            x_min, y_min, bbox_width, bbox_height = bbox
+            x_min, y_min, bbox_width, bbox_height = result["bbox"]
             x_max = x_min + bbox_width
             y_max = y_min + bbox_height
 
@@ -404,7 +408,7 @@ class YOLOInference:
                 [x_min, y_min, x_max, y_max, result["score"], result["category_id"]]
             )
 
-        if not boxes_data:
+        if len(boxes_data) == 0:
             boxes_tensor = torch.empty(
                 (0, 6), dtype=torch.float32
             )  # Boxes class expects tensor with shape (0,6)
