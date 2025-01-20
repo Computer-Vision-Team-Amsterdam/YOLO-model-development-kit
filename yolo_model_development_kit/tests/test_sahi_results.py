@@ -9,7 +9,7 @@ from yolo_model_development_kit.inference_pipeline.source.YOLO_inference import 
 )
 
 
-def run_test(
+def test_sahi_to_yolo_results_conversion(
     sahi_results_mock,
     expected_boxes,
     expected_confs,
@@ -90,7 +90,7 @@ if __name__ == "__main__":
             "area": 4699,
         },
     ]
-    run_test(
+    test_sahi_to_yolo_results_conversion(
         sahi_results_mock_with_detections,
         expected_boxes=2,
         expected_confs=[0.8050000071525574, 0.7940000295639038],
@@ -99,7 +99,7 @@ if __name__ == "__main__":
     )
 
     sahi_results_mock_no_detections = []
-    run_test(
+    test_sahi_to_yolo_results_conversion(
         sahi_results_mock_no_detections,
         expected_boxes=0,
         expected_confs=[],
