@@ -1,9 +1,12 @@
 import logging
 import os
-from typing import Dict, List, Union
+from typing import Any, Dict, List, Union
 
+import numpy as np
 import torch
 from cvtoolkit.helpers.file_helpers import IMG_FORMATS
+from sahi import AutoDetectionModel
+from sahi.predict import get_sliced_prediction
 from ultralytics import YOLO
 from ultralytics.engine.results import Results
 
@@ -48,11 +51,11 @@ class YOLOInference:
             Location where output (annotation labels and possible images) will
             be stored.
         model_path: str
-            Location of the pre-trained YOLOv8 model.
+            Location of the pre-trained YOLO model.
         inference_settings: Dict
             Settings for the model, which contains:
                 model_params: Dict
-                    Inference parameters for the YOLOv8 model:
+                    Inference parameters for the YOLO model:
                         img_size, save_img_flag, save_txt_flag, save_conf_flag, conf
                 target_classes: List
                     List of target classes for which bounding boxes will be predicted.
@@ -92,6 +95,8 @@ class YOLOInference:
         """
         self.images_folder = images_folder
         self.output_folder = output_folder
+        self.use_sahi = inference_settings["use_sahi"]
+        self.sahi = inference_settings["sahi_params"]
 
         self.inference_params = {
             "imgsz": inference_settings["model_params"].get("img_size", 640),
@@ -105,9 +110,19 @@ class YOLOInference:
         }
 
         logger.debug(f"Inference_params: {self.inference_params}")
-        logger.debug(f"YOLO model: {model_path}")
+        logger.debug(f"Model path: {model_path}")
         logger.debug(f"Output folder: {self.output_folder}")
-        self.model = YOLO(model=model_path, task="detect")
+
+        if self.use_sahi:
+            self.sahi_model = AutoDetectionModel.from_pretrained(
+                model_type=self.sahi["model_type"],
+                model_path=model_path,
+                confidence_threshold=self.inference_params["conf"],
+            )
+            logger.info(f"Using SAHI model with params: {self.sahi}.")
+        else:
+            self.model = YOLO(model=model_path, task="detect")
+            logger.info("Using YOLO model.")
 
         self.target_classes = inference_settings["target_classes"]
         self.sensitive_classes = inference_settings["sensitive_classes"]
@@ -121,12 +136,10 @@ class YOLOInference:
             if inference_settings["sensitive_classes_conf"]
             else self.inference_params["conf"]
         )
-
         logger.debug(
             f"Using confidence thresholds: target_classes: {self.target_classes_conf}, "
             f"sensitive_classes: {self.sensitive_classes_conf}"
         )
-
         self.output_image_size = inference_settings["output_image_size"]
         self.save_detections = inference_settings["save_detection_images"]
         self.save_labels = inference_settings["save_detection_labels"]
@@ -141,7 +154,6 @@ class YOLOInference:
             if inference_settings["outputs"]["labels_subfolder"]
             else ""
         )
-
         self.batch_size = inference_settings["model_params"]["batch_size"]
 
     def run_pipeline(self) -> None:
@@ -187,6 +199,73 @@ class YOLOInference:
             image.resize(output_image_size=self.output_image_size)
         return image
 
+    def _run_sahi_inference(
+        self, batch_images: List[InputImage], batch_image_paths: List[str]
+    ) -> List[Results]:
+        """
+        Run inference using SAHI for a batch of images.
+
+        Parameters
+        ----------
+        batch_images: List[InputImage]
+            List of images in the current batch.
+        batch_image_paths: List[str]
+            List of images paths in the current batch.
+
+        Returns
+        -------
+        List[Results]
+            List of Results objects for the batch.
+        """
+        batch_results = []
+        for image, image_path in zip(batch_images, batch_image_paths):
+            result = get_sliced_prediction(
+                image=image,
+                detection_model=self.sahi_model,
+                slice_height=self.sahi["slice_height"],
+                slice_width=self.sahi["slice_width"],
+                overlap_height_ratio=self.sahi["overlap_height_ratio"],
+                overlap_width_ratio=self.sahi["overlap_width_ratio"],
+            )
+            object_prediction_list = result.to_coco_annotations()
+            category_mapping = {
+                prediction.category.id: prediction.category.name
+                for prediction in result.object_prediction_list
+            }
+
+            sahi_result = self.process_sahi_results_to_yolo_results(
+                sahi_results=object_prediction_list,
+                image=image,
+                image_path=image_path,
+                category_mapping=category_mapping,
+                speed=result.durations_in_seconds,
+            )
+            batch_results.append(sahi_result)
+        return batch_results
+
+    def _run_yolo_inference(
+        self, batch_images: List[InputImage], folder_name: str
+    ) -> List[Results]:
+        """
+        Run inference using YOLO for a batch of images.
+
+        Parameters
+        ----------
+        batch_images: List[InputImage]
+            List of images in the current batch.
+        folder_name: str
+            Name of the folder containing the batch images.
+
+        Returns
+        -------
+        List[Results]
+            List of Results objects for the batch.
+        """
+
+        self.inference_params["source"] = batch_images
+        self.inference_params["name"] = folder_name
+        return self.model(**self.inference_params)
+
     def _process_batches(self, folders_and_frames: Dict[str, List[str]]) -> None:
         """
         Process all images in all sub-folders in batches of size batch_size.
@@ -205,19 +284,24 @@ class YOLOInference:
             logger.debug(f"Number of images to detect: {len(image_paths)}")
             processed_images = 0
             for i in range(0, len(image_paths), self.batch_size):
+                batch_image_paths = image_paths[i : i + self.batch_size]
                 batch_images = [
                     self._load_image(image_path).image
-                    for image_path in image_paths[i : i + self.batch_size]
+                    for image_path in batch_image_paths
                 ]
-                self.inference_params["source"] = batch_images
-                self.inference_params["name"] = folder_name
-                batch_results = self.model(**self.inference_params)
-                torch.cuda.empty_cache()  # Clear unused memory
+
+                if self.use_sahi:
+                    batch_results = self._run_sahi_inference(
+                        batch_images, batch_image_paths
+                    )
+                else:
+                    batch_results = self._run_yolo_inference(batch_images, folder_name)
+
                 self._process_detections(
                     model_results=batch_results,
-                    image_paths=image_paths[i : i + self.batch_size],
+                    image_paths=batch_image_paths,
                 )
-                processed_images += len(batch_images)
+                processed_images += len(batch_image_paths)
 
             logger.debug(f"Number of images processed: {processed_images}")
 
@@ -232,7 +316,7 @@ class YOLOInference:
         Parameters
         ----------
         model_results: List[Results]
-            List of YOLOv8 inference Results objects.
+            List of YOLO inference Results objects.
         image_paths: List[str]
             List of input image paths corresponding to the Results.
         """
@@ -293,3 +377,50 @@ class YOLOInference:
                     else:
                         folders_and_frames[foldername].append(filename)
         return folders_and_frames
+
+    @staticmethod
+    def process_sahi_results_to_yolo_results(
+        sahi_results: List[Dict[str, Any]],
+        image: np.ndarray,
+        image_path: str,
+        category_mapping: Dict[str, str],
+        speed: Dict[str, float],
+    ) -> Results:
+        """
+        Converts SAHI results into a YOLO-style Results object.
+
+        Args:
+            sahi_results (List[Dict[str, Any]]): SAHI COCO-style annotations.
+            image (np.ndarray): Original image array.
+            image_path (str): Path to the original image.
+
+        Returns:
+            Results: A Results object with SAHI detection boxes
+        """
+
+        boxes_data = []
+        for result in sahi_results:
+            x_min, y_min, bbox_width, bbox_height = result["bbox"]
+            x_max = x_min + bbox_width
+            y_max = y_min + bbox_height
+
+            boxes_data.append(
+                [x_min, y_min, x_max, y_max, result["score"], result["category_id"]]
+            )
+
+        if len(boxes_data) == 0:
+            boxes_tensor = torch.empty(
+                (0, 6), dtype=torch.float32
+            )  # Boxes class expects tensor with shape (0,6)
+        else:
+            boxes_tensor = torch.tensor(np.array(boxes_data), dtype=torch.float32)
+
+        names = {int(k): v for k, v in category_mapping.items()}
+
+        return Results(
+            boxes=boxes_tensor,
+            orig_img=image,
+            path=image_path,
+            names=names,
+            speed=speed,
+        )
