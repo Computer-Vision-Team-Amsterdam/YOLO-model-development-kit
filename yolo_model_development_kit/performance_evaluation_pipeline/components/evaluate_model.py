@@ -86,7 +86,6 @@ def evaluate_model(
         predictions_base_folder=predictions_base_dir,
         category_manager=category_manager,
         output_folder=output_dir,
-        ground_truth_image_shape=eval_settings["ground_truth_image_shape"],
         predictions_image_shape=eval_settings["predictions_image_shape"],
         dataset_name=eval_settings["dataset_name"],
         model_name=eval_settings["model_name"],

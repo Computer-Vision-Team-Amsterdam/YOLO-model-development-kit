@@ -1,9 +1,9 @@
 customer: ""
 
 aml_experiment_details:
-  compute_name: oor-testing
+  compute_name: gpu-blurring-model
   env_name: oor-environment
-  env_version: 58
+  env_version: 61
   src_dir: "."
 
 inference_pipeline:
@@ -42,16 +42,15 @@ performance_evaluation:
   mapping_json_path: "groupings_wheelchairs_bias_analysis.json"
   dataset_name: "sampled_panos"
   model_name: "yolov5"
-  ground_truth_image_shape: [3840, 2160]
-  predictions_image_shape: [2048, 1024]
+  predictions_image_shape: [8000, 4000]
   prediction_labels_rel_path: "labels"
   splits: []
   target_classes: []
-  sensitive_classes: []
+  sensitive_classes: [0, 1]
   target_classes_conf: 0.7  # null means all predictions are used, custom COCO considers this threshold also for sensitive classes
   sensitive_classes_conf: null  # null means all predictions are used, only for TBA evaluation
-  plot_pr_curves: False
-  is_bias_analysis: True
+  plot_pr_curves: True
+  is_bias_analysis: False
 
 training_pipeline:
   model_parameters:

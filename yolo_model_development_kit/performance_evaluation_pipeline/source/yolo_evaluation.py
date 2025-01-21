@@ -1,7 +1,7 @@
 import logging
 import os
 from itertools import product
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -59,23 +59,21 @@ class YoloEvaluator:
         subfolder).
     category_manager: CategoryManager
         CategoryManager object containing object classes.
-    output_folder: Optional[Union[str, None]] = None
+    output_folder: Optional[str] = None
         Location where output will be stored. If None, the
         predictions_base_folder will be used.
-    ground_truth_image_shape: Tuple[int, int] = (3840, 2160)
-        Shape of ground truth images as (w, h).
     predictions_image_shape: Tuple[int, int] = (3840, 2160)
         Shape of prediction images as (w, h).
     dataset_name: str = ""
         Name of dataset, used in results plots.
-    model_name: Optional[Union[str, None]] = None
+    model_name: Optional[str] = None
         Name of the model used in the results. If no name is provided, the name
         of the predictions folder is used.
     gt_annotations_rel_path: str = "labels"
         Name of folder containing ground truth labels.
     pred_annotations_rel_path: str = "labels"
         Name of the folder containing prediction labels.
-    splits: Union[List[str], None] = ["train", "val", "test"]
+    splits: Optional[List[str]] = ["train", "val", "test"]
         Which splits to evaluate. Set to `None` if the data contains no splits.
     target_classes: List[int] = []
         Which object classes should be evaluated (default is []).
@@ -98,14 +96,13 @@ class YoloEvaluator:
         ground_truth_base_folder: str,
         predictions_base_folder: str,
         category_manager: CategoryManager,
-        output_folder: Optional[Union[str, None]] = None,
-        ground_truth_image_shape: Tuple[int, int] = (3840, 2160),
+        output_folder: Optional[str] = None,
         predictions_image_shape: Tuple[int, int] = (3840, 2160),
         dataset_name: str = "",
-        model_name: Optional[Union[str, None]] = None,
+        model_name: Optional[str] = None,
         gt_annotations_rel_path: str = "labels",
         pred_annotations_rel_path: str = "labels",
-        splits: Union[List[str], None] = ["train", "val", "test"],
+        splits: Optional[List[str]] = ["train", "val", "test"],
         target_classes: List[int] = [],
         sensitive_classes: List[int] = [],
         target_classes_conf: Optional[float] = None,
@@ -116,7 +113,6 @@ class YoloEvaluator:
         self.predictions_base_folder = predictions_base_folder
         self.category_manager = category_manager
         self.output_folder = output_folder
-        self.ground_truth_image_shape = ground_truth_image_shape
         self.predictions_image_shape = predictions_image_shape
         self.dataset_name = dataset_name
         self.model_name = (
@@ -454,11 +450,12 @@ class YoloEvaluator:
             dataset_dir=self.ground_truth_base_folder,
             category_manager=self.category_manager,
             splits=self.splits,
+            fixed_image_shape=self.predictions_image_shape,
             output_dir=gt_output_dir,
         )
         pred_json_files = convert_yolo_predictions_to_coco_json(
             predictions_dir=self.predictions_base_folder,
-            image_shape=self.ground_truth_image_shape,
+            image_shape=self.predictions_image_shape,
             labels_rel_path=self.pred_annotations_rel_path,
             splits=self.splits,
             output_dir=pred_output_dir,
@@ -478,7 +475,7 @@ class YoloEvaluator:
                     coco_ground_truth_json=gt_json_files[i],
                     coco_predictions_json=pred_json_files[i],
                     category_manager=self.category_manager,
-                    predicted_img_shape=self.ground_truth_image_shape,
+                    predicted_img_shape=self.predictions_image_shape,
                     classes=target_cls,
                     print_summary=False,
                 )

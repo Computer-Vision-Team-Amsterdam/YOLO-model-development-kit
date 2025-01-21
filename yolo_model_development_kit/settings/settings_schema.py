@@ -61,7 +61,6 @@ class PerformanceEvaluationSpec(SettingsSpecModel):
     mapping_json_path: str = ""
     dataset_name: str = ""
     model_name: str
-    ground_truth_image_shape: List[int]
     predictions_image_shape: List[int]
     prediction_labels_rel_path: str = "labels"
     splits: List[str]

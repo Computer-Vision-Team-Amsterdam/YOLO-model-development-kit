@@ -2,6 +2,7 @@
 # TODO: Move this to CVToolkit
 
 import json
+import logging
 import os
 import pathlib
 from typing import Dict, List, Optional, Tuple
@@ -11,6 +12,8 @@ from PIL import Image
 from yolo_model_development_kit.performance_evaluation_pipeline.metrics import (
     CategoryManager,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def convert_yolo_predictions_to_coco_json(
@@ -78,6 +81,7 @@ def convert_yolo_dataset_to_coco_json(
     dataset_dir: str,
     category_manager: CategoryManager,
     splits: Optional[List[str]] = ["train", "val", "test"],
+    fixed_image_shape: Optional[Tuple[int, int]] = None,
     output_dir: Optional[str] = None,
 ) -> List[str]:
     if not splits:
@@ -91,7 +95,9 @@ def convert_yolo_dataset_to_coco_json(
         image_dir = os.path.join(dataset_dir, "images", split)
         label_dir = os.path.join(dataset_dir, "labels", split)
 
-        coco_dataset = _convert_dataset_split(image_dir, label_dir, category_manager)
+        coco_dataset = _convert_dataset_split(
+            image_dir, label_dir, category_manager, fixed_image_shape
+        )
 
         output_file = os.path.join(output_dir, f"coco_gt_{split}.json")
         with open(output_file, "w") as f:
@@ -102,7 +108,10 @@ def convert_yolo_dataset_to_coco_json(
 
 
 def _convert_dataset_split(
-    image_dir: str, label_dir: str, category_manager: CategoryManager
+    image_dir: str,
+    label_dir: str,
+    category_manager: CategoryManager,
+    fixed_image_shape: Optional[Tuple[int, int]] = None,
 ) -> Dict:
     image_list: List[Dict] = []
     annotation_list: List[Dict] = []
@@ -114,8 +123,17 @@ def _convert_dataset_split(
 
     for image_file in os.listdir(image_dir):
         image_path = os.path.join(image_dir, image_file)
-        image = Image.open(image_path)
-        width, height = image.size
+        width, height = Image.open(image_path).size
+        if fixed_image_shape is not None:
+            fix_width, fix_height = fixed_image_shape
+            if abs(fix_width / fix_height - width / height) > 1e-06:
+                logger.warning(
+                    f"Ratio mismatch: fixed image shape {fixed_image_shape} "
+                    f"does not match true image shape {(width, height)} "
+                    f"for image {image_file}"
+                )
+            width = fix_width
+            height = fix_height
 
         image_dict = {
             "id": image_file.split(".")[0],
