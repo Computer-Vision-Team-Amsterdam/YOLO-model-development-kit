@@ -1,7 +1,15 @@
 # Project specific files
 *.jpg
+*.png
 *.mp4
 *.csv
+*.html
+
+local/
+results/
+
+config.yml
+config.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
