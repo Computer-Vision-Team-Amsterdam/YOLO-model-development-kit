@@ -16,6 +16,9 @@ from yolo_model_development_kit.inference_pipeline.source.model_result import (
 )
 
 logger = logging.getLogger("inference_pipeline")
+logging.getLogger("azure.core.pipeline.policies.http_logging_policy").setLevel(
+    logging.WARNING
+)
 
 
 class YOLOInference:
