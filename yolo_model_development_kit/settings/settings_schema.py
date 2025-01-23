@@ -40,10 +40,19 @@ class InferenceModelParameters(SettingsSpecModel):
     save_conf_flag: bool = False
 
 
+class InferenceSAHIParameters(SettingsSpecModel):
+    model_type: str = "ultralytics"
+    slice_height: int = 2048
+    slice_width: int = 2048
+    overlap_height_ratio: float = 0.2
+    overlap_width_ratio: float = 0.2
+
+
 class InferencePipelineSpec(SettingsSpecModel):
     model_params: InferenceModelParameters
     inputs: Dict[str, str] = None
     outputs: Dict[str, str] = None
+    sahi_params: InferenceSAHIParameters
     target_classes: List[int] = None
     sensitive_classes: List[int] = []
     target_classes_conf: Optional[float] = None
@@ -52,12 +61,14 @@ class InferencePipelineSpec(SettingsSpecModel):
     save_detection_images: bool = False
     save_detection_labels: bool = True
     save_all_images: bool = False
+    use_sahi: bool = False
 
 
 class PerformanceEvaluationSpec(SettingsSpecModel):
     inputs: Dict[str, str]
     outputs: Dict[str, str]
     categories_json_path: str = ""
+    mapping_json_path: str = ""
     dataset_name: str = ""
     model_name: str
     ground_truth_image_shape: List[int]
@@ -69,6 +80,7 @@ class PerformanceEvaluationSpec(SettingsSpecModel):
     target_classes_conf: Optional[float] = None
     sensitive_classes_conf: Optional[float] = None
     plot_pr_curves: bool = True
+    is_bias_analysis: bool = True
 
 
 class TrainingModelParameters(SettingsSpecModel):

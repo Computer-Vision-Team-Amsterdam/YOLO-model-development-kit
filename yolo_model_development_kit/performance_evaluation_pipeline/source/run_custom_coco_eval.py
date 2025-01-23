@@ -5,8 +5,8 @@ from typing import Any, Dict, List, Tuple, Union
 from pycocotools.coco import COCO
 
 from yolo_model_development_kit.performance_evaluation_pipeline.metrics import (
+    CategoryManager,
     CustomCOCOeval,
-    ObjectClass,
 )
 
 logger = logging.getLogger("performance_evaluation")
@@ -15,6 +15,7 @@ logger = logging.getLogger("performance_evaluation")
 def execute_custom_coco_eval(
     coco_ground_truth_json: str,
     coco_predictions_json: str,
+    category_manager: CategoryManager,
     predicted_img_shape: Tuple[int, int],
     classes: List[int] = None,
     print_summary: bool = False,
@@ -30,6 +31,8 @@ def execute_custom_coco_eval(
         Path to JSON file with ground truth annotations in the COCO format.
     coco_predictions_json: str
         Path to JSON file with prediction annotations in the COCO format.
+    category_manager: CategoryManager
+        CategoryManager object containing the object classes to evaluate.
     predicted_img_shape: Tuple[int, int]
         Shape of images in the coco_predictions_json. Should equal the shape of
         ground truth images. Used as a sanity check.
@@ -72,7 +75,6 @@ def execute_custom_coco_eval(
         )
     evaluation = CustomCOCOeval(COCO_gt, COCO_dt, "bbox")
 
-    # Opening JSON file
     with open(coco_ground_truth_json) as f:
         data = json.load(f)
 
@@ -95,9 +97,9 @@ def execute_custom_coco_eval(
     evaluation.params.imgIds = image_names  # image IDs to evaluate
     # If no specific classes are passed, use all available class IDs.
     if classes is None:
-        classes = ObjectClass.all_ids()
+        classes = category_manager.all_ids()
     evaluation.params.catIds = list(classes)
-    class_labels = [ObjectClass.get_name(cat_id) for cat_id in classes]
+    class_labels = [category_manager.get_name(cat_id) for cat_id in classes]
     evaluation.params.catLbls = class_labels
 
     # We need to overwrite the default area ranges for the bounding box size differentiation
@@ -107,7 +109,7 @@ def execute_custom_coco_eval(
         aRng: Dict[Union[str, int], Tuple[float, float]] = {"areaRngLbl": areaRngLbl}
         for class_id in classes:
             # Dynamically retrieve the size range for each category.
-            box_size = ObjectClass.to_dict(class_id)
+            box_size = category_manager.to_dict(class_id)
             box_range = box_size[areaRngLbl]
             aRng[class_id] = (box_range[0] * img_area, box_range[1] * img_area)
         areaRng.append(aRng)
