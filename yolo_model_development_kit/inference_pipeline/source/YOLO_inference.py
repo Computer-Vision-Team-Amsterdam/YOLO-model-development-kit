@@ -201,13 +201,15 @@ class YOLOInference:
             could not be loaded
         """
         image = child_class(image_full_path=str(image_path))
+
         if isinstance(image.image, NoneType):
             logger.warning(f"Image could not be loaded: {image_path}")
             return None
 
         if self.output_image_size:
             image.resize(output_image_size=self.output_image_size)
-        return image.image
+
+        return image
 
     def _run_sahi_inference(
         self, batch_images: List[InputImage], batch_image_paths: List[str]
@@ -295,17 +297,17 @@ class YOLOInference:
             processed_images = 0
             for i in range(0, len(image_paths), self.batch_size):
                 batch_image_paths = image_paths[i : i + self.batch_size]
-                batch_images = [
+                batch_input_images = [
                     self._load_image(image_path) for image_path in batch_image_paths
                 ]
 
                 # Check if all images could be loaded
                 correct_idx = [
-                    i for i, img in enumerate(batch_images) if img is not None
+                    i for i, img in enumerate(batch_input_images) if img is not None
                 ]
-                if len(correct_idx) != len(batch_images):
-                    batch_images = [batch_images[idx] for idx in correct_idx]
-                    batch_image_paths = [batch_image_paths[idx] for idx in correct_idx]
+                # Prepare correctly loaded images
+                batch_images = [batch_input_images[idx].image for idx in correct_idx]
+                batch_image_paths = [batch_image_paths[idx] for idx in correct_idx]
                 if len(batch_images) < 1:
                     continue
 
