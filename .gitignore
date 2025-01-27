@@ -1,5 +1,6 @@
 # Project specific files
 *.jpg
+*.png
 *.mp4
 *.csv
 
