@@ -156,6 +156,7 @@ class YOLOInference:
             else ""
         )
         self.batch_size = inference_settings["model_params"]["batch_size"]
+        self.folders_and_frames: Dict[str, List[str]] = {}
 
     def run_pipeline(self) -> None:
         """
