@@ -3,6 +3,12 @@
 *.png
 *.mp4
 *.csv
+*.html
+
+local/
+results/
+
+config.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

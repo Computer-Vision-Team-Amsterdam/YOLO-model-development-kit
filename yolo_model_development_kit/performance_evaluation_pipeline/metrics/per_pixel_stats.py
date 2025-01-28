@@ -302,42 +302,64 @@ class PerPixelEvaluator:
                 logger.error(e)
                 raise ValueError(e)
 
-            gt_classes = (
-                group_mapping[target_class]
-                if use_group_mapping and group_mapping and target_class in group_mapping
-                else [target_class]
-            )
+            if use_group_mapping and group_mapping and target_class in group_mapping:
+                gt_classes = group_mapping[target_class]
+                box_sizes = self.category_manager.to_dict(
+                    target_class, single_size_only
+                )
 
-            logger.info(f"Processing class {target_class_name} with IDs {gt_classes}")
-
-            box_sizes = self.category_manager.to_dict(target_class, single_size_only)
-
-            for gt_class in gt_classes:
                 logger.info(
-                    f"Processing gt_class {gt_class} against target_class {target_class_name}"
+                    f"Processing class {target_class_name} with IDs {gt_classes}"
+                )
+
+                for gt_class in gt_classes:
+                    logger.info(
+                        f"Processing gt_class {gt_class} against target_class {target_class_name}"
+                    )
+
+                    for box_size_name, box_size in box_sizes.items():
+                        size_all = box_size_name == "all"
+                        self.gt_dataset.reset_filter()
+
+                        filtered_labels = (
+                            self.gt_dataset.filter_by_class(class_to_keep=gt_class)
+                            .filter_by_size_percentage(perc_to_keep=box_size)
+                            .get_filtered_labels()
+                        )
+
+                        results[f"{target_class_name}_{gt_class}_{box_size_name}"] = (
+                            self._get_per_pixel_statistics(
+                                true_labels=filtered_labels,
+                                predicted_labels=predicted_target_class,
+                                size_all=size_all,
+                            )
+                        )
+                        logger.info(
+                            f'Results for {target_class_name}_{gt_class}_{box_size_name}: {results[f"{target_class_name}_{gt_class}_{box_size_name}"]}'
+                        )
+
+                        self.gt_dataset.reset_filter()
+            else:
+                box_sizes = self.category_manager.to_dict(
+                    target_class, single_size_only
                 )
 
                 for box_size_name, box_size in box_sizes.items():
                     size_all = box_size_name == "all"
-                    self.gt_dataset.reset_filter()
 
-                    filtered_labels = (
-                        self.gt_dataset.filter_by_class(class_to_keep=gt_class)
+                    self.gt_dataset.reset_filter()
+                    true_target_class_size = (  # i.e. true_person_small
+                        self.gt_dataset.filter_by_class(class_to_keep=target_class)
                         .filter_by_size_percentage(perc_to_keep=box_size)
                         .get_filtered_labels()
                     )
 
-                    results[f"{target_class_name}_{gt_class}_{box_size_name}"] = (
+                    results[f"{target_class_name}_{box_size_name}"] = (
                         self._get_per_pixel_statistics(
-                            true_labels=filtered_labels,
+                            true_labels=true_target_class_size,
                             predicted_labels=predicted_target_class,
                             size_all=size_all,
                         )
                     )
-                    logger.info(
-                        f'Results for {target_class_name}_{gt_class}_{box_size_name}: {results[f"{target_class_name}_{gt_class}_{box_size_name}"]}'
-                    )
-
-                    self.gt_dataset.reset_filter()
 
         return results
