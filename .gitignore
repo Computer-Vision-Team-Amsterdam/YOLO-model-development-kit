@@ -8,7 +8,6 @@
 local/
 results/
 
-config.yml
 config.json
 
 # Byte-compiled / optimized / DLL files
