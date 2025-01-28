@@ -1,5 +1,6 @@
 import logging
 import os
+from types import NoneType
 from typing import Any, Dict, List, Union
 
 import numpy as np
@@ -178,26 +179,37 @@ class YOLOInference:
 
     def _load_image(
         self, image_path: Union[os.PathLike, str], child_class=InputImage
-    ) -> InputImage:
-        """This method can be extended in the child class to perform pre-processing of the images before the inference.
-        To do this we can also extend InputImage and add the extra functions are needed, for example a function to defisheye the image.
-        An example of this can be found in the Objectherkenning-Openbare-Ruimte repo.
+    ) -> Union[InputImage, None]:
+        """
+        This method can be extended in the child class to perform pre-processing
+        of the images before the inference. To do this we can also extend
+        InputImage and add the extra functions are needed, for example a
+        function to defisheye the image. An example of this can be found in the
+        Objectherkenning-Openbare-Ruimte repo.
 
         Parameters
         ----------
         image_path : Union[os.PathLike, str]
             path where the image is located
         child_class : _type_, optional
-            Type of object to create, by default InputImage but it can also be a child of InputImage
+            Type of object to create, by default InputImage but it can also be a
+            child of InputImage
 
         Returns
         -------
         InputImage
-            the preprocessed image ready to be inferenced
+            the preprocessed image ready to be inferenced, or None if the image
+            could not be loaded
         """
         image = child_class(image_full_path=str(image_path))
+
+        if isinstance(image.image, NoneType):
+            logger.warning(f"Image could not be loaded: {image_path}")
+            return None
+
         if self.output_image_size:
             image.resize(output_image_size=self.output_image_size)
+
         return image
 
     def _run_sahi_inference(
@@ -279,10 +291,19 @@ class YOLOInference:
             processed_images = 0
             for i in range(0, len(image_paths), self.batch_size):
                 batch_image_paths = image_paths[i : i + self.batch_size]
-                batch_images = [
-                    self._load_image(image_path).image
-                    for image_path in batch_image_paths
+                batch_input_images = [
+                    self._load_image(image_path) for image_path in batch_image_paths
                 ]
+
+                # Check if all images could be loaded
+                correct_idx = [
+                    i for i, img in enumerate(batch_input_images) if img is not None
+                ]
+                # Prepare correctly loaded images
+                batch_images = [batch_input_images[idx].image for idx in correct_idx]
+                batch_image_paths = [batch_image_paths[idx] for idx in correct_idx]
+                if len(batch_images) < 1:
+                    continue
 
                 if self.use_sahi:
                     batch_results = self._run_sahi_inference(

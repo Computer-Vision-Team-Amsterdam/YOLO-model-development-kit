@@ -2,15 +2,18 @@
 # TODO: Move this to CVToolkit
 
 import json
+import logging
 import os
 import pathlib
 from typing import Dict, List, Optional, Tuple
 
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 
 from yolo_model_development_kit.performance_evaluation_pipeline.metrics import (
     CategoryManager,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def convert_yolo_predictions_to_coco_json(
@@ -114,7 +117,12 @@ def _convert_dataset_split(
 
     for image_file in os.listdir(image_dir):
         image_path = os.path.join(image_dir, image_file)
-        image = Image.open(image_path)
+        try:
+            image = Image.open(image_path)
+        except UnidentifiedImageError:
+            logger.warning(f"UnidentifiedImageError: {image_path} could not be opened.")
+            continue
+
         width, height = image.size
 
         image_dict = {
