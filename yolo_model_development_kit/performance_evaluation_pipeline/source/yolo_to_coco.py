@@ -7,7 +7,7 @@ import os
 import pathlib
 from typing import Dict, List, Optional, Tuple
 
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 
 from yolo_model_development_kit.performance_evaluation_pipeline.metrics import (
     CategoryManager,
@@ -123,7 +123,13 @@ def _convert_dataset_split(
 
     for image_file in os.listdir(image_dir):
         image_path = os.path.join(image_dir, image_file)
-        width, height = Image.open(image_path).size
+
+        try:
+            width, height = Image.open(image_path).size
+        except UnidentifiedImageError:
+            logger.warning(f"UnidentifiedImageError: {image_path} could not be opened.")
+            continue
+
         if fixed_image_shape is not None:
             fix_width, fix_height = fixed_image_shape
             if abs(fix_width / fix_height - width / height) > 1e-06:
