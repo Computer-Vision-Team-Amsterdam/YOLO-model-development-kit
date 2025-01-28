@@ -95,7 +95,7 @@ def evaluate_model(
         sensitive_classes=sensitive_classes,
         target_classes_conf=eval_settings["target_classes_conf"],
         sensitive_classes_conf=eval_settings["sensitive_classes_conf"],
-        plot_single_size=(not eval_settings["plot_sml"]),
+        plot_sml_size=eval_settings["plot_sml"],
         plot_conf_range=eval_settings["plot_conf_range"],
         plot_logx=eval_settings["plot_logx"],
     )

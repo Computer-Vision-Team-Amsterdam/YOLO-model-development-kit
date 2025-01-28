@@ -89,9 +89,9 @@ class YoloEvaluator:
     single_size_only: bool = False
         Set to true to disable differentiation in bounding box sizes. Default is
         to evaluate for the sizes S, M, and L.
-    plot_single_size: bool = True
-        Whether to plot PR curves for all bounding boxes combined (True), or
-        differentiate by size (False).
+    plot_sml_size: bool = False
+        Whether to plot PR curves for all bounding boxes combined (False), or
+        differentiate by size (True).
     plot_conf_range: Optional[Iterable[float]] = None
         Range of confidence values over which to plot PR/F curves. If not set,
         range will be taken as 0.05 intervals between 0 and 1.
@@ -116,7 +116,7 @@ class YoloEvaluator:
         target_classes_conf: Optional[float] = None,
         sensitive_classes_conf: Optional[float] = None,
         single_size_only: bool = False,
-        plot_single_size: bool = True,
+        plot_sml_size: bool = False,
         plot_conf_range: Optional[Iterable[float]] = None,
         plot_logx: Optional[bool] = False,
     ):
@@ -147,7 +147,7 @@ class YoloEvaluator:
             self.plot_conf_range = plot_conf_range
         else:
             self.plot_conf_range = np.arange(0.05, 1.0, 0.05)
-        self.plot_single_size = self.single_size_only or plot_single_size
+        self.plot_sml_size = (not self.single_size_only) and plot_sml_size
         self.plot_logx = plot_logx
 
         self._log_stats()
@@ -572,7 +572,7 @@ class YoloEvaluator:
         for conf in self.plot_conf_range:
             logger.debug(f"Computing PR/F curve data for conf={conf}")
             tba_results = eval_func(
-                confidence_threshold=conf, single_size_only=self.plot_single_size
+                confidence_threshold=conf, single_size_only=(not self.plot_sml_size)
             )
             df = tba_result_to_df(tba_results)
             df.insert(4, "Conf", conf)
@@ -602,7 +602,7 @@ class YoloEvaluator:
                 result_type=result_type,
                 dataset=self.dataset_name,
                 output_dir=output_dir,
-                size_sml=(not self.plot_single_size),
+                size_sml=self.plot_sml_size,
                 logx=self.plot_logx,
                 show_plot=show_plot,
             )
