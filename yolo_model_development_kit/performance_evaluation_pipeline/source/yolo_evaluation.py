@@ -1,7 +1,7 @@
 import logging
 import os
 from itertools import product
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -89,6 +89,14 @@ class YoloEvaluator:
     single_size_only: bool = False
         Set to true to disable differentiation in bounding box sizes. Default is
         to evaluate for the sizes S, M, and L.
+    plot_single_size: bool = True
+        Whether to plot PR curves for all bounding boxes combined (True), or
+        differentiate by size (False).
+    plot_conf_range: Optional[Iterable[float]] = None
+        Range of confidence values over which to plot PR/F curves. If not set,
+        range will be taken as 0.05 intervals between 0 and 1.
+    plot_logx: Optional[bool] = False
+        Whether to use log scale for plot x-axis
     """
 
     def __init__(
@@ -108,6 +116,9 @@ class YoloEvaluator:
         target_classes_conf: Optional[float] = None,
         sensitive_classes_conf: Optional[float] = None,
         single_size_only: bool = False,
+        plot_single_size: bool = True,
+        plot_conf_range: Optional[Iterable[float]] = None,
+        plot_logx: Optional[bool] = False,
     ):
         self.ground_truth_base_folder = ground_truth_base_folder
         self.predictions_base_folder = predictions_base_folder
@@ -131,6 +142,13 @@ class YoloEvaluator:
         self.target_classes_conf = target_classes_conf
         self.sensitive_classes_conf = sensitive_classes_conf
         self.single_size_only = single_size_only
+
+        if plot_conf_range is not None:
+            self.plot_conf_range = plot_conf_range
+        else:
+            self.plot_conf_range = np.arange(0.05, 1.0, 0.05)
+        self.plot_single_size = self.single_size_only or plot_single_size
+        self.plot_logx = plot_logx
 
         self._log_stats()
 
@@ -549,11 +567,13 @@ class YoloEvaluator:
         A pandas DataFrame with the precision, recall, F1, F0.5, and F2 scores
         for each confidence level.
         """
-        confs = np.arange(0.05, 1.0, 0.05)
         dfs = []
 
-        for conf in confs:
-            tba_results = eval_func(confidence_threshold=conf, single_size_only=True)
+        for conf in self.plot_conf_range:
+            logger.debug(f"Computing PR/F curve data for conf={conf}")
+            tba_results = eval_func(
+                confidence_threshold=conf, single_size_only=self.plot_single_size
+            )
             df = tba_result_to_df(tba_results)
             df.insert(4, "Conf", conf)
             df["F1"] = compute_fb_score(df["Precision"], df["Recall"], 1.0)
@@ -575,24 +595,27 @@ class YoloEvaluator:
         for split, eval_class in product(self.splits, eval_classes):
             save_pr_curve(
                 results_df=pr_df,
-                dataset=self.dataset_name,
-                split=split,
+                split=(split if split != "" else "all"),
                 target_class=eval_class,
                 category_manager=self.category_manager,
                 model_name=self.model_name,
                 result_type=result_type,
+                dataset=self.dataset_name,
                 output_dir=output_dir,
+                size_sml=(not self.plot_single_size),
+                logx=self.plot_logx,
                 show_plot=show_plot,
             )
             save_fscore_curve(
                 results_df=pr_df,
-                dataset=self.dataset_name,
-                split=split,
+                split=(split if split != "" else "all"),
                 target_class=eval_class,
                 category_manager=self.category_manager,
                 model_name=self.model_name,
                 result_type=result_type,
+                dataset=self.dataset_name,
                 output_dir=output_dir,
+                logx=self.plot_logx,
                 show_plot=show_plot,
             )
 
@@ -618,6 +641,9 @@ class YoloEvaluator:
             output_dir=self.output_folder,
             show_plot=show_plot,
         )
+        # Also save results to csv
+        filename = os.path.join(self.output_folder, "tba-pr-f-curve-data.csv")
+        _df_to_csv(pr_curve_df, filename)
 
     def plot_per_image_pr_f_curves(self, show_plot: bool = False):
         """
@@ -641,6 +667,9 @@ class YoloEvaluator:
             output_dir=self.output_folder,
             show_plot=show_plot,
         )
+        # Also save results to csv
+        filename = os.path.join(self.output_folder, "per-image-pr-f-curve-data.csv")
+        _df_to_csv(pr_curve_df, filename)
 
 
 def _bias_analysis_result_to_df(

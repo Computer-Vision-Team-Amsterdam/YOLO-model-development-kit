@@ -32,24 +32,27 @@ inference_pipeline:
 
 performance_evaluation:
   inputs:
-    datastore: "bias_analysis_sampled_panos"
-    ground_truth_rel_path: "kavel10_kempkes_geo360_sampled_panos"
-    predictions_rel_path: "inference/yolov5"
+    datastore: "annotations_datastore"
+    ground_truth_rel_path: "annotations-projects/07-25-2022_120550_UTC/ORBS-base/first-split"
+    predictions_rel_path: "yolo11/inference/ORBS-base-test/yolo11s_base"
   outputs:
-    datastore: "bias_analysis_sampled_panos"
-    output_rel_path: "evaluation/v5/test"
-  categories_json_path: "categories_eval.json"
+    datastore: "annotations_datastore"
+    output_rel_path: "yolo11/evaluation/ORBS-base-test/yolo11s_base"
+  categories_json_path: "categories_eval_baas_v5.json"
   mapping_json_path: "groupings_wheelchairs_bias_analysis.json"
-  dataset_name: "sampled_panos"
-  model_name: "yolov5"
+  dataset_name: "ORBS-base"
+  model_name: "yolo11s"
   predictions_image_shape: [8000, 4000]
   prediction_labels_rel_path: "labels"
-  splits: []
+  splits: ["test"]
   target_classes: []
   sensitive_classes: [0, 1]
   target_classes_conf: 0.7  # null means all predictions are used, custom COCO considers this threshold also for sensitive classes
   sensitive_classes_conf: null  # null means all predictions are used, only for TBA evaluation
-  plot_pr_curves: True
+  plot_curves: True
+  plot_sml: True  # Whether to differentiate between S, M, and L (slower)
+  plot_conf_range: [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1]  # Confidence values for PR curves
+  plot_logx: True  # Use log scale for x-axis
   is_bias_analysis: False
 
 training_pipeline:
