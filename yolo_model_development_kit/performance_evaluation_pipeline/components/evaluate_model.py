@@ -110,7 +110,7 @@ def evaluate_model(
         tba_results = yolo_eval.evaluate_tba()
         yolo_eval.save_tba_results_to_csv(results=tba_results)
         # Plot precision/recall curves
-        if eval_settings["plot_pr_curves"]:
+        if eval_settings["plot_curves"]:
             yolo_eval.plot_tba_pr_f_curves(show_plot=False)
 
     # Per Image evaluation
@@ -118,7 +118,7 @@ def evaluate_model(
         per_image_results = yolo_eval.evaluate_per_image()
         yolo_eval.save_per_image_results_to_csv(results=per_image_results)
         # Plot precision/recall curves
-        if eval_settings["plot_pr_curves"]:
+        if eval_settings["plot_curves"]:
             yolo_eval.plot_per_image_pr_f_curves(show_plot=False)
 
     # Custom COCO evaluation
