@@ -53,7 +53,9 @@ training_pipeline:
     project_datastore_path: "dataset_oor_v2_2"
     project_rel_path: "model"
     project_name: "yolo11m_base"  # can be an empty string or omitted entirely, will be ignored in sweep mode
+    experiment_name: ""
   sweep_mode: False  # Set to true to run a hyperparameter sweep based on inputs/sweep_config
+  sweep_trials: 1 # will be ignored in train mode
 
 wandb:
   api_key: ""

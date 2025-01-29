@@ -68,6 +68,7 @@ class TrainingPipelineSpec(SettingsSpecModel):
     inputs: Dict[str, str] = None
     outputs: Dict[str, str] = None
     sweep_mode: bool = False
+    sweep_trials: int = 1
 
 
 class WandbSpec(SettingsSpecModel):

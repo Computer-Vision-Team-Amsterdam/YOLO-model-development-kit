@@ -145,12 +145,12 @@ def train_model(
 
     train_params.update(train_params_from_json)  # Update with dynamically loaded params
 
-    # wandb.init(
-    #     job_type="training",
-    #     entity=settings["wandb"]["entity"],
-    #     project=settings["wandb"]["project_name"],
-    #     name=experiment_name,
-    # )
+    wandb.init(
+        job_type="training",
+        entity=settings["wandb"]["entity"],
+        project=settings["wandb"]["project_name"],
+        name=experiment_name,
+    )
 
     model = YOLO(model=pretrained_model_path, task="detect")
 
