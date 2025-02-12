@@ -1,5 +1,6 @@
 import logging
 import os
+from datetime import datetime
 from types import NoneType
 from typing import Any, Dict, List, Union
 
@@ -142,9 +143,9 @@ class YOLOInference:
             f"sensitive_classes: {self.sensitive_classes_conf}"
         )
         self.output_image_size = inference_settings["output_image_size"]
+        self.save_all_images = inference_settings["save_all_images"]
         self.save_detections = inference_settings["save_detection_images"]
         self.save_labels = inference_settings["save_detection_labels"]
-        self.save_all_images = inference_settings["save_all_images"]
         self.detections_subfolder = (
             inference_settings["outputs"]["detections_subfolder"]
             if inference_settings["outputs"]["detections_subfolder"]
@@ -155,6 +156,20 @@ class YOLOInference:
             if inference_settings["outputs"]["labels_subfolder"]
             else ""
         )
+        if (
+            self.save_detections
+            and self.save_labels
+            and not self.detections_subfolder
+            and not self.labels_subfolder
+        ):
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            logger.info(
+                "Saving detections and labels are both enabled, but "
+                "detections_subfolder and labels_subfolder were not provided. "
+                "Using 'detections' and 'labels' including timestamp as default folders."
+            )
+            self.detections_subfolder = f"detections_{timestamp}"
+            self.labels_subfolder = f"labels_{timestamp}"
         self.batch_size = inference_settings["model_params"]["batch_size"]
         self.folders_and_frames: Dict[str, List[str]] = {}
 
