@@ -33,4 +33,4 @@ RUN /opt/miniconda/bin/conda init bash && \
     . /opt/miniconda/etc/profile.d/conda.sh && \
     conda activate env && \
     poetry update --no-ansi --no-interaction && \
-    poetry install --no-ansi --no-interaction --no-root
+    poetry install --no-ansi --no-interaction --no-root --with model_export --without dev
