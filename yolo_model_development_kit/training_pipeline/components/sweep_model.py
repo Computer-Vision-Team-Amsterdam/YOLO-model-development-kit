@@ -7,9 +7,11 @@ import wandb
 import yaml
 from azure.ai.ml.constants import AssetTypes
 from mldesigner import Input, Output, command_component
-from ultralytics import YOLO
 from ultralytics import settings as ultralytics_settings
-from wandb.integration.ultralytics import add_wandb_callback
+
+ultralytics_settings.update({"wandb": True})
+from ultralytics import YOLO  # noqa: E402
+from wandb.integration.ultralytics import add_wandb_callback  # noqa: E402
 
 sys.path.append("../../..")
 
@@ -122,7 +124,6 @@ def sweep_model(
 
             add_wandb_callback(
                 model,
-                enable_model_checkpointing=False,
                 enable_validation_logging=False,
                 enable_prediction_logging=False,
                 enable_train_validation_logging=False,
