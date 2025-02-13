@@ -37,6 +37,13 @@ inference_pipeline:
   save_all_images: False  # If True, all images will be saved regardless of whether they contain target class objects
   use_sahi: False
 
+model_conversion:
+  datastore_path: "annotations_datastore"
+  model_weights_rel_path: "yolo11/trained_models/"
+  input_model_name: "yolo11m_orbs_lilac_spaceship-2.pt"
+  output_model_name: "yolo11m_orbs_lilac_spaceship-2.engine"
+  image_size: [2048, 1024]
+  batch_size: 1
 
 performance_evaluation:
   inputs:
@@ -94,7 +101,7 @@ wandb:
 
 logging:
   loglevel_own: DEBUG  # override loglevel for packages defined in `own_packages`
-  own_packages: ["__main__", "yolo_model_development_kit", "performance_evaluation", "training_pipeline"]
+  own_packages: ["__main__", "yolo_model_development_kit", "inference_pipeline", "model_conversion_pipeline", "performance_evaluation", "training_pipeline"]
   basic_config:
     # log config as arguments to `logging.basicConfig`
     level: WARNING

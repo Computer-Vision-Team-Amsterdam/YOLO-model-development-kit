@@ -64,6 +64,15 @@ class InferencePipelineSpec(SettingsSpecModel):
     use_sahi: bool = False
 
 
+class ModelConversionPipelineSpec(SettingsSpecModel):
+    datastore_path: str
+    model_weights_rel_path: str = ""
+    input_model_name: str
+    output_model_name: Optional[str] = None
+    image_size: Optional[Union[Tuple[int, int], int]] = None
+    batch_size: int = 1
+
+
 class PerformanceEvaluationSpec(SettingsSpecModel):
     inputs: Dict[str, str]
     outputs: Dict[str, str]
@@ -117,7 +126,8 @@ class YoloModelDevelopmentKitSettingsSpec(SettingsSpecModel):
     customer: str
     aml_experiment_details: AMLExperimentDetailsSpec
     logging: LoggingSpec = LoggingSpec()
-    performance_evaluation: PerformanceEvaluationSpec = None
     inference_pipeline: InferencePipelineSpec = None
+    model_conversion: ModelConversionPipelineSpec = None
+    performance_evaluation: PerformanceEvaluationSpec = None
     training_pipeline: TrainingPipelineSpec = None
     wandb: WandbSpec = None
