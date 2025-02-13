@@ -142,9 +142,9 @@ class YOLOInference:
             f"sensitive_classes: {self.sensitive_classes_conf}"
         )
         self.output_image_size = inference_settings["output_image_size"]
-        self.save_all_images = inference_settings["save_all_images"]
         self.save_detections = inference_settings["save_detection_images"]
         self.save_labels = inference_settings["save_detection_labels"]
+        self.save_all_images = inference_settings["save_all_images"]
         self.detections_subfolder = (
             inference_settings["outputs"]["detections_subfolder"]
             if inference_settings["outputs"]["detections_subfolder"]
