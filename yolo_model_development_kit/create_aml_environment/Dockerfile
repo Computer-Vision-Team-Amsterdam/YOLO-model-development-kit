@@ -7,6 +7,7 @@ RUN apt update -y \
         build-essential \
         ca-certificates \
         curl \
+        libgl1 \
         libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 

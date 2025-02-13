@@ -3,7 +3,7 @@ customer: ""
 aml_experiment_details:
   compute_name: oor-testing
   env_name: yolo-environment
-  env_version: 6
+  env_version: 7
   src_dir: "."
 
 inference_pipeline:
