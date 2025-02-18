@@ -72,7 +72,7 @@ def evaluate_model(
     sensitive_classes = eval_settings["sensitive_classes"]
 
     logger.info(
-        f"Running performance evaluation for model: {eval_settings["model_name"]}"
+        f"Running performance evaluation for model: {eval_settings['model_name']}"
     )
 
     os.makedirs(output_dir, exist_ok=True)

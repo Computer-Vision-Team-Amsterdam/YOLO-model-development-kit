@@ -61,7 +61,7 @@ def perform_bias_analysis(
     """
 
     eval_settings = settings["performance_evaluation"]
-    logger.info(f"Running bias analysis for model: {eval_settings["model_name"]}")
+    logger.info(f"Running bias analysis for model: {eval_settings['model_name']}")
 
     os.makedirs(output_dir, exist_ok=True)
 
