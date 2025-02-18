@@ -33,7 +33,7 @@ class LoggingSpec(SettingsSpecModel):
 
 class InferenceModelParameters(SettingsSpecModel):
     batch_size: int = 1
-    img_size: int = 640
+    img_size: Union[Tuple[int, int], int] = 640
     conf: float = 0.5
     save_img_flag: bool = False
     save_txt_flag: bool = False

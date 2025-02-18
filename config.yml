@@ -8,31 +8,31 @@ aml_experiment_details:
 
 inference_pipeline:
   model_params:
-    batch_size: 1 # batch size does not have an effect for SAHI
-    img_size: 2048
-    conf: 0.01
+    batch_size: 1  # batch size does not have an effect for SAHI
+    img_size: [1024, 2048]  # [height, width]
+    conf: 0.0001
   inputs:
-    datastore_path: "inference_test"
-    inference_data_rel_path: "datasets/demo_images"
-    model_weights_rel_path: "model_weights"
-    model_name: "yolo11m_orbs_lilac_spaceship-2.pt"
+    datastore_path: "annotations_datastore"
+    inference_data_rel_path: "annotations-projects/07-25-2022_120550_UTC/ORBS-base/first-split/images/test/"
+    model_weights_rel_path: "yolo11/trained_models"
+    model_name: "yolo11m_orbs_lilac_spaceship-2.engine"
   outputs:
-    datastore_path: "inference_test"  # empty string "" means same as input datastore
-    output_rel_path: "inference/demo_images/test_new_inference_pipeline/"
+    datastore_path: "annotations_datastore"  # empty string "" means same as input datastore
+    output_rel_path: "yolo11/inference/tensorrt_test/yolo11m_engine"
     detections_subfolder: ""
-    labels_subfolder: ""
+    labels_subfolder: "test"
   sahi_params:
     model_type: "ultralytics"
     slice_height: 2048
     slice_width: 2048
     overlap_height_ratio: 0.2
     overlap_width_ratio: 0.2
-  target_classes: []
-  sensitive_classes: [0,1]
+  target_classes: [0, 1]
+  sensitive_classes: []
   target_classes_conf: null  # null means conf is taken from model_params
   sensitive_classes_conf: null  # null means conf is taken from model_params
-  output_image_size: null  # null means keep original size
-  save_detection_images: True
+  output_image_size: [8000, 4000]  # [width, height] - null means keep original size
+  save_detection_images: False
   save_detection_labels: True
   save_all_images: False  # If True, all images will be saved regardless of whether they contain target class objects
   use_sahi: False
@@ -42,41 +42,41 @@ model_conversion:
   model_weights_rel_path: "yolo11/trained_models/"
   input_model_name: "yolo11m_orbs_lilac_spaceship-2.pt"
   output_model_name: "yolo11m_orbs_lilac_spaceship-2.engine"
-  image_size: [2048, 1024]
+  image_size: [1024, 2048]  # [height, width]
   batch_size: 1
 
 performance_evaluation:
   inputs:
-    datastore: "bias_analysis_sampled_panos"
-    ground_truth_rel_path: "kavel10_kempkes_geo360_sampled_panos"
-    predictions_rel_path: "inference/yolo11s_base"
+    datastore: "annotations_datastore"
+    ground_truth_rel_path: "annotations-projects/07-25-2022_120550_UTC/ORBS-base/first-split"
+    predictions_rel_path: "yolo11/inference/tensorrt_test/yolo11m_pt"
   outputs:
-    datastore: "bias_analysis_sampled_panos"
-    output_rel_path: "evaluation/yolo11s_base/standard_evaluation"
+    datastore: "annotations_datastore"
+    output_rel_path: "evaluation/tensorrt_test/yolo11m_pt"
   categories_json_path: "categories_eval.json"
   mapping_json_path: "groupings_wheelchairs_bias_analysis.json"
-  dataset_name: "kavel10_kempkes_geo360"
-  model_name: "yolo11s_base"
-  ground_truth_image_shape: [8000,4000]
-  predictions_image_shape: [2048, 1024]
-  prediction_labels_rel_path: "labels"
-  splits: []
+  dataset_name: "ORBS-base"
+  model_name: "yolo11m_pt"
+  ground_truth_image_shape: [8000, 4000]  # [width, height]
+  predictions_image_shape: [2048, 1024]  # [width, height]
+  prediction_labels_rel_path: ""
+  splits: ["test"]
   target_classes: []
-  sensitive_classes: [0,1]
+  sensitive_classes: [0, 1]
   target_classes_conf: 0.7  # null means all predictions are used, custom COCO considers this threshold also for sensitive classes
-  sensitive_classes_conf: null  # null means all predictions are used, only for TBA evaluation
+  sensitive_classes_conf: 0.01  # null means all predictions are used, only for TBA evaluation
   plot_pr_curves: True
   is_bias_analysis: False
 
 training_pipeline:
   model_parameters:
-    img_size: 1280
-    batch: 0.85
-    epochs: 500
-    n_classes: 5
-    name_classes: ["person", "license plate", "container", "mobile toilet", "scaffolding"]
+    img_size: 2048
+    batch: 2
+    epochs: 200
+    n_classes: 2
+    name_classes: ["person", "license plate"]
     # The following settings are ignored in sweep mode and will instead be taken from the sweep_config file.
-    patience: 100
+    patience: 20
     cos_lr: True
     dropout: 0.0
     seed: 0
@@ -84,15 +84,15 @@ training_pipeline:
     cls: 0.5
     dfl: 1.5
   inputs:
-    datastore_path: "dataset_oor_v2_2"
-    training_data_rel_path: "processed-dataset-oor-v2-2"
-    model_weights_rel_path: "model"
-    model_name: "best_yolo11m_coco_161024.pt"
-    config_file: "train_data_augment_config.json" # can be an empty string or omitted entirely
+    datastore_path: "annotations_datastore"
+    training_data_rel_path: "annotations-projects/07-25-2022_120550_UTC/ORBS-base/first-split"
+    model_weights_rel_path: "yolo11/base_models"
+    model_name: "yolo11m.pt"
+    config_file: "train_baas_config.json" # can be an empty string or omitted entirely
     sweep_config: "sweep_config.json"
   outputs:
-    project_datastore_path: "dataset_oor_v2_2"
-    project_rel_path: "model"
+    project_datastore_path: "annotations_datastore"
+    project_rel_path: "yolo11/training/yolo11m"
   sweep_mode: False  # Set to true to run a hyperparameter sweep based on inputs/sweep_config
 
 wandb:
