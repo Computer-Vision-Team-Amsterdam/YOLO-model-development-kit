@@ -42,6 +42,7 @@ model_conversion:
   model_weights_rel_path: "yolo11/trained_models/"
   input_model_name: "yolo11m_orbs_lilac_spaceship-2.pt"
   output_model_name: "yolo11m_orbs_lilac_spaceship-2.engine"
+  overwrite_if_exists: True
   image_size: [1024, 2048]  # [height, width]
   batch_size: 1
 
@@ -65,7 +66,7 @@ performance_evaluation:
   sensitive_classes: [0, 1]
   target_classes_conf: 0.7  # null means all predictions are used, custom COCO considers this threshold also for sensitive classes
   sensitive_classes_conf: 0.01  # null means all predictions are used, only for TBA evaluation
-  plot_pr_curves: True
+  plot_pr_curves: False
   is_bias_analysis: False
 
 training_pipeline:

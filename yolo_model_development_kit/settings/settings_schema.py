@@ -69,6 +69,7 @@ class ModelConversionPipelineSpec(SettingsSpecModel):
     model_weights_rel_path: str = ""
     input_model_name: str
     output_model_name: Optional[str] = None
+    overwrite_if_exists: bool = False
     image_size: Optional[Union[Tuple[int, int], int]] = None
     batch_size: int = 1
 
