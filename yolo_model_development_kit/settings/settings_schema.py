@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from pydantic import BaseModel
 
@@ -31,10 +31,44 @@ class LoggingSpec(SettingsSpecModel):
     ai_instrumentation_key: str = ""
 
 
+class InferenceModelParameters(SettingsSpecModel):
+    batch_size: int = 1
+    img_size: int = 640
+    conf: float = 0.5
+    save_img_flag: bool = False
+    save_txt_flag: bool = False
+    save_conf_flag: bool = False
+
+
+class InferenceSAHIParameters(SettingsSpecModel):
+    model_type: str = "ultralytics"
+    slice_height: int = 2048
+    slice_width: int = 2048
+    overlap_height_ratio: float = 0.2
+    overlap_width_ratio: float = 0.2
+
+
+class InferencePipelineSpec(SettingsSpecModel):
+    model_params: InferenceModelParameters
+    inputs: Dict[str, str] = None
+    outputs: Dict[str, str] = None
+    sahi_params: InferenceSAHIParameters
+    target_classes: List[int] = None
+    sensitive_classes: List[int] = []
+    target_classes_conf: Optional[float] = None
+    sensitive_classes_conf: Optional[float] = None
+    output_image_size: Optional[Tuple[int, int]] = None
+    save_detection_images: bool = False
+    save_detection_labels: bool = True
+    save_all_images: bool = False
+    use_sahi: bool = False
+
+
 class PerformanceEvaluationSpec(SettingsSpecModel):
     inputs: Dict[str, str]
     outputs: Dict[str, str]
     categories_json_path: str = ""
+    mapping_json_path: str = ""
     dataset_name: str = ""
     model_name: str
     ground_truth_image_shape: List[int]
@@ -46,6 +80,7 @@ class PerformanceEvaluationSpec(SettingsSpecModel):
     target_classes_conf: Optional[float] = None
     sensitive_classes_conf: Optional[float] = None
     plot_pr_curves: bool = True
+    is_bias_analysis: bool = True
 
 
 class TrainingModelParameters(SettingsSpecModel):
@@ -86,5 +121,6 @@ class YoloModelDevelopmentKitSettingsSpec(SettingsSpecModel):
     aml_experiment_details: AMLExperimentDetailsSpec
     logging: LoggingSpec = LoggingSpec()
     performance_evaluation: PerformanceEvaluationSpec = None
+    inference_pipeline: InferencePipelineSpec = None
     training_pipeline: TrainingPipelineSpec = None
     wandb: WandbSpec = None

@@ -5,7 +5,7 @@ import numpy as np
 from cvtoolkit.datasets.yolo_labels_dataset import YoloLabelsDataset
 
 from yolo_model_development_kit.performance_evaluation_pipeline.metrics import (
-    ObjectClass,
+    CategoryManager,
 )
 
 logger = logging.getLogger(__name__)
@@ -35,6 +35,8 @@ class PerImageEvaluator:
         predictions_path: str
             Path to ground truth annotations, either as a folder with YOLO .txt
             annotation files, or as a COCO JSON file.
+        category_manager: CategoryManager
+            CategoryManager object containing the object classes to evaluate.
         image_shape: Tuple[int, int] = (3840, 2160)
             Shape of the images. Since YOLO .txt annotations contain bounding
             box dimensions as fraction of the image shape, the pixel dimensions
@@ -55,10 +57,12 @@ class PerImageEvaluator:
         self,
         ground_truth_path: str,
         predictions_path: str,
+        category_manager: CategoryManager,
         image_shape: Tuple[int, int] = (3840, 2160),
         confidence_threshold: Optional[float] = None,
         decimals: int = 3,
     ):
+        self.category_manager = category_manager
         self.decimals = decimals
         img_area = image_shape[0] * image_shape[1]
         if ground_truth_path.endswith(".json"):
@@ -89,7 +93,7 @@ class PerImageEvaluator:
 
     def collect_results_per_class_and_size(
         self,
-        classes: List[int] = ObjectClass.all_ids(),
+        classes: List[int] = None,
         single_size_only: bool = False,
     ) -> Dict[str, Dict[str, float]]:
         """
@@ -99,7 +103,7 @@ class PerImageEvaluator:
 
         Parameters
         ----------
-        classes: List[int] = ObjectClass.all_ids()
+        classes: List[int] = None
             Which classes to evaluate (default is all).
         single_size_only: bool = False
             Whether to differentiate bounding box sizes (small, medium, large)
@@ -119,6 +123,10 @@ class PerImageEvaluator:
                 }
             }
         """
+
+        if classes is None:
+            classes = self.category_manager.all_ids()
+
         results = {}
 
         for target_class in classes:
@@ -127,13 +135,13 @@ class PerImageEvaluator:
                 self.pred_dataset.filter_by_class(target_class)
             )
 
-            target_class_name = ObjectClass.get_name(target_class)
+            target_class_name = self.category_manager.get_name(target_class)
             if target_class_name == "Unknown":
                 e = f"Class ID {target_class} not found in loaded categories. Stopping execution."
                 logger.error(e)
                 raise ValueError(e)
 
-            box_sizes = ObjectClass.to_dict(target_class, single_size_only)
+            box_sizes = self.category_manager.to_dict(target_class, single_size_only)
 
             for box_size_name, box_size in box_sizes.items():
                 self.gt_dataset.reset_filter()
@@ -143,9 +151,9 @@ class PerImageEvaluator:
                     ).filter_by_size_percentage(perc_to_keep=box_size)
                 )
 
-                results[f"{ObjectClass.get_name(target_class)}_{box_size_name}"] = (
-                    self._compute_stats(ground_truth, predictions, box_size_name)
-                )
+                results[
+                    f"{self.category_manager.get_name(target_class)}_{box_size_name}"
+                ] = self._compute_stats(ground_truth, predictions, box_size_name)
 
         return results
 
