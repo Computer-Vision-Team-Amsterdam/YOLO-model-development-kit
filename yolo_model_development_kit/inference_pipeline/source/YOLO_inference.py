@@ -17,6 +17,7 @@ from yolo_model_development_kit.inference_pipeline.source.model_result import (
 )
 
 logger = logging.getLogger("inference_pipeline")
+# TODO: Workaround to suppress excessive logging from azure, should be fixed better in the future
 logging.getLogger("azure.core.pipeline.policies.http_logging_policy").setLevel(
     logging.WARNING
 )
