@@ -6,7 +6,6 @@ from typing import List, Optional, Union
 
 import cv2
 import numpy as np
-import numpy.typing as npt
 from ultralytics.engine.results import Boxes, Results
 
 from yolo_model_development_kit.inference_pipeline.source.output_image import (
@@ -159,10 +158,6 @@ class ModelResult:
             self._save_labels(annotation_str, labels_output_folder, image_file_name)
 
         return len(target_idxs)
-
-    def get_image(self) -> npt.NDArray:
-        """Returns the image."""
-        return self.output_image.get_image()
 
     def _save_image(
         self,
