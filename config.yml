@@ -95,8 +95,8 @@ wandb:
   mode: "offline"
 
 logging:
-  loglevel_own: DEBUG  # override loglevel for packages defined in `own_packages`
-  own_packages: ["__main__", "yolo_model_development_kit", "performance_evaluation", "training_pipeline"]
+  loglevel_own: INFO  # override loglevel for packages defined in `own_packages`
+  own_packages: ["__main__", "yolo_model_development_kit", "performance_evaluation", "training_pipeline", "inference_pipeline"]
   basic_config:
     # log config as arguments to `logging.basicConfig`
     level: WARNING
