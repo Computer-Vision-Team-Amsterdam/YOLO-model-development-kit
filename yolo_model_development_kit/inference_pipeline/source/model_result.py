@@ -154,7 +154,7 @@ class ModelResult:
             annotation_str = self._get_annotation_string_from_boxes(
                 self.boxes[target_idxs]
             )
-            self._save_labels(annotation_str, output_folder, image_file_name)
+            self._save_labels(annotation_str, labels_output_folder, image_file_name)
 
         return len(target_idxs)
 
