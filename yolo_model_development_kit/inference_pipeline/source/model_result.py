@@ -6,7 +6,6 @@ from typing import List, Optional, Union
 
 import cv2
 import numpy as np
-import numpy.typing as npt
 from ultralytics.engine.results import Boxes, Results
 
 from yolo_model_development_kit.inference_pipeline.source.output_image import (
@@ -135,32 +134,30 @@ class ModelResult:
             np.in1d(self.boxes.cls, self.sensitive_classes)
             & (self.boxes.conf >= self.sensitive_classes_conf)
         )[0]
-        if len(sensitive_idxs) > 0:
-            sensitive_bounding_boxes = self.boxes[sensitive_idxs].xyxy
-            self.output_image.blur_inside_boxes(boxes=sensitive_bounding_boxes)
-
-        if len(target_idxs) > 0:
-            target_bounding_boxes = self.boxes[target_idxs].xyxy
-            target_categories = [int(box.cls) for box in self.boxes[target_idxs]]
-            self.output_image.draw_bounding_boxes(
-                boxes=target_bounding_boxes,
-                categories=target_categories,
-                colour_map=self.category_colors,
-            )
 
         if self.save_image or self.save_all_images:
+            if len(sensitive_idxs) > 0:
+                sensitive_bounding_boxes = self.boxes[sensitive_idxs].xyxy
+                self.output_image.blur_inside_boxes(boxes=sensitive_bounding_boxes)
+
+            if len(target_idxs) > 0:
+                target_bounding_boxes = self.boxes[target_idxs].xyxy
+                target_categories = [int(box.cls) for box in self.boxes[target_idxs]]
+                self.output_image.draw_bounding_boxes(
+                    boxes=target_bounding_boxes,
+                    categories=target_categories,
+                    colour_map=self.category_colors,
+                )
+
             self._save_image(output_folder, image_file_name)
+
         if self.save_labels and len(target_idxs) > 0:
             annotation_str = self._get_annotation_string_from_boxes(
                 self.boxes[target_idxs]
             )
-            self._save_labels(annotation_str, output_folder, image_file_name)
+            self._save_labels(annotation_str, labels_output_folder, image_file_name)
 
         return len(target_idxs)
-
-    def get_image(self) -> npt.NDArray:
-        """Returns the image."""
-        return self.output_image.get_image()
 
     def _save_image(
         self,

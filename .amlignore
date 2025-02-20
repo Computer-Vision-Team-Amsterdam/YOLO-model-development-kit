@@ -186,6 +186,7 @@ data/*
 *.csv
 *.html
 *.jpg
+*.png
 *.DS_Store
 *.md
 poetry.lock
