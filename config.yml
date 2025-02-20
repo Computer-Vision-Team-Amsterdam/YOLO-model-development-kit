@@ -28,7 +28,7 @@ inference_pipeline:
     overlap_height_ratio: 0.2
     overlap_width_ratio: 0.2
   target_classes: []
-  sensitive_classes: [0,1]
+  sensitive_classes: [0, 1]
   target_classes_conf: null  # null means conf is taken from model_params
   sensitive_classes_conf: null  # null means conf is taken from model_params
   output_image_size: null  # null means keep original size
@@ -36,7 +36,6 @@ inference_pipeline:
   save_detection_labels: True
   save_all_images: False  # If True, all images will be saved regardless of whether they contain target class objects
   use_sahi: False
-
 
 performance_evaluation:
   inputs:
@@ -99,7 +98,7 @@ wandb:
 
 logging:
   loglevel_own: DEBUG  # override loglevel for packages defined in `own_packages`
-  own_packages: ["__main__", "yolo_model_development_kit", "performance_evaluation", "training_pipeline"]
+  own_packages: ["__main__", "yolo_model_development_kit", "performance_evaluation", "training_pipeline", "inference_pipeline"]
   basic_config:
     # log config as arguments to `logging.basicConfig`
     level: WARNING
