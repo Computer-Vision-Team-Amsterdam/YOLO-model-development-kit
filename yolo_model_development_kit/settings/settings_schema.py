@@ -91,6 +91,7 @@ class TrainingModelParameters(SettingsSpecModel):
     epochs: int = 100
     n_classes: int = 3
     name_classes: List[str] = ["person", "license plate", "container"]
+    cache: Union[bool, str] = False
     patience: int = 25
     cos_lr: bool = False
     dropout: float = 0.0

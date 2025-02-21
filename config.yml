@@ -69,7 +69,8 @@ training_pipeline:
     epochs: 500
     n_classes: 5
     name_classes: ["person", "license plate", "container", "mobile toilet", "scaffolding"]
-    # The following settings are ignored in sweep mode and will instead be taken from the sweep_config file.
+    cache: True  # cache dataset in RAM
+    # The following settings are ignored in sweep mode and will instead be taken from the sweep_config_file.
     patience: 100
     cos_lr: True
     dropout: 0.0
@@ -82,14 +83,13 @@ training_pipeline:
     training_data_rel_path: "processed-dataset-oor-v2-2"
     model_weights_rel_path: "model"
     model_name: "best_yolo11m_coco_161024.pt"
-    config_file: "train_data_augment_config.json" # can be an empty string or omitted entirely
-    sweep_config: "sweep_config.json"
+    model_config_file: "train_data_augment_config.json" # can be an empty string or omitted entirely
+    sweep_config_file: "sweep_config.json"
   outputs:
     project_datastore_path: "dataset_oor_v2_2"
     project_rel_path: "model"
-    project_name: "yolo11m_base"  # can be an empty string or omitted entirely, will be ignored in sweep mode
-    experiment_name: ""
-  sweep_mode: False  # Set to true to run a hyperparameter sweep based on inputs/sweep_config
+    experiment_name: "yolo11m_base"  # subfolder name to store results in, can be an empty string or omitted entirely, will be ignored in sweep mode
+  sweep_mode: False  # Set to true to run a hyperparameter sweep based on inputs/sweep_config_file
   sweep_trials: 1 # will be ignored in train mode
 
 wandb:

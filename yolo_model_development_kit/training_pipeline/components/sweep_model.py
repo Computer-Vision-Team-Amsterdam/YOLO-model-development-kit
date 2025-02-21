@@ -103,8 +103,9 @@ def sweep_model(
     }
 
     # Define the search space
-    config_file = settings["training_pipeline"]["inputs"]["sweep_config"]
-    sweep_configuration = load_sweep_configuration(config_file)
+    sweep_configuration = load_sweep_configuration(
+        settings["training_pipeline"]["inputs"]["sweep_config_file"]
+    )
 
     # Start the sweep
     sweep_id = wandb.sweep(sweep=sweep_configuration)

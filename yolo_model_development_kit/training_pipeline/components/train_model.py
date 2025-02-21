@@ -140,7 +140,7 @@ def train_model(
     }
 
     # Load parameters from the JSON configuration file, if provided
-    config_file = settings["training_pipeline"]["inputs"].get("config_file", None)
+    config_file = settings["training_pipeline"]["inputs"].get("model_config_file", None)
     train_params_from_json = load_training_parameters(config_file)
 
     train_params.update(train_params_from_json)  # Update with dynamically loaded params
