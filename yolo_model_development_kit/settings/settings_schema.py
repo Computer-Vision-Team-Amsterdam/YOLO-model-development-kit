@@ -81,7 +81,6 @@ class PerformanceEvaluationSpec(SettingsSpecModel):
     mapping_json_path: str = ""
     dataset_name: str = ""
     model_name: str
-    ground_truth_image_shape: List[int]
     predictions_image_shape: List[int]
     prediction_labels_rel_path: str = "labels"
     splits: List[str]
@@ -89,7 +88,10 @@ class PerformanceEvaluationSpec(SettingsSpecModel):
     sensitive_classes: List[int]
     target_classes_conf: Optional[float] = None
     sensitive_classes_conf: Optional[float] = None
-    plot_pr_curves: bool = True
+    plot_curves: bool = True
+    plot_sml: bool = False
+    plot_conf_range: Optional[List] = None
+    plot_logx: Optional[bool] = False
     is_bias_analysis: bool = True
 
 
@@ -99,6 +101,7 @@ class TrainingModelParameters(SettingsSpecModel):
     epochs: int = 100
     n_classes: int = 3
     name_classes: List[str] = ["person", "license plate", "container"]
+    cache: Union[bool, str] = False
     patience: int = 25
     cos_lr: bool = False
     dropout: float = 0.0
@@ -113,11 +116,14 @@ class TrainingPipelineSpec(SettingsSpecModel):
     inputs: Dict[str, str] = None
     outputs: Dict[str, str] = None
     sweep_mode: bool = False
+    sweep_trials: int = 1
 
 
 class WandbSpec(SettingsSpecModel):
     api_key: str
     mode: str = "disabled"
+    entity: Optional[str] = None
+    project_name: str
 
 
 class YoloModelDevelopmentKitSettingsSpec(SettingsSpecModel):

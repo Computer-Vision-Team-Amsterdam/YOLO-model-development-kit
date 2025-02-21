@@ -27,8 +27,8 @@ inference_pipeline:
     slice_width: 2048
     overlap_height_ratio: 0.2
     overlap_width_ratio: 0.2
-  target_classes: [0, 1]
-  sensitive_classes: []
+  target_classes: []
+  sensitive_classes: [0, 1]
   target_classes_conf: null  # null means conf is taken from model_params
   sensitive_classes_conf: null  # null means conf is taken from model_params
   output_image_size: [8000, 4000]  # [width, height] - null means keep original size
@@ -50,34 +50,37 @@ performance_evaluation:
   inputs:
     datastore: "annotations_datastore"
     ground_truth_rel_path: "annotations-projects/07-25-2022_120550_UTC/ORBS-base/first-split"
-    predictions_rel_path: "yolo11/inference/tensorrt_test/yolo11m_pt"
+    predictions_rel_path: "yolo11/inference/ORBS-base-test/yolo11s_base"
   outputs:
     datastore: "annotations_datastore"
-    output_rel_path: "evaluation/tensorrt_test/yolo11m_pt"
-  categories_json_path: "categories_eval.json"
+    output_rel_path: "yolo11/evaluation/ORBS-base-test/yolo11s_base"
+  categories_json_path: "categories_eval_baas_v5.json"
   mapping_json_path: "groupings_wheelchairs_bias_analysis.json"
   dataset_name: "ORBS-base"
-  model_name: "yolo11m_pt"
-  ground_truth_image_shape: [8000, 4000]  # [width, height]
-  predictions_image_shape: [2048, 1024]  # [width, height]
-  prediction_labels_rel_path: ""
+  model_name: "yolo11s"
+  predictions_image_shape: [8000, 4000]
+  prediction_labels_rel_path: "labels"
   splits: ["test"]
   target_classes: []
   sensitive_classes: [0, 1]
   target_classes_conf: 0.7  # null means all predictions are used, custom COCO considers this threshold also for sensitive classes
-  sensitive_classes_conf: 0.01  # null means all predictions are used, only for TBA evaluation
-  plot_pr_curves: False
+  sensitive_classes_conf: null  # null means all predictions are used, only for TBA evaluation
+  plot_curves: True
+  plot_sml: True  # Whether to differentiate between S, M, and L (slower)
+  plot_conf_range: [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1]  # Confidence values for PR curves
+  plot_logx: True  # Use log scale for x-axis
   is_bias_analysis: False
 
 training_pipeline:
   model_parameters:
-    img_size: 2048
-    batch: 2
-    epochs: 200
-    n_classes: 2
-    name_classes: ["person", "license plate"]
-    # The following settings are ignored in sweep mode and will instead be taken from the sweep_config file.
-    patience: 20
+    img_size: 1280
+    batch: 0.85
+    epochs: 500
+    n_classes: 5
+    name_classes: ["person", "license plate", "container", "mobile toilet", "scaffolding"]
+    cache: True  # cache dataset in RAM
+    # The following settings are ignored in sweep mode and will instead be taken from the sweep_config_file.
+    patience: 100
     cos_lr: True
     dropout: 0.0
     seed: 0
@@ -85,23 +88,27 @@ training_pipeline:
     cls: 0.5
     dfl: 1.5
   inputs:
-    datastore_path: "annotations_datastore"
-    training_data_rel_path: "annotations-projects/07-25-2022_120550_UTC/ORBS-base/first-split"
-    model_weights_rel_path: "yolo11/base_models"
-    model_name: "yolo11m.pt"
-    config_file: "train_baas_config.json" # can be an empty string or omitted entirely
-    sweep_config: "sweep_config.json"
+    datastore_path: "dataset_oor_v2_2"
+    training_data_rel_path: "processed-dataset-oor-v2-2"
+    model_weights_rel_path: "model"
+    model_name: "best_yolo11m_coco_161024.pt"
+    model_config_file: "train_data_augment_config.json" # can be an empty string or omitted entirely
+    sweep_config_file: "sweep_config.json"
   outputs:
-    project_datastore_path: "annotations_datastore"
-    project_rel_path: "yolo11/training/yolo11m"
-  sweep_mode: False  # Set to true to run a hyperparameter sweep based on inputs/sweep_config
+    project_datastore_path: "dataset_oor_v2_2"
+    project_rel_path: "model"
+    experiment_name: "yolo11m_base"  # subfolder name to store results in, can be an empty string or omitted entirely, will be ignored in sweep mode
+  sweep_mode: False  # Set to true to run a hyperparameter sweep based on inputs/sweep_config_file
+  sweep_trials: 1 # will be ignored in train mode
 
 wandb:
   api_key: ""
   mode: "offline"
+  entity: "a-lombardo-ggd-amsterdam"  # W&B entity to log the run to (default: null)
+  project_name: "baas_v11"  # W&B project name
 
 logging:
-  loglevel_own: DEBUG  # override loglevel for packages defined in `own_packages`
+  loglevel_own: INFO  # override loglevel for packages defined in `own_packages`
   own_packages: ["__main__", "yolo_model_development_kit", "inference_pipeline", "model_conversion_pipeline", "performance_evaluation", "training_pipeline"]
   basic_config:
     # log config as arguments to `logging.basicConfig`

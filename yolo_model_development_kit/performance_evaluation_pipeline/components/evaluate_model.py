@@ -72,7 +72,7 @@ def evaluate_model(
     sensitive_classes = eval_settings["sensitive_classes"]
 
     logger.info(
-        f"Running performance evaluation for model: {eval_settings["model_name"]}"
+        f"Running performance evaluation for model: {eval_settings['model_name']}"
     )
 
     os.makedirs(output_dir, exist_ok=True)
@@ -86,7 +86,6 @@ def evaluate_model(
         predictions_base_folder=predictions_base_dir,
         category_manager=category_manager,
         output_folder=output_dir,
-        ground_truth_image_shape=eval_settings["ground_truth_image_shape"],
         predictions_image_shape=eval_settings["predictions_image_shape"],
         dataset_name=eval_settings["dataset_name"],
         model_name=eval_settings["model_name"],
@@ -96,6 +95,9 @@ def evaluate_model(
         sensitive_classes=sensitive_classes,
         target_classes_conf=eval_settings["target_classes_conf"],
         sensitive_classes_conf=eval_settings["sensitive_classes_conf"],
+        plot_sml_size=eval_settings["plot_sml"],
+        plot_conf_range=eval_settings["plot_conf_range"],
+        plot_logx=eval_settings["plot_logx"],
     )
 
     logger.info(f"Target classes: {yolo_eval.target_classes}")
@@ -108,7 +110,7 @@ def evaluate_model(
         tba_results = yolo_eval.evaluate_tba()
         yolo_eval.save_tba_results_to_csv(results=tba_results)
         # Plot precision/recall curves
-        if eval_settings["plot_pr_curves"]:
+        if eval_settings["plot_curves"]:
             yolo_eval.plot_tba_pr_f_curves(show_plot=False)
 
     # Per Image evaluation
@@ -116,7 +118,7 @@ def evaluate_model(
         per_image_results = yolo_eval.evaluate_per_image()
         yolo_eval.save_per_image_results_to_csv(results=per_image_results)
         # Plot precision/recall curves
-        if eval_settings["plot_pr_curves"]:
+        if eval_settings["plot_curves"]:
             yolo_eval.plot_per_image_pr_f_curves(show_plot=False)
 
     # Custom COCO evaluation
