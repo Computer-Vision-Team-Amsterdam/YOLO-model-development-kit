@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "yolo-model-development-kit"
-version = "1.2.0"
+version = "1.2.1"
 description = "Project to develop a YOLO model using AzureML platform."
 authors = [
     "Sebastian Davrieux <s.davrieux@amsterdam.nl>",
@@ -12,7 +12,7 @@ authors = [
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "~3.12"
+python = ">=3.10, <=3.12"
 pre-commit = "^3.8.0"
 aml_interface = { git = "https://github.com/Computer-Vision-Team-Amsterdam/AML-Interface.git", tag = "v1.1.2" }
 azure-ai-ml = {version = "^1.2.0", source = "PyPI"}

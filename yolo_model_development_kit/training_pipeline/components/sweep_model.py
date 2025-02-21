@@ -7,9 +7,11 @@ import wandb
 import yaml
 from azure.ai.ml.constants import AssetTypes
 from mldesigner import Input, Output, command_component
-from ultralytics import YOLO
 from ultralytics import settings as ultralytics_settings
-from wandb.integration.ultralytics import add_wandb_callback
+
+ultralytics_settings.update({"wandb": True})
+from ultralytics import YOLO  # noqa: E402
+from wandb.integration.ultralytics import add_wandb_callback  # noqa: E402
 
 sys.path.append("../../..")
 
@@ -85,18 +87,25 @@ def sweep_model(
     model_parameters = settings["training_pipeline"]["model_parameters"]
     sweep_trials = settings["training_pipeline"]["sweep_trials"]
 
+    # The batch_size can be a float between 0 and 1, or a positive int.
+    # This is ambiguous in the config.yml parsing, so we need to fix it here.
+    batch_size = model_parameters.get("batch", -1)
+    if (batch_size >= 1) and (isinstance(batch_size, float)):
+        batch_size = int(batch_size)
+
     train_params = {
         "data": yaml_path,
         "epochs": model_parameters.get("epochs", 100),
         "imgsz": model_parameters.get("img_size", 1024),
         "project": project_path,
         "save_dir": project_path,
-        "batch": model_parameters.get("batch", -1),
+        "batch": batch_size,
     }
 
     # Define the search space
-    config_file = settings["training_pipeline"]["inputs"]["sweep_config"]
-    sweep_configuration = load_sweep_configuration(config_file)
+    sweep_configuration = load_sweep_configuration(
+        settings["training_pipeline"]["inputs"]["sweep_config_file"]
+    )
 
     # Start the sweep
     sweep_id = wandb.sweep(sweep=sweep_configuration)
@@ -116,7 +125,6 @@ def sweep_model(
 
             add_wandb_callback(
                 model,
-                enable_model_checkpointing=False,
                 enable_validation_logging=False,
                 enable_prediction_logging=False,
                 enable_train_validation_logging=False,
