@@ -1,6 +1,10 @@
-[tool.poetry]
+[build-system]
+requires = ["setuptools>=70.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
 name = "yolo-model-development-kit"
-version = "1.3.0"
+version = "1.3.1"
 description = "Project to develop a YOLO model using AzureML platform."
 authors = [
     "Sebastian Davrieux <s.davrieux@amsterdam.nl>",
@@ -9,52 +13,46 @@ authors = [
     "Andrea Lombardo <a.lombardo@amsterdam.nl>",
     "Daan Bloembergen <d.bloembergen@amsterdam.nl>"
 ]
+maintainers = [
+    { name = "Computer Vision Team, Gemeente Amsterdam", email = "cvt@amsterdam.nl" },
+]
 readme = "README.md"
+requires-python = ">=3.10, <=3.12"
+dependencies = [
+    "aml_interface@git+https://github.com/Computer-Vision-Team-Amsterdam/AML-Interface.git@feature/flexible_build_context",
+    "azure-ai-ml>=1.20",
+    "azure-storage-blob>=12.23",
+    "cvtoolkit@git+https://github.com/Computer-Vision-Team-Amsterdam/CVToolkit.git@v2.0.4",
+    "matplotlib>=3.9.0",
+    "mldesigner>=0.1.0b16",
+    "numpy>=1.24.2",
+    "opencv-python>=4.6.0",
+    "pandas>=2.0",
+    "pycocotools>=2.0.8",
+    "sahi>=0.11.20",
+    "ultralytics>=8.3.0",
+    "wandb>=0.18.0",
+]
 
-[tool.poetry.dependencies]
-python = ">=3.10,<=3.12"
-pre-commit = "^3.8.0"
-aml_interface = { git = "https://github.com/Computer-Vision-Team-Amsterdam/AML-Interface.git", tag = "v1.1.2" }
-azure-ai-ml = {version = "^1.2.0", source = "PyPI"}
-azure-storage-blob = {version = "^12.19.0", source = "PyPI"}
-cvtoolkit = { git = "https://github.com/Computer-Vision-Team-Amsterdam/CVToolkit.git", tag = "v2.0.4" }
-matplotlib = {version = "^3.9.2", source = "PyPI"}
-mldesigner = {version = "^0.1.0-beta.9", source = "PyPI"}
-numpy = {version = "^1.24.2", source = "PyPI"}
-pandas = {version = "^2.0.3", source = "PyPI"}
-pycocotools = {version = "^2.0.7", source = "PyPI"}
-sahi = {version = "^0.11.20", source = "PyPI"}
-ultralytics = {version = "^8.3.0", source = "PyPI"}
-wandb = {version = "^0.18.0", source = "PyPI"}
-
-[tool.poetry.group.dev.dependencies]
-folium = {version = "^0.17.0", source = "PyPI"}
-geopandas = {version = "~0.13.2", source = "PyPI"}
-ipykernel = {version = "^6.29.4", source = "PyPI"}
-matplotlib = {version = "^3.9.2", source = "PyPI"}
-mapclassify = {version = "^2.8.1", source = "PyPI"}
-nbstripout = {version = "^0.7.1", source = "PyPI"}
-pandas-stubs = {version = "2.0.*", source = "PyPI"}
-pre-commit = {version = "^3.2.0", source = "PyPI"}
-pytest = {version = "^7.0.1", source = "PyPI"}
-pytest-cov = {version = "^4.0.0", source = "PyPI"}
-safety = {version = "^3.2.4", source = "PyPI"}
-
-[tool.poetry.group.model_export]
-optional = true
-
-[tool.poetry.group.model_export.dependencies]
-onnxslim = {version = "^0.1.48", source = "PyPI"}
-onnxruntime-gpu = {version = "^1.20.1", source = "PyPI"}
-tensorrt-cu12 = {version = ">7.0.0,<10.1.0 || >10.1.0,<10.5.0", source = "PyPI"}
-tensorrt-cu12-bindings = {version = ">7.0.0,<10.1.0 || >10.1.0,<10.5.0", source = "PyPI"}
-tensorrt-cu12-libs = {version = ">7.0.0,<10.1.0 || >10.1.0,<10.5.0", source = "PyPI"}
-ultralytics = {version = "^8.3.0", source = "PyPI", extras = ["export"]}
+[project.optional-dependencies]
+dev = [
+    "ipykernel>=6.29.4",
+    "nbstripout>=0.7.1",
+    "pandas-stubs>=2.0",
+    "pre-commit>=3.2.0",
+    "pytest>=7.0.1",
+    "pytest-cov>=4.0.0",
+    "safety>=3.2.4",
+]
+model_export = [
+    "onnxslim>=0.1.48",
+    "onnxruntime-gpu>=1.20.1",
+    "tensorrt-cu12>7.0.0,!=10.1.*,<10.5.0",
+    "tensorrt-cu12-bindings>7.0.0,!=10.1.*,<10.5.0",
+    "tensorrt-cu12-libs>7.0.0,!=10.1.*,<10.5.0",
+    "ultralytics[export]>=8.3.0",
+]
 
 [tool.isort]
 profile = "black"
 multi_line_output = 3
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"

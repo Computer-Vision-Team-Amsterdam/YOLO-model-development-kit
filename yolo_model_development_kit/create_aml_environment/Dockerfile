@@ -13,27 +13,16 @@ RUN apt update -y \
 
 WORKDIR /opt/app
 
-RUN conda update -n base -c conda-forge conda \
-    && conda config --add channels conda-forge \
-    && conda config --set channel_priority strict
-
-# TensorRT export only works with python 3.11
-RUN conda create -n env python=3.11
-RUN echo "source activate env" > ~/.bashrc
-ENV PATH="/opt/miniconda/envs/env/bin:$PATH"
-
-RUN curl -sSL https://install.python-poetry.org | python3 -
-ENV PATH="/root/.local/bin:$PATH"
-RUN poetry config virtualenvs.create false
-
 COPY pyproject.toml .
-# The lock file won't have the right packages for export, so we just use a fresh install
-# COPY poetry.lock .
 
-# Initialize Conda, activate environment and install poetry packages
-RUN /opt/miniconda/bin/conda init bash && \
-    . /opt/miniconda/etc/profile.d/conda.sh && \
-    conda activate env && \
-    # No lock file so nothing to update
-    # poetry update --no-ansi --no-interaction && \
-    poetry install --no-ansi --no-interaction --no-root --with model_export --without dev
+# Install UV package manager
+ADD https://astral.sh/uv/install.sh /uv-installer.sh
+RUN sh /uv-installer.sh && rm /uv-installer.sh
+ENV PATH="/root/.local/bin/:$PATH"
+
+# Create environment and install packages
+# NOTE: tensorrt export requires python <= 3.11
+RUN uv venv --python 3.11 \
+    && uv pip install -r pyproject.toml --extra model_export
+
+ENV PATH="/opt/app/.venv/bin:$PATH"
