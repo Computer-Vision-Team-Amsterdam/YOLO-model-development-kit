@@ -1,8 +1,11 @@
+import logging
 from typing import Dict, List, Optional, Tuple, Union
 
 import cv2
 import numpy as np
 import numpy.typing as npt
+
+logger = logging.getLogger("inference_pipeline")
 
 
 class OutputImage:
@@ -57,6 +60,12 @@ class OutputImage:
             y_min = max(0, y_min - box_padding)
             x_max = min(img_width, x_max + box_padding)
             y_max = min(img_height, y_max + box_padding)
+
+            if (x_max - x_min < 1) or (y_max - y_min < 1):
+                logger.debug(
+                    f"Attempting to blur empty bounding box: {(x_min, y_min)} -> {(x_max, y_max)}"
+                )
+                continue
 
             # logger.debug(f"Blurring inside: {(x_min, y_min)} -> {(x_max, y_max)}")
             area_to_blur = self.image[y_min:y_max, x_min:x_max]
