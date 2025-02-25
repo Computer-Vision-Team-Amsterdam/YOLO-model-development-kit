@@ -126,6 +126,12 @@ class OutputImage:
             x_max = min(img_width, x_max + box_padding)
             y_max = min(img_height, y_max + box_padding)
 
+            if (x_max - x_min < 1) or (y_max - y_min < 1):
+                logger.debug(
+                    f"Attempting to draw empty bounding box: {(x_min, y_min)} -> {(x_max, y_max)}"
+                )
+                continue
+
             # logger.debug(
             #     f"Drawing: {(x_min, y_min)} -> {(x_max, y_max)} in colour {colour}"
             # )
