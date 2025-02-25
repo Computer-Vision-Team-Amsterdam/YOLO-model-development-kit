@@ -11,9 +11,9 @@ logger = logging.getLogger("inference_pipeline")
 class OutputImage:
     # Predefined colors for 5 categories
     DEFAULT_COLORS: Dict[int, Tuple[int, int, int]] = {
-        0: (0, 0, 255),  # Blue
+        0: (255, 0, 0),  # Blue
         1: (0, 255, 0),  # Green
-        2: (255, 0, 0),  # Red
+        2: (0, 0, 255),  # Red
         3: (255, 255, 0),  # Cyan
         4: (255, 0, 255),  # Magenta
     }
