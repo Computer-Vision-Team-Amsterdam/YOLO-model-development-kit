@@ -16,13 +16,8 @@ WORKDIR /opt/app
 COPY pyproject.toml .
 
 # Install UV package manager
-ADD https://astral.sh/uv/install.sh /uv-installer.sh
-RUN sh /uv-installer.sh && rm /uv-installer.sh
-ENV PATH="/root/.local/bin/:$PATH"
+RUN pip install uv
 
-# Create environment and install packages
-# NOTE: tensorrt export requires python <= 3.11
-RUN uv venv --python 3.11 \
-    && uv pip install -r pyproject.toml --extra model_export
-
-ENV PATH="/opt/app/.venv/bin:$PATH"
+# Install requirements
+# Note: model_export requires python <= 3.11
+RUN uv pip install --system -r pyproject.toml --extra model_export
