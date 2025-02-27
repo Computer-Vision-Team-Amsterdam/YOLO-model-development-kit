@@ -1,16 +1,19 @@
+import logging
 from typing import Dict, List, Optional, Tuple, Union
 
 import cv2
 import numpy as np
 import numpy.typing as npt
 
+logger = logging.getLogger("inference_pipeline")
+
 
 class OutputImage:
     # Predefined colors for 5 categories
     DEFAULT_COLORS: Dict[int, Tuple[int, int, int]] = {
-        0: (0, 0, 255),  # Blue
+        0: (255, 0, 0),  # Blue
         1: (0, 255, 0),  # Green
-        2: (255, 0, 0),  # Red
+        2: (0, 0, 255),  # Red
         3: (255, 255, 0),  # Cyan
         4: (255, 0, 255),  # Magenta
     }
@@ -57,6 +60,12 @@ class OutputImage:
             y_min = max(0, y_min - box_padding)
             x_max = min(img_width, x_max + box_padding)
             y_max = min(img_height, y_max + box_padding)
+
+            if (x_max - x_min < 1) or (y_max - y_min < 1):
+                logger.debug(
+                    f"Attempting to blur empty bounding box: {(x_min, y_min)} -> {(x_max, y_max)}"
+                )
+                continue
 
             # logger.debug(f"Blurring inside: {(x_min, y_min)} -> {(x_max, y_max)}")
             area_to_blur = self.image[y_min:y_max, x_min:x_max]
@@ -116,6 +125,12 @@ class OutputImage:
             y_min = max(0, y_min - box_padding)
             x_max = min(img_width, x_max + box_padding)
             y_max = min(img_height, y_max + box_padding)
+
+            if (x_max - x_min < 1) or (y_max - y_min < 1):
+                logger.debug(
+                    f"Attempting to draw empty bounding box: {(x_min, y_min)} -> {(x_max, y_max)}"
+                )
+                continue
 
             # logger.debug(
             #     f"Drawing: {(x_min, y_min)} -> {(x_max, y_max)} in colour {colour}"
