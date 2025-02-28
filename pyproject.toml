@@ -12,7 +12,7 @@ authors = [
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.10,<=3.12"
+python = ">=3.10, <=3.12"
 pre-commit = "^3.8.0"
 aml_interface = { git = "https://github.com/Computer-Vision-Team-Amsterdam/AML-Interface.git", tag = "v1.1.2" }
 azure-ai-ml = {version = "^1.2.0", source = "PyPI"}
@@ -44,6 +44,7 @@ safety = {version = "^3.2.4", source = "PyPI"}
 optional = true
 
 [tool.poetry.group.model_export.dependencies]
+python = ">=3.10, <3.12"
 onnxslim = {version = "^0.1.48", source = "PyPI"}
 onnxruntime-gpu = {version = "^1.20.1", source = "PyPI"}
 tensorrt-cu12 = {version = ">7.0.0,<10.1.0 || >10.1.0,<10.5.0", source = "PyPI"}
