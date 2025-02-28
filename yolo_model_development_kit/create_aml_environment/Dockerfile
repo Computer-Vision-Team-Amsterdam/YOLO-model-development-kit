@@ -18,6 +18,7 @@ RUN conda update -n base -c conda-forge conda \
     && conda config --set channel_priority strict
 
 # TensorRT export only works with python 3.11
+# The dependency causing this limitation is https://pypi.org/project/tensorflow-decision-forests/
 RUN conda create -n env python=3.11
 RUN echo "source activate env" > ~/.bashrc
 ENV PATH="/opt/miniconda/envs/env/bin:$PATH"
