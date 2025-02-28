@@ -118,6 +118,7 @@ def perform_bias_analysis(
             predictions_image_shape=eval_settings["predictions_image_shape"],
             dataset_name=eval_settings["dataset_name"],
             model_name=eval_settings["model_name"],
+            gt_annotations_rel_path=eval_settings["ground_truth_labels_rel_path"],
             pred_annotations_rel_path=eval_settings["prediction_labels_rel_path"],
             splits=eval_settings["splits"],
             target_classes=[maps_to_class],
