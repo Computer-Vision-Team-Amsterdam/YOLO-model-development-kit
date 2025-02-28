@@ -60,6 +60,7 @@ performance_evaluation:
   model_name: "yolo11s"
   predictions_image_shape: [8000, 4000]
   prediction_labels_rel_path: "labels"
+  ground_truth_labels_rel_path: "labels"
   splits: ["test"]
   target_classes: []
   sensitive_classes: [0, 1]

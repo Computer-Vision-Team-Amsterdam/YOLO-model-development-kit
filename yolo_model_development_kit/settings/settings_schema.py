@@ -83,6 +83,7 @@ class PerformanceEvaluationSpec(SettingsSpecModel):
     model_name: str
     predictions_image_shape: List[int]
     prediction_labels_rel_path: str = "labels"
+    ground_truth_labels_rel_path: str = "labels"
     splits: List[str]
     target_classes: List[int]
     sensitive_classes: List[int]
