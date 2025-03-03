@@ -1,26 +1,26 @@
 customer: ""
 
 aml_experiment_details:
-  compute_name: gpu-blurring-model
-  env_name: oor-environment
-  env_version: 61
+  compute_name: oor-testing
+  env_name: yolo-environment
+  env_version: 16
   src_dir: "."
 
 inference_pipeline:
   model_params:
-    batch_size: 1 # batch size does not have an effect for SAHI
-    img_size: 2048
-    conf: 0.01
+    batch_size: 1  # batch size does not have an effect for SAHI
+    img_size: [1024, 2048]  # [height, width]
+    conf: 0.0001
   inputs:
-    datastore_path: "inference_test"
-    inference_data_rel_path: "datasets/demo_images"
-    model_weights_rel_path: "model_weights"
-    model_name: "yolo11m_orbs_lilac_spaceship-2.pt"
+    datastore_path: "annotations_datastore"
+    inference_data_rel_path: "annotations-projects/07-25-2022_120550_UTC/ORBS-base/first-split/images/test/"
+    model_weights_rel_path: "yolo11/trained_models"
+    model_name: "yolo11m_orbs_lilac_spaceship-2.engine"
   outputs:
-    datastore_path: "inference_test"  # empty string "" means same as input datastore
-    output_rel_path: "inference/demo_images/test_new_inference_pipeline/"
+    datastore_path: "annotations_datastore"  # empty string "" means same as input datastore
+    output_rel_path: "yolo11/inference/tensorrt_test/yolo11m_engine"
     detections_subfolder: ""
-    labels_subfolder: ""
+    labels_subfolder: "test"
   sahi_params:
     model_type: "ultralytics"
     slice_height: 2048
@@ -31,11 +31,20 @@ inference_pipeline:
   sensitive_classes: [0, 1]
   target_classes_conf: null  # null means conf is taken from model_params
   sensitive_classes_conf: null  # null means conf is taken from model_params
-  output_image_size: null  # null means keep original size
-  save_detection_images: True
+  output_image_size: [8000, 4000]  # [width, height] - null means keep original size
+  save_detection_images: False
   save_detection_labels: True
   save_all_images: False  # If True, all images will be saved regardless of whether they contain target class objects
   use_sahi: False
+
+model_conversion:
+  datastore_path: "annotations_datastore"
+  model_weights_rel_path: "yolo11/trained_models/"
+  input_model_name: "yolo11m_orbs_lilac_spaceship-2.pt"
+  output_model_name: "yolo11m_orbs_lilac_spaceship-2.engine"
+  overwrite_if_exists: True
+  image_size: [1024, 2048]  # [height, width]
+  batch_size: 1
 
 performance_evaluation:
   inputs:
@@ -100,8 +109,8 @@ wandb:
   project_name: "baas_v11"  # W&B project name
 
 logging:
-  loglevel_own: DEBUG  # override loglevel for packages defined in `own_packages`
-  own_packages: ["__main__", "yolo_model_development_kit", "performance_evaluation", "training_pipeline", "inference_pipeline"]
+  loglevel_own: INFO  # override loglevel for packages defined in `own_packages`
+  own_packages: ["__main__", "yolo_model_development_kit", "inference_pipeline", "model_conversion_pipeline", "performance_evaluation", "training_pipeline"]
   basic_config:
     # log config as arguments to `logging.basicConfig`
     level: WARNING
