@@ -80,11 +80,6 @@ def _convert_model_to_trt(
     image_size: Optional[Union[Tuple[int, int], int]],
     batch: int = 1,
 ) -> None:
-    # if psutil.virtual_memory().total > 8.0 * 1.073742e9:
-    #     workspace = 4.0
-    # else:
-    #     workspace = 2.0
-
     export_params = {
         "format": "engine",
         "workspace": None,
