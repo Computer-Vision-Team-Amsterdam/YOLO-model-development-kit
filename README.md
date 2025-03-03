@@ -9,12 +9,19 @@ git clone git@github.com:Computer-Vision-Team-Amsterdam/YOLO-model-development-k
 ```
 
 ### 2. Install UV
-We use UV as package manager, which can be installed using any method mentioned on [the UV webpage](https://docs.astral.sh/uv/). In principle, however, it is also possible to use PIP to install the required packages.
+We use UV as package manager, which can be installed using any method mentioned on [the UV webpage](https://docs.astral.sh/uv/getting-started/installation/).
 
 The easiest option is to use their installer:
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
+
+It is also possible to use pip:
+```bash
+pipx install uv
+```
+
+Afterwards, uv can be updated using `uv self update`.
 
 ### 3. Install dependencies
 In the terminal, navigate to the project root (the folder containing `pyproject.toml`), then use UV to create a new virtual environment and install the dependencies.
@@ -30,7 +37,7 @@ uv venv --python 3.11
 source .venv/bin/activate 
 
 # Install dependencies
-uv pip install -r pyproject.toml --extra dev 
+uv pip install -r pyproject.toml --extra dev [--extra model_export]
 ```
     
 ### 4. Install pre-commit hooks
@@ -52,7 +59,7 @@ bash .git/hooks/pre-commit
 
 ## Usage
 
-Modify the `config.yml` to your needs and run the required pipelines.
+Modify the `config.yml` to your needs and run the required pipelines. For example:
 
 ```bash
 # Create AzureML environment
