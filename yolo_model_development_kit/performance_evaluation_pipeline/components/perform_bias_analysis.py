@@ -1,3 +1,4 @@
+import glob
 import logging
 import os
 import sys
@@ -60,7 +61,40 @@ def perform_bias_analysis(
         Location where output will be stored.
     """
 
+    def log_label_counts(labels_folder: str, logger, valid_category_ids: set):
+        """
+        Counts and logs the number of lines in each label file that start with one of the valid category IDs.
+
+        Parameters
+        ----------
+        labels_folder : str
+            Path to the folder containing label text files.
+        logger : logging.Logger
+            Logger for logging the counts.
+        valid_category_ids : set
+            Set of category IDs (integers) that belong to the current grouping.
+        """
+        counts = {cat_id: 0 for cat_id in valid_category_ids}
+        # Look for .txt files (adjust the pattern if needed)
+        pattern = os.path.join(labels_folder, "**", "*.txt")
+        for label_file in glob.glob(pattern, recursive=True):
+            with open(label_file, "r") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    # The remapped category is assumed to be the first token.
+                    try:
+                        cat_id = int(line.split()[0])
+                    except (ValueError, IndexError):
+                        continue
+                    # Only count if the category ID belongs to the current grouping.
+                    if cat_id in valid_category_ids:
+                        counts[cat_id] += 1
+        logger.info(f"Sample counts in '{labels_folder}': {counts}")
+
     eval_settings = settings["performance_evaluation"]
+    ground_truth_labels_rel_path = eval_settings["ground_truth_labels_rel_path"]
     logger.info(f"Running bias analysis for model: {eval_settings['model_name']}")
 
     os.makedirs(output_dir, exist_ok=True)
@@ -74,7 +108,9 @@ def perform_bias_analysis(
     logger.info(f"Loaded thresholds: {category_manager.all_thresholds()}")
     logger.info(f"Loaded groupings: {category_manager.all_groupings()}")
 
-    original_gt_labels_path = os.path.join(ground_truth_base_dir, "labels")
+    original_gt_labels_path = os.path.join(
+        ground_truth_base_dir, ground_truth_labels_rel_path
+    )
     logger.info(f"Original ground truth labels path: {original_gt_labels_path}")
     groupings = category_manager.all_groupings()
 
@@ -104,9 +140,16 @@ def perform_bias_analysis(
 
         process_labels(
             original_gt_labels=original_gt_labels_path,
+            ground_truth_rel_path=ground_truth_labels_rel_path,
             new_gt_labels_path=new_labels_path,
             category_mapping=category_mapping,
         )
+
+        valid_category_ids = set(category_mapping.values())
+        logger.info(
+            f'Valid category IDs for grouping "{group_name}": {valid_category_ids}'
+        )
+        log_label_counts(new_labels_path, logger, valid_category_ids)
 
         current_ground_truth_base_dir = new_labels_path
 
@@ -118,8 +161,8 @@ def perform_bias_analysis(
             predictions_image_shape=eval_settings["predictions_image_shape"],
             dataset_name=eval_settings["dataset_name"],
             model_name=eval_settings["model_name"],
-            gt_annotations_rel_path=eval_settings["ground_truth_labels_rel_path"],
             pred_annotations_rel_path=eval_settings["prediction_labels_rel_path"],
+            gt_annotations_rel_path=ground_truth_labels_rel_path,
             splits=eval_settings["splits"],
             target_classes=[maps_to_class],
             sensitive_classes=eval_settings["sensitive_classes"],

@@ -27,14 +27,16 @@ def _process_label(label_path, new_labels_path, category_mapping):
         label_file.write("\n".join(new_lines))
 
 
-def process_labels(original_gt_labels, new_gt_labels_path, category_mapping):
+def process_labels(
+    original_gt_labels, ground_truth_rel_path, new_gt_labels_path, category_mapping
+):
     """
     Take original ground truth labels, process them according to the mapping
     and write them in a new label folder.
     """
     labels_list = os.listdir(original_gt_labels)
     logger.info(f"There are {len(labels_list)} to be processed.")
-    new_gt_labels_path = os.path.join(new_gt_labels_path, "labels")
+    new_gt_labels_path = os.path.join(new_gt_labels_path, ground_truth_rel_path)
     os.makedirs(new_gt_labels_path, exist_ok=True)
     counter = 0
     for label_file in labels_list:
