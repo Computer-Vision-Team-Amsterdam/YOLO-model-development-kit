@@ -1,3 +1,4 @@
+import glob
 import logging
 import os
 
@@ -44,3 +45,33 @@ def process_labels(
         _process_label(label_path, new_gt_labels_path, category_mapping)
         counter += 1
     logger.info(f"Processed {counter} labels.")
+
+
+def log_label_counts(labels_folder: str, logger, valid_category_ids: set):
+    """
+    Counts and logs the number of lines in each label file that start with one of the valid category IDs.
+
+    Parameters
+    ----------
+    labels_folder : str
+        Path to the folder containing label text files.
+    logger : logging.Logger
+        Logger for logging the counts.
+    valid_category_ids : set
+        Set of category IDs (integers) that belong to the current grouping.
+    """
+    counts = {cat_id: 0 for cat_id in valid_category_ids}
+    pattern = os.path.join(labels_folder, "**", "*.txt")
+    for label_file in glob.glob(pattern, recursive=True):
+        with open(label_file, "r") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    cat_id = int(line.split()[0])
+                except (ValueError, IndexError):
+                    continue
+                if cat_id in valid_category_ids:
+                    counts[cat_id] += 1
+    logger.info(f"Sample counts in '{labels_folder}': {counts}")

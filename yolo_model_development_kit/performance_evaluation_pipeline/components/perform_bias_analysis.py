@@ -1,4 +1,3 @@
-import glob
 import logging
 import os
 import sys
@@ -15,6 +14,7 @@ from yolo_model_development_kit.performance_evaluation_pipeline.metrics import (
 )
 from yolo_model_development_kit.performance_evaluation_pipeline.source import (  # noqa: E402
     YoloEvaluator,
+    log_label_counts,
     process_labels,
 )
 
@@ -60,38 +60,6 @@ def perform_bias_analysis(
     output_dir: Output(type=AssetTypes.URI_FOLDER)
         Location where output will be stored.
     """
-
-    def log_label_counts(labels_folder: str, logger, valid_category_ids: set):
-        """
-        Counts and logs the number of lines in each label file that start with one of the valid category IDs.
-
-        Parameters
-        ----------
-        labels_folder : str
-            Path to the folder containing label text files.
-        logger : logging.Logger
-            Logger for logging the counts.
-        valid_category_ids : set
-            Set of category IDs (integers) that belong to the current grouping.
-        """
-        counts = {cat_id: 0 for cat_id in valid_category_ids}
-        # Look for .txt files (adjust the pattern if needed)
-        pattern = os.path.join(labels_folder, "**", "*.txt")
-        for label_file in glob.glob(pattern, recursive=True):
-            with open(label_file, "r") as f:
-                for line in f:
-                    line = line.strip()
-                    if not line:
-                        continue
-                    # The remapped category is assumed to be the first token.
-                    try:
-                        cat_id = int(line.split()[0])
-                    except (ValueError, IndexError):
-                        continue
-                    # Only count if the category ID belongs to the current grouping.
-                    if cat_id in valid_category_ids:
-                        counts[cat_id] += 1
-        logger.info(f"Sample counts in '{labels_folder}': {counts}")
 
     eval_settings = settings["performance_evaluation"]
     ground_truth_labels_rel_path = eval_settings["ground_truth_labels_rel_path"]
