@@ -70,6 +70,7 @@ def evaluate_model(
     eval_settings = settings["performance_evaluation"]
     target_classes = eval_settings["target_classes"]
     sensitive_classes = eval_settings["sensitive_classes"]
+    overall_stats = eval_settings["overall_stats_tba"]
 
     logger.info(
         f"Running performance evaluation for model: {eval_settings['model_name']}"
@@ -108,13 +109,13 @@ def evaluate_model(
 
     # Total Blurred Area evaluation
     if len(sensitive_classes) > 0:
-        tba_results = yolo_eval.evaluate_tba(overall=eval_settings["overall_stats_tba"])
+        tba_results = yolo_eval.evaluate_tba(overall_stats=overall_stats)
         yolo_eval.save_tba_results_to_csv(
-            results=tba_results, overall=eval_settings["overall_stats_tba"]
+            results=tba_results, overall_stats=overall_stats
         )
         # Plot precision/recall curves
         if eval_settings["plot_curves"]:
-            yolo_eval.plot_tba_pr_f_curves(show_plot=False)
+            yolo_eval.plot_tba_pr_f_curves(show_plot=False, overall_stats=overall_stats)
 
     # Per Image evaluation
     if len(target_classes) > 0:
