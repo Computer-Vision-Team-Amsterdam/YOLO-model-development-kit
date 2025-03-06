@@ -1,7 +1,7 @@
 import logging
 import os
 from itertools import product
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, cast
 
 import numpy as np
 import pandas as pd
@@ -184,6 +184,7 @@ class YoloEvaluator:
         upper_half: bool = False,
         confidence_threshold: Optional[float] = None,
         single_size_only: Optional[bool] = None,
+        overall: bool = False,
     ) -> Dict[str, Dict[str, Dict[str, float]]]:
         """
         Run Total Blurred Area evaluation for the sensitive classes. This tells
@@ -205,6 +206,21 @@ class YoloEvaluator:
                 }
             }
 
+        If overall is set to True, the results will be summarized as follows:
+
+            {
+                [model_name]_[split]: {
+                    "overall": {
+                        "true_positives": float,
+                        "false_positives": float,
+                        "true_negatives": float,
+                        "false_negatives:": float,
+                        "precision": float,
+                        "recall": float,
+                        "f1_score": float,
+                    }
+            }
+
         Parameters
         ----------
         upper_half: bool = False
@@ -218,6 +234,8 @@ class YoloEvaluator:
             Optional: set to true to disable differentiation in bounding box
             sizes. If omitted, the initial confidence threshold at construction
             will be used.
+        overall: bool = False
+            Whether to compute overall statistics for all classes.
 
         Returns
         -------
@@ -243,10 +261,17 @@ class YoloEvaluator:
                 upper_half=upper_half,
             )
             key = f"{self.model_name}_{split if split != '' else 'all'}"
-            tba_results[key] = evaluator.collect_results_per_class_and_size(
-                classes=self.sensitive_classes,
-                single_size_only=single_size_only,
-            )
+            if overall:
+                tba_results[key] = {
+                    "overall": evaluator.collect_overall_results(
+                        classes=self.sensitive_classes,
+                    )
+                }
+            else:
+                tba_results[key] = evaluator.collect_results_per_class_and_size(
+                    classes=self.sensitive_classes,
+                    single_size_only=single_size_only,
+                )
         return tba_results
 
     def evaluate_tba_bias_analysis(
@@ -512,6 +537,7 @@ class YoloEvaluator:
         results: Dict[str, Dict[str, Dict[str, float]]],
         use_groupings: bool = False,
         group_id: Optional[int] = None,
+        overall: bool = False,
     ):
         """Save TBA results dict as CSV file."""
         filename = ""
@@ -529,10 +555,17 @@ class YoloEvaluator:
             )
             _df_to_csv(bias_analysis_tba_result_to_df(results), filename)
         else:
-            filename = os.path.join(
-                self.output_folder, f"{self.model_name}-tba-eval.csv"
-            )
-            _df_to_csv(tba_result_to_df(results), filename)
+            if overall:
+                filename = os.path.join(
+                    self.output_folder, f"{self.model_name}-overall-tba-eval.csv"
+                )
+                overall_results = {k: v["overall"] for k, v in results.items()}
+                _df_to_csv(overall_tba_result_to_df(overall_results), filename)
+            else:
+                filename = os.path.join(
+                    self.output_folder, f"{self.model_name}-tba-eval.csv"
+                )
+                _df_to_csv(tba_result_to_df(results), filename)
 
     def save_per_image_results_to_csv(
         self, results: Dict[str, Dict[str, Dict[str, float]]]
@@ -776,6 +809,37 @@ def _default_result_to_df(
     return df
 
 
+def _overall_tba_result_to_df(results: Dict[str, Dict[str, float]]) -> pd.DataFrame:
+    """
+    Convert overall TBA results dictionary (one dictionary per key) to a Pandas DataFrame.
+    Assumes that each value in `results` is a dict with overall metrics.
+    """
+
+    def _stat_to_header(stat: str) -> str:
+        if stat in ("fpr", "fnr", "tpr", "tnr"):
+            return stat.upper()
+        else:
+            return " ".join([p.capitalize() for p in stat.split("_")])
+
+    # Header: Model, Split, Overall, and the metric names
+    sample_metrics = next(iter(results.values()))
+    header = ["Model", "Split", "Overall"]
+    header.extend([_stat_to_header(metric) for metric in sample_metrics.keys()])
+
+    df = pd.DataFrame(columns=header)
+
+    for key, metrics in results.items():
+        try:
+            model_name, split = key.rsplit("_", maxsplit=1)
+        except ValueError:
+            model_name, split = key, ""
+        row = [model_name, split, "overall"]
+        row.extend(cast(List[Any], list(metrics.values())))
+        df.loc[len(df)] = row
+
+    return df
+
+
 def bias_analysis_tba_result_to_df(
     results: Dict[str, Dict[str, Dict[str, float]]]
 ) -> pd.DataFrame:
@@ -783,6 +847,13 @@ def bias_analysis_tba_result_to_df(
     Convert TBA results dictionary to Pandas DataFrame.
     """
     return _bias_analysis_result_to_df(results=results)
+
+
+def overall_tba_result_to_df(results: Dict[str, Dict[str, float]]) -> pd.DataFrame:
+    """
+    Convert overall TBA results dictionary to a Pandas DataFrame.
+    """
+    return _overall_tba_result_to_df(results=results)
 
 
 def tba_result_to_df(results: Dict[str, Dict[str, Dict[str, float]]]) -> pd.DataFrame:

@@ -108,8 +108,10 @@ def evaluate_model(
 
     # Total Blurred Area evaluation
     if len(sensitive_classes) > 0:
-        tba_results = yolo_eval.evaluate_tba()
-        yolo_eval.save_tba_results_to_csv(results=tba_results)
+        tba_results = yolo_eval.evaluate_tba(overall=eval_settings["overall_stats_tba"])
+        yolo_eval.save_tba_results_to_csv(
+            results=tba_results, overall=eval_settings["overall_stats_tba"]
+        )
         # Plot precision/recall curves
         if eval_settings["plot_curves"]:
             yolo_eval.plot_tba_pr_f_curves(show_plot=False)

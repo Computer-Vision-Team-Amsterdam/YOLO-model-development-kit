@@ -79,6 +79,7 @@ class PerformanceEvaluationSpec(SettingsSpecModel):
     sensitive_classes: List[int]
     target_classes_conf: Optional[float] = None
     sensitive_classes_conf: Optional[float] = None
+    overall_stats_tba: bool = False
     plot_curves: bool = True
     plot_sml: bool = False
     plot_conf_range: Optional[List] = None

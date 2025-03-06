@@ -44,7 +44,7 @@ performance_evaluation:
     predictions_rel_path: "yolo11/inference/ORBS-base-test/yolo11s_base"
   outputs:
     datastore: "annotations_datastore"
-    output_rel_path: "yolo11/evaluation/ORBS-base-test/yolo11s_base"
+    output_rel_path: "yolo11/evaluation/ORBS-base-test/yolo11s_base_test_new"
   categories_json_path: "categories_eval_baas_v5.json"
   mapping_json_path: "groupings_wheelchairs_bias_analysis.json"
   dataset_name: "ORBS-base"
@@ -57,6 +57,7 @@ performance_evaluation:
   sensitive_classes: [0, 1]
   target_classes_conf: 0.7  # null means all predictions are used, custom COCO considers this threshold also for sensitive classes
   sensitive_classes_conf: null  # null means all predictions are used, only for TBA evaluation
+  overall_stats_tba: True # Compute stats for all classes without distinction
   plot_curves: True
   plot_sml: True  # Whether to differentiate between S, M, and L (slower)
   plot_conf_range: [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1]  # Confidence values for PR curves
