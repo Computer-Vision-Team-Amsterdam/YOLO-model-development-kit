@@ -33,7 +33,7 @@ class LoggingSpec(SettingsSpecModel):
 
 class InferenceModelParameters(SettingsSpecModel):
     batch_size: int = 1
-    img_size: int = 640
+    img_size: Union[Tuple[int, int], int] = 640
     conf: float = 0.5
     save_img_flag: bool = False
     save_txt_flag: bool = False
@@ -62,6 +62,16 @@ class InferencePipelineSpec(SettingsSpecModel):
     save_detection_labels: bool = True
     save_all_images: bool = False
     use_sahi: bool = False
+
+
+class ModelConversionPipelineSpec(SettingsSpecModel):
+    datastore_path: str
+    model_weights_rel_path: str = ""
+    input_model_name: str
+    output_model_name: Optional[str] = None
+    overwrite_if_exists: bool = False
+    image_size: Optional[Union[Tuple[int, int], int]] = None
+    batch_size: int = 1
 
 
 class PerformanceEvaluationSpec(SettingsSpecModel):
@@ -125,7 +135,8 @@ class YoloModelDevelopmentKitSettingsSpec(SettingsSpecModel):
     customer: str
     aml_experiment_details: AMLExperimentDetailsSpec
     logging: LoggingSpec = LoggingSpec()
-    performance_evaluation: PerformanceEvaluationSpec = None
     inference_pipeline: InferencePipelineSpec = None
+    model_conversion: ModelConversionPipelineSpec = None
+    performance_evaluation: PerformanceEvaluationSpec = None
     training_pipeline: TrainingPipelineSpec = None
     wandb: WandbSpec = None

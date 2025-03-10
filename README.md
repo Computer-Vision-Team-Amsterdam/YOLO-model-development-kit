@@ -16,7 +16,8 @@ If you don't have it yet, follow the instructions [here](https://python-poetry.o
 In the terminal, navigate to the project root (the folder containing `pyproject.toml`), then use Poetry to create a new virtual environment and install the dependencies.
 
 ```bash
-poetry install
+poetry install [--with dev] [--without model_export]
+# Note: model_export requires a CUDA enabled GPU and python <= 3.11
 ```
     
 #### 4. Install pre-commit hooks
