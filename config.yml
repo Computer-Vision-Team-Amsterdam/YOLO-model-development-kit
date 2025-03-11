@@ -53,7 +53,7 @@ performance_evaluation:
     predictions_rel_path: "yolo11/inference/ORBS-base-test/yolo11s_base"
   outputs:
     datastore: "annotations_datastore"
-    output_rel_path: "yolo11/evaluation/ORBS-base-test/yolo11s_base_test_new"
+    output_rel_path: "yolo11/evaluation/ORBS-base-test/yolo11s_base"
   categories_json_path: "categories_eval_baas_v5.json"
   mapping_json_path: "groupings_wheelchairs_bias_analysis.json"
   dataset_name: "ORBS-base"
