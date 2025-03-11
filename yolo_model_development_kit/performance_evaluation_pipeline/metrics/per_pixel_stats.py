@@ -363,3 +363,66 @@ class PerPixelEvaluator:
                     )
 
         return results
+
+    def collect_overall_results(self, classes: List[int]) -> Dict[str, float]:
+        """
+        Compute overall pixel-level statistics (including precision) across the given classes.
+        Instead of treating each class independently, it computes the union of all ground truth
+        and prediction masks for the provided classes.
+
+        Parameters
+        ----------
+        classes: List[int]
+            List of sensitive class IDs for which to compute the overall metric.
+
+        Returns
+        -------
+        A dictionary with overall statistics (e.g., precision, recall, f1_score).
+        """
+        pixel_stats = PixelStats()
+        (img_width, img_height) = self.img_shape
+
+        gt_labels_all = self.gt_dataset.get_filtered_labels()
+
+        for image_id in gt_labels_all.keys():
+            union_gt_bboxes = []
+            for cls in classes:
+                self.gt_dataset.reset_filter()
+                filtered = self.gt_dataset.filter_by_class(
+                    class_to_keep=cls
+                ).get_filtered_labels()
+                if image_id in filtered:
+                    union_gt_bboxes.extend(filtered[image_id][:, 1:5])
+            if union_gt_bboxes:
+                gt_mask = generate_binary_mask(
+                    np.array(union_gt_bboxes),
+                    image_width=img_width,
+                    image_height=img_height,
+                    consider_upper_half=self.upper_half,
+                )
+            else:
+                gt_mask = np.zeros((img_height, img_width), dtype=bool)
+
+            union_pred_bboxes = []
+            for cls in classes:
+                self.pred_dataset.reset_filter()
+                filtered = self.pred_dataset.filter_by_class(
+                    class_to_keep=cls
+                ).get_filtered_labels()
+                if image_id in filtered:
+                    union_pred_bboxes.extend(filtered[image_id][:, 1:5])
+            if union_pred_bboxes:
+                pred_mask = generate_binary_mask(
+                    np.array(union_pred_bboxes),
+                    image_width=img_width,
+                    image_height=img_height,
+                    consider_upper_half=self.upper_half,
+                )
+            else:
+                pred_mask = np.zeros((img_height, img_width), dtype=bool)
+
+            pixel_stats.update_statistics_based_on_masks(
+                true_mask=gt_mask, predicted_mask=pred_mask
+            )
+
+        return pixel_stats.get_statistics(size_all=True, decimals=self.decimals)

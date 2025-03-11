@@ -14,6 +14,7 @@ from yolo_model_development_kit.performance_evaluation_pipeline.metrics import (
 )
 from yolo_model_development_kit.performance_evaluation_pipeline.source import (  # noqa: E402
     YoloEvaluator,
+    log_label_counts,
     process_labels,
 )
 
@@ -61,6 +62,7 @@ def perform_bias_analysis(
     """
 
     eval_settings = settings["performance_evaluation"]
+    ground_truth_labels_rel_path = eval_settings["ground_truth_labels_rel_path"]
     logger.info(f"Running bias analysis for model: {eval_settings['model_name']}")
 
     os.makedirs(output_dir, exist_ok=True)
@@ -74,7 +76,9 @@ def perform_bias_analysis(
     logger.info(f"Loaded thresholds: {category_manager.all_thresholds()}")
     logger.info(f"Loaded groupings: {category_manager.all_groupings()}")
 
-    original_gt_labels_path = os.path.join(ground_truth_base_dir, "labels")
+    original_gt_labels_path = os.path.join(
+        ground_truth_base_dir, ground_truth_labels_rel_path
+    )
     logger.info(f"Original ground truth labels path: {original_gt_labels_path}")
     groupings = category_manager.all_groupings()
 
@@ -102,11 +106,19 @@ def perform_bias_analysis(
         category_mapping = category_manager.get_category_mapping(group_name)
         logger.info(f"Category mapping: {category_mapping}")
 
+        # TODO: Skip if the labels have already been processed
         process_labels(
             original_gt_labels=original_gt_labels_path,
+            ground_truth_rel_path=ground_truth_labels_rel_path,
             new_gt_labels_path=new_labels_path,
             category_mapping=category_mapping,
         )
+
+        valid_category_ids = set(category_mapping.values())
+        logger.info(
+            f'Valid category IDs for grouping "{group_name}": {valid_category_ids}'
+        )
+        log_label_counts(new_labels_path, logger, valid_category_ids)
 
         current_ground_truth_base_dir = new_labels_path
 
@@ -118,8 +130,8 @@ def perform_bias_analysis(
             predictions_image_shape=eval_settings["predictions_image_shape"],
             dataset_name=eval_settings["dataset_name"],
             model_name=eval_settings["model_name"],
-            gt_annotations_rel_path=eval_settings["ground_truth_labels_rel_path"],
             pred_annotations_rel_path=eval_settings["prediction_labels_rel_path"],
+            gt_annotations_rel_path=ground_truth_labels_rel_path,
             splits=eval_settings["splits"],
             target_classes=[maps_to_class],
             sensitive_classes=eval_settings["sensitive_classes"],
