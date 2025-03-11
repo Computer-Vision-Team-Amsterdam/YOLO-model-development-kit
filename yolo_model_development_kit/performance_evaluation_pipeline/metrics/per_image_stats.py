@@ -179,9 +179,9 @@ class PerImageEvaluator:
 
         precision = round(tp / PP, self.decimals) if PP > 0 else np.nan
         recall = round(tp / P, self.decimals) if P > 0 else np.nan
-        fpr = round(fp / N, self.decimals)
+        fpr = round(fp / N, self.decimals) if N > 0 else np.nan
         fnr = round(fn / P, self.decimals) if P > 0 else np.nan
-        tnr = round(tn / N, self.decimals)
+        tnr = round(tn / N, self.decimals) if N > 0 else np.nan
 
         return {
             "precision": precision if size_all else np.nan,
