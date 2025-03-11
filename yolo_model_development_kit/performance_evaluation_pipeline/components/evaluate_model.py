@@ -28,7 +28,7 @@ aml_experiment_settings = settings["aml_experiment_details"]
     display_name="Evaluate model predictions.",
     environment=f"azureml:{aml_experiment_settings['env_name']}:{aml_experiment_settings['env_version']}",
     code="../../../",
-    is_deterministic=True,
+    is_deterministic=False,
 )
 def evaluate_model(
     ground_truth_base_dir: Input(type=AssetTypes.URI_FOLDER),  # type: ignore # noqa: F821

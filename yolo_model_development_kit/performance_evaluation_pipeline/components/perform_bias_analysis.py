@@ -29,7 +29,7 @@ aml_experiment_settings = settings["aml_experiment_details"]
     display_name="Perform Bias Analysis on a model.",
     environment=f"azureml:{aml_experiment_settings['env_name']}:{aml_experiment_settings['env_version']}",
     code="../../../",
-    is_deterministic=True,
+    is_deterministic=False,
 )
 def perform_bias_analysis(
     predictions_base_dir: Input(type=AssetTypes.URI_FOLDER),  # type: ignore # noqa: F821
