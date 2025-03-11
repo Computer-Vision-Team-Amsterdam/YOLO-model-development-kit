@@ -106,6 +106,7 @@ def perform_bias_analysis(
         category_mapping = category_manager.get_category_mapping(group_name)
         logger.info(f"Category mapping: {category_mapping}")
 
+        # TODO: Skip if the labels have already been processed
         process_labels(
             original_gt_labels=original_gt_labels_path,
             ground_truth_rel_path=ground_truth_labels_rel_path,
