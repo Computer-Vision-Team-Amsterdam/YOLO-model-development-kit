@@ -13,10 +13,10 @@ RUN apt update -y \
 
 WORKDIR /opt/app
 
-COPY pyproject.toml .
-
 # Install UV package manager
 RUN pip install uv
+
+COPY pyproject.toml .
 
 # Install requirements
 # Note: model_export requires python <= 3.11
