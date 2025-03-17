@@ -9,6 +9,7 @@ def main():
         env_name=settings["aml_experiment_details"]["env_name"],
         build_context_path="yolo_model_development_kit/create_aml_environment",
         dockerfile_path="Dockerfile",
+        build_context_files=["pyproject.toml"],
     )
 
 
