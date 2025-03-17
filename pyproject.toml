@@ -7,11 +7,11 @@ name = "yolo-model-development-kit"
 version = "1.4.0"
 description = "Project to develop a YOLO model using AzureML platform."
 authors = [
-    "Sebastian Davrieux <s.davrieux@amsterdam.nl>",
-    "Diana Epureanu <d.epureanu@amsterdam.nl>",
-    "Niek IJzerman <n.ijzerman@amsterdam.nl>",
-    "Andrea Lombardo <a.lombardo@amsterdam.nl>",
-    "Daan Bloembergen <d.bloembergen@amsterdam.nl>"
+    {name = "Sebastian Davrieux", email = "s.davrieux@amsterdam.nl"},
+    {name = "Diana Epureanu", email = "d.epureanu@amsterdam.nl"},
+    {name = "Andrea Lombardo", email = "a.lombardo@amsterdam.nl"},
+    {name = "Daan Bloembergen", email = "d.bloembergen@amsterdam.nl"},
+    {name = "Niek IJzerman", email = "n.ijzerman@amsterdam.nl"},
 ]
 maintainers = [
     { name = "Computer Vision Team, Gemeente Amsterdam", email = "cvt@amsterdam.nl" },
