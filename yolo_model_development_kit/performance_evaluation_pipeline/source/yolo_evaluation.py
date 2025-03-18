@@ -115,6 +115,7 @@ class YoloEvaluator:
         sensitive_classes: List[int] = [],
         target_classes_conf: Optional[float] = None,
         sensitive_classes_conf: Optional[float] = None,
+        overall_stats_tba: bool = False,
         single_size_only: bool = False,
         plot_sml_size: bool = False,
         plot_conf_range: Optional[Iterable[float]] = None,
@@ -141,6 +142,7 @@ class YoloEvaluator:
 
         self.target_classes_conf = target_classes_conf
         self.sensitive_classes_conf = sensitive_classes_conf
+        self.overall_stats_tba = overall_stats_tba
         self.single_size_only = single_size_only
 
         if plot_conf_range is not None:
@@ -246,6 +248,7 @@ class YoloEvaluator:
             tba_results[key] = evaluator.collect_results_per_class_and_size(
                 classes=self.sensitive_classes,
                 single_size_only=single_size_only,
+                include_overall_stats=self.overall_stats_tba,
             )
         return tba_results
 
@@ -673,7 +676,7 @@ class YoloEvaluator:
 
 
 def _bias_analysis_result_to_df(
-    results: Dict[str, Dict[str, Dict[str, float]]]
+    results: Dict[str, Dict[str, Dict[str, float]]],
 ) -> pd.DataFrame:
     """
     Convert bias analysis results dictionary to Pandas DataFrame.
@@ -738,7 +741,7 @@ def _bias_analysis_result_to_df(
 
 
 def _default_result_to_df(
-    results: Dict[str, Dict[str, Dict[str, float]]]
+    results: Dict[str, Dict[str, Dict[str, float]]],
 ) -> pd.DataFrame:
     """
     Convert TBA or PerImage results dictionary to Pandas DataFrame.
@@ -777,7 +780,7 @@ def _default_result_to_df(
 
 
 def bias_analysis_tba_result_to_df(
-    results: Dict[str, Dict[str, Dict[str, float]]]
+    results: Dict[str, Dict[str, Dict[str, float]]],
 ) -> pd.DataFrame:
     """
     Convert TBA results dictionary to Pandas DataFrame.
@@ -793,7 +796,7 @@ def tba_result_to_df(results: Dict[str, Dict[str, Dict[str, float]]]) -> pd.Data
 
 
 def per_image_result_to_df(
-    results: Dict[str, Dict[str, Dict[str, float]]]
+    results: Dict[str, Dict[str, Dict[str, float]]],
 ) -> pd.DataFrame:
     """
     Convert Per Image results dictionary to Pandas DataFrame.
@@ -802,7 +805,7 @@ def per_image_result_to_df(
 
 
 def custom_coco_result_to_df(
-    results: Dict[str, Dict[str, Dict[str, float]]]
+    results: Dict[str, Dict[str, Dict[str, float]]],
 ) -> pd.DataFrame:
     """
     Convert custom COCO results dictionary to Pandas DataFrame.

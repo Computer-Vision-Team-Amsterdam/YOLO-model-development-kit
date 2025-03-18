@@ -22,7 +22,7 @@ dependencies = [
     "aml_interface@git+https://github.com/Computer-Vision-Team-Amsterdam/AML-Interface.git@v1.1.3",
     "azure-ai-ml>=1.20",
     "azure-storage-blob>=12.23",
-    "cvtoolkit@git+https://github.com/Computer-Vision-Team-Amsterdam/CVToolkit.git@v2.0.5",
+    "cvtoolkit@git+https://github.com/Computer-Vision-Team-Amsterdam/CVToolkit.git@fix/typing",
     "matplotlib>=3.9.0",
     "mldesigner>=0.1.0b16",
     "numpy>=1.24.2",

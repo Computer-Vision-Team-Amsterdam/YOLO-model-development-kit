@@ -66,6 +66,8 @@ performance_evaluation:
   sensitive_classes: [0, 1]
   target_classes_conf: 0.7  # null means all predictions are used, custom COCO considers this threshold also for sensitive classes
   sensitive_classes_conf: null  # null means all predictions are used, only for TBA evaluation
+  overall_stats_tba: True # Also compute overall stats for all classes combined in TBA evaluation
+  single_size_only: False # Do not differentiate between bounding box sizes for TBA and Per Image evaluation
   plot_curves: True
   plot_sml: True  # Whether to differentiate between S, M, and L (slower)
   plot_conf_range: [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1]  # Confidence values for PR curves
