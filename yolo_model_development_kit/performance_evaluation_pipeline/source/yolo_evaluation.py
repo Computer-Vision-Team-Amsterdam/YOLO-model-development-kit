@@ -1,7 +1,7 @@
 import logging
 import os
 from itertools import product
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, cast
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -184,7 +184,6 @@ class YoloEvaluator:
         upper_half: bool = False,
         confidence_threshold: Optional[float] = None,
         single_size_only: Optional[bool] = None,
-        overall_stats: bool = False,
     ) -> Dict[str, Dict[str, Dict[str, float]]]:
         """
         Run Total Blurred Area evaluation for the sensitive classes. This tells
@@ -206,21 +205,6 @@ class YoloEvaluator:
                 }
             }
 
-        If overall is set to True, the results will be summarized as follows:
-
-            {
-                [model_name]_[split]: {
-                    "overall": {
-                        "true_positives": float,
-                        "false_positives": float,
-                        "true_negatives": float,
-                        "false_negatives:": float,
-                        "precision": float,
-                        "recall": float,
-                        "f1_score": float,
-                    }
-            }
-
         Parameters
         ----------
         upper_half: bool = False
@@ -234,8 +218,6 @@ class YoloEvaluator:
             Optional: set to true to disable differentiation in bounding box
             sizes. If omitted, the initial confidence threshold at construction
             will be used.
-        overall_stats: bool = False
-            Whether to compute overall statistics for all classes.
 
         Returns
         -------
@@ -261,17 +243,10 @@ class YoloEvaluator:
                 upper_half=upper_half,
             )
             key = f"{self.model_name}_{split if split != '' else 'all'}"
-            if overall_stats:
-                tba_results[key] = {
-                    "overall": evaluator.collect_overall_results(
-                        classes=self.sensitive_classes,
-                    )
-                }
-            else:
-                tba_results[key] = evaluator.collect_results_per_class_and_size(
-                    classes=self.sensitive_classes,
-                    single_size_only=single_size_only,
-                )
+            tba_results[key] = evaluator.collect_results_per_class_and_size(
+                classes=self.sensitive_classes,
+                single_size_only=single_size_only,
+            )
         return tba_results
 
     def evaluate_tba_bias_analysis(
@@ -538,7 +513,6 @@ class YoloEvaluator:
         results: Dict[str, Dict[str, Dict[str, float]]],
         use_groupings: bool = False,
         group_id: Optional[int] = None,
-        overall_stats: bool = False,
     ):
         """Save TBA results dict as CSV file."""
         filename = ""
@@ -556,17 +530,10 @@ class YoloEvaluator:
             )
             _df_to_csv(bias_analysis_tba_result_to_df(results), filename)
         else:
-            if overall_stats:
-                filename = os.path.join(
-                    self.output_folder, f"{self.model_name}-overall-tba-eval.csv"
-                )
-                overall_results = {k: v["overall"] for k, v in results.items()}
-                _df_to_csv(overall_tba_result_to_df(overall_results), filename)
-            else:
-                filename = os.path.join(
-                    self.output_folder, f"{self.model_name}-tba-eval.csv"
-                )
-                _df_to_csv(tba_result_to_df(results), filename)
+            filename = os.path.join(
+                self.output_folder, f"{self.model_name}-tba-eval.csv"
+            )
+            _df_to_csv(tba_result_to_df(results), filename)
 
     def save_per_image_results_to_csv(
         self, results: Dict[str, Dict[str, Dict[str, float]]]
@@ -584,23 +551,17 @@ class YoloEvaluator:
         )
         _df_to_csv(custom_coco_result_to_df(results), filename)
 
-    def _compute_pr_f_curve_data(
-        self, eval_func: Callable, overall_stats: bool = False
-    ) -> pd.DataFrame:
+    def _compute_pr_f_curve_data(self, eval_func: Callable) -> pd.DataFrame:
         """
         Compute data needed to plot precision and recall curves, and the f-score
         curves. This method calls either `self.evaluate_tba` or
         `self.evaluate_per_image` with argument `single_size_only=True` for a
         range of confidence thresholds and returns the results in a DataFrame.
 
-        If overall=True, overall (class-agnostic) metrics will be computed.
-
         Parameters
         ----------
         eval_func: Callable
             Either `self.evaluate_tba` or `self.evaluate_per_image`.
-        overall_stats: bool, default False
-            Whether to compute overall (class-agnostic) metrics.
 
         Returns
         -------
@@ -611,19 +572,10 @@ class YoloEvaluator:
 
         for conf in self.plot_conf_range:
             logger.debug(f"Computing PR/F curve data for conf={conf}")
-            if overall_stats:
-                tba_results = eval_func(
-                    confidence_threshold=conf,
-                    single_size_only=(not self.plot_sml_size),
-                    overall_stats=True,
-                )
-                overall_results = {k: v["overall"] for k, v in tba_results.items()}
-                df = overall_tba_result_to_df(overall_results)
-            else:
-                tba_results = eval_func(
-                    confidence_threshold=conf, single_size_only=(not self.plot_sml_size)
-                )
-                df = tba_result_to_df(tba_results)
+            tba_results = eval_func(
+                confidence_threshold=conf, single_size_only=(not self.plot_sml_size)
+            )
+            df = tba_result_to_df(tba_results)
             df.insert(4, "Conf", conf)
             df["F1"] = compute_fb_score(df["Precision"], df["Recall"], 1.0)
             df["F0.5"] = compute_fb_score(df["Precision"], df["Recall"], 0.5)
@@ -639,94 +591,56 @@ class YoloEvaluator:
         eval_classes: List[int],
         output_dir: str = "",
         show_plot: bool = False,
-        overall_stats: bool = False,
     ):
         """Plot the precision and recall curves, and F-score curves."""
-        if overall_stats:
-            for split in self.splits:
-                save_pr_curve(
-                    results_df=pr_df,
-                    split=(split if split != "" else "all"),
-                    target_class="overall",
-                    category_manager=self.category_manager,
-                    model_name=self.model_name,
-                    result_type=result_type,
-                    dataset=self.dataset_name,
-                    output_dir=output_dir,
-                    size_sml=False,
-                    logx=self.plot_logx,
-                    show_plot=show_plot,
-                )
-                save_fscore_curve(
-                    results_df=pr_df,
-                    split=(split if split != "" else "all"),
-                    target_class="overall",
-                    category_manager=self.category_manager,
-                    model_name=self.model_name,
-                    result_type=result_type,
-                    dataset=self.dataset_name,
-                    output_dir=output_dir,
-                    logx=self.plot_logx,
-                    show_plot=show_plot,
-                )
-        else:
-            for split, eval_class in product(self.splits, eval_classes):
-                save_pr_curve(
-                    results_df=pr_df,
-                    split=(split if split != "" else "all"),
-                    target_class=eval_class,
-                    category_manager=self.category_manager,
-                    model_name=self.model_name,
-                    result_type=result_type,
-                    dataset=self.dataset_name,
-                    output_dir=output_dir,
-                    size_sml=self.plot_sml_size,
-                    logx=self.plot_logx,
-                    show_plot=show_plot,
-                )
-                save_fscore_curve(
-                    results_df=pr_df,
-                    split=(split if split != "" else "all"),
-                    target_class=eval_class,
-                    category_manager=self.category_manager,
-                    model_name=self.model_name,
-                    result_type=result_type,
-                    dataset=self.dataset_name,
-                    output_dir=output_dir,
-                    logx=self.plot_logx,
-                    show_plot=show_plot,
-                )
+        for split, eval_class in product(self.splits, eval_classes):
+            save_pr_curve(
+                results_df=pr_df,
+                split=(split if split != "" else "all"),
+                target_class=eval_class,
+                category_manager=self.category_manager,
+                model_name=self.model_name,
+                result_type=result_type,
+                dataset=self.dataset_name,
+                output_dir=output_dir,
+                size_sml=self.plot_sml_size,
+                logx=self.plot_logx,
+                show_plot=show_plot,
+            )
+            save_fscore_curve(
+                results_df=pr_df,
+                split=(split if split != "" else "all"),
+                target_class=eval_class,
+                category_manager=self.category_manager,
+                model_name=self.model_name,
+                result_type=result_type,
+                dataset=self.dataset_name,
+                output_dir=output_dir,
+                logx=self.plot_logx,
+                show_plot=show_plot,
+            )
 
-    def plot_tba_pr_f_curves(
-        self, show_plot: bool = False, overall_stats: bool = False
-    ):
+    def plot_tba_pr_f_curves(self, show_plot: bool = False):
         """
         Plot and save precision and recall curves and f-score curves for the
         total blurred area statistic. This will call evaluate_tba() for each
         split and target_class for a range of confidence thresholds, which can
         take some time to compute.
 
-        If overall_stats=True, overall (class-agnostic) metrics will be computed.
-
         Parameters
         ----------
         show_plot: bool = False
             Whether or not to show the plot (True) or only save the image
             (False).
-        overall_stats: bool = False
-            Whether to compute overall (class-agnostic) metrics.
         """
         logger.info(f"Plotting TBA precision/recall curves for {self.model_name}")
-        pr_curve_df = self._compute_pr_f_curve_data(
-            self.evaluate_tba, overall_stats=overall_stats
-        )
+        pr_curve_df = self._compute_pr_f_curve_data(self.evaluate_tba)
         self._plot_pr_f_curves(
             pr_df=pr_curve_df,
             result_type="total blurred area",
             eval_classes=self.sensitive_classes,
             output_dir=self.output_folder,
             show_plot=show_plot,
-            overall_stats=overall_stats,
         )
         # Also save results to csv
         filename = os.path.join(self.output_folder, "tba-pr-f-curve-data.csv")
@@ -863,36 +777,6 @@ def _default_result_to_df(
     return df
 
 
-def _overall_tba_result_to_df(results: Dict[str, Dict[str, float]]) -> pd.DataFrame:
-    """
-    Convert overall TBA results dictionary (one dictionary per key) to a Pandas DataFrame.
-    Assumes that each value in `results` is a dict with overall metrics.
-    """
-
-    def _stat_to_header(stat: str) -> str:
-        if stat in ("fpr", "fnr", "tpr", "tnr"):
-            return stat.upper()
-        else:
-            return " ".join([p.capitalize() for p in stat.split("_")])
-
-    sample_metrics = next(iter(results.values()))
-    header = ["Model", "Split", "Object Class", "Size"]
-    header.extend([_stat_to_header(metric) for metric in sample_metrics.keys()])
-
-    df = pd.DataFrame(columns=header)
-
-    for key, metrics in results.items():
-        try:
-            model_name, split = key.rsplit("_", maxsplit=1)
-        except ValueError:
-            model_name, split = key, ""
-        row = [model_name, split, "overall", "all"]
-        row.extend(cast(List[Any], list(metrics.values())))
-        df.loc[len(df)] = row
-
-    return df
-
-
 def bias_analysis_tba_result_to_df(
     results: Dict[str, Dict[str, Dict[str, float]]]
 ) -> pd.DataFrame:
@@ -900,13 +784,6 @@ def bias_analysis_tba_result_to_df(
     Convert TBA results dictionary to Pandas DataFrame.
     """
     return _bias_analysis_result_to_df(results=results)
-
-
-def overall_tba_result_to_df(results: Dict[str, Dict[str, float]]) -> pd.DataFrame:
-    """
-    Convert overall TBA results dictionary to a Pandas DataFrame.
-    """
-    return _overall_tba_result_to_df(results=results)
 
 
 def tba_result_to_df(results: Dict[str, Dict[str, Dict[str, float]]]) -> pd.DataFrame:
