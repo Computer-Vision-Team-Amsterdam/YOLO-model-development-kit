@@ -470,6 +470,7 @@ class YoloEvaluator:
             splits=self.splits,
             fixed_image_shape=self.predictions_image_shape,
             output_dir=gt_output_dir,
+            gt_labels_rel_path=self.gt_annotations_rel_path,
         )
         pred_json_files = convert_yolo_predictions_to_coco_json(
             predictions_dir=self.predictions_base_folder,

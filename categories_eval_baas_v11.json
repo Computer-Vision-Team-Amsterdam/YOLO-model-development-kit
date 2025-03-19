@@ -1,0 +1,20 @@
+{
+    "categories": [
+      {
+        "id": 0,
+        "name": "person",
+        "thresholds": [
+          0.000108,
+          0.000308
+        ]
+      },
+      {
+        "id": 1,
+        "name": "license plate",
+        "thresholds": [
+          0.000022,
+          0.000069
+        ]
+      }
+    ]
+  }
