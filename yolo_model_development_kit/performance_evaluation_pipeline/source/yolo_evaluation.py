@@ -233,7 +233,8 @@ class YoloEvaluator:
         tba_results = dict()
         for split in self.splits:
             logger.info(
-                f"Running TBA evaluation for {self.model_name} / {split if split != '' else 'all'}"
+                f"Running TBA evaluation for {self.model_name} / {split if split != '' else 'all'} "
+                f"@ {confidence_threshold} confidence"
             )
             ground_truth_folder, prediction_folder = self._get_folders_for_split(split)
             evaluator = PerPixelEvaluator(
@@ -305,7 +306,8 @@ class YoloEvaluator:
         tba_results = dict()
         for split in self.splits:
             logger.info(
-                f"Running TBA evaluation for {self.model_name} / {split if split != '' else 'all'}"
+                f"Running TBA bias analysis for {self.model_name} / {split if split != '' else 'all'} "
+                f"@ {confidence_threshold} confidence"
             )
             ground_truth_folder, prediction_folder = self._get_folders_for_split(split)
             evaluator = PerPixelEvaluator(
@@ -329,7 +331,7 @@ class YoloEvaluator:
             for target_class, group_categories in group_mapping.items():
                 for category in group_categories:
                     logger.info(
-                        f"Running TBA evaluation for class {target_class} vs category {category}"
+                        f"Running TBA bias analysis for class {target_class} vs category {category}"
                     )
                     key = f"{key_prefix}_class_{target_class}_vs_{category}"
                     tba_results[key] = evaluator.collect_results_per_class_and_size(
@@ -389,7 +391,8 @@ class YoloEvaluator:
         per_image_results = dict()
         for split in self.splits:
             logger.info(
-                f"Running per-image evaluation for {self.model_name} / {split if split != '' else 'all'}"
+                f"Running per-image evaluation for {self.model_name} / {split if split != '' else 'all'} "
+                f"@ {confidence_threshold} confidence"
             )
             ground_truth_folder, prediction_folder = self._get_folders_for_split(split)
             evaluator = PerImageEvaluator(
