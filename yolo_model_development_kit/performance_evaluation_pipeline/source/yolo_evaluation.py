@@ -1,7 +1,7 @@
 import logging
 import os
 from itertools import product
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -595,7 +595,12 @@ class YoloEvaluator:
         show_plot: bool = False,
     ):
         """Plot the precision and recall curves, and F-score curves."""
-        for split, eval_class in product(self.splits, eval_classes):
+        extended_eval_classes: List[Union[int, str]] = [
+            cls_id for cls_id in eval_classes
+        ]
+        if self.overall_stats_tba:
+            extended_eval_classes.insert(0, "all")
+        for split, eval_class in product(self.splits, extended_eval_classes):
             save_pr_curve(
                 results_df=pr_df,
                 split=(split if split != "" else "all"),

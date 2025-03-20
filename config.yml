@@ -1,9 +1,9 @@
 customer: ""
 
 aml_experiment_details:
-  compute_name: oor-testing
+  compute_name: cpu-cluster
   env_name: yolo-environment
-  env_version: 18
+  env_version: 19
   src_dir: "."
 
 inference_pipeline:
