@@ -83,6 +83,7 @@ def convert_yolo_dataset_to_coco_json(
     splits: Optional[List[str]] = ["train", "val", "test"],
     fixed_image_shape: Optional[Tuple[int, int]] = None,
     output_dir: Optional[str] = None,
+    gt_labels_rel_path: str = "labels",
 ) -> List[str]:
     if not splits:
         splits = [""]
@@ -93,7 +94,7 @@ def convert_yolo_dataset_to_coco_json(
 
     for split in splits:
         image_dir = os.path.join(dataset_dir, "images", split)
-        label_dir = os.path.join(dataset_dir, "labels", split)
+        label_dir = os.path.join(dataset_dir, gt_labels_rel_path, split)
 
         coco_dataset = _convert_dataset_split(
             image_dir, label_dir, category_manager, fixed_image_shape
