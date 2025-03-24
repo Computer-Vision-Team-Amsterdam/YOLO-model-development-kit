@@ -39,6 +39,13 @@ source .venv/bin/activate
 # Install dependencies
 uv pip install -r pyproject.toml --extra dev [--extra model_export]
 ```
+
+To update dependencies (e.g. when pyproject.toml dependencies change):
+
+```bash
+uv lock --upgrade
+uv sync --extra dev
+```
     
 ### 4. Install pre-commit hooks
 The pre-commit hooks help to ensure that all committed code is valid and consistently formatted. We use UV to manage pre-commit as well.
@@ -47,13 +54,13 @@ The pre-commit hooks help to ensure that all committed code is valid and consist
 uv tool install pre-commit --with pre-commit-uv --force-reinstall
 
 # Install pre-commit hooks
-pre-commit install
+uv run pre-commit install
 
 # Optional: update pre-commit hooks
-pre-commit autoupdate
+uv run pre-commit autoupdate
 
 # Run pre-commit hooks using
-bash .git/hooks/pre-commit
+uv run .git/hooks/pre-commit
 ```
 
 
@@ -63,8 +70,8 @@ Modify the `config.yml` to your needs and run the required pipelines. For exampl
 
 ```bash
 # Create AzureML environment
-python yolo_model_development_kit/create_aml_environment/create_azure_env.py
+uv run yolo_model_development_kit/create_aml_environment/create_azure_env.py
 
 # Train a YOLO model
-python yolo_model_development_kit/training_pipeline/submit_training_pipeline.py
+uv run yolo_model_development_kit/training_pipeline/submit_training_pipeline.py
 ```

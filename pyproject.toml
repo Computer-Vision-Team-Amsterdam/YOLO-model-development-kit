@@ -29,6 +29,7 @@ dependencies = [
     "opencv-python>=4.6.0",
     "pandas>=2.0",
     "pycocotools>=2.0.8",
+    "pydantic>=1.8.2",
     "sahi>=0.11.20",
     "ultralytics>=8.3.0",
     "wandb>=0.18.0",
@@ -56,6 +57,9 @@ model_export = [
     "tensorrt-cu12-libs>7.0.0,!=10.1.*,<10.5.0",
     "ultralytics[export]>=8.3.0",
 ]
+
+[tool.setuptools]
+py-modules = ["yolo_model_development_kit"]
 
 [tool.isort]
 profile = "black"

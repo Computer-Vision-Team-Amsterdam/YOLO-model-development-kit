@@ -1,7 +1,7 @@
 import logging
 import os
 from itertools import product
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -115,6 +115,7 @@ class YoloEvaluator:
         sensitive_classes: List[int] = [],
         target_classes_conf: Optional[float] = None,
         sensitive_classes_conf: Optional[float] = None,
+        overall_stats_tba: bool = False,
         single_size_only: bool = False,
         plot_sml_size: bool = False,
         plot_conf_range: Optional[Iterable[float]] = None,
@@ -141,6 +142,7 @@ class YoloEvaluator:
 
         self.target_classes_conf = target_classes_conf
         self.sensitive_classes_conf = sensitive_classes_conf
+        self.overall_stats_tba = overall_stats_tba
         self.single_size_only = single_size_only
 
         if plot_conf_range is not None:
@@ -231,7 +233,8 @@ class YoloEvaluator:
         tba_results = dict()
         for split in self.splits:
             logger.info(
-                f"Running TBA evaluation for {self.model_name} / {split if split != '' else 'all'}"
+                f"Running TBA evaluation for {self.model_name} / {split if split != '' else 'all'} "
+                f"@ {confidence_threshold} confidence"
             )
             ground_truth_folder, prediction_folder = self._get_folders_for_split(split)
             evaluator = PerPixelEvaluator(
@@ -246,6 +249,7 @@ class YoloEvaluator:
             tba_results[key] = evaluator.collect_results_per_class_and_size(
                 classes=self.sensitive_classes,
                 single_size_only=single_size_only,
+                include_overall_stats=self.overall_stats_tba,
             )
         return tba_results
 
@@ -302,7 +306,8 @@ class YoloEvaluator:
         tba_results = dict()
         for split in self.splits:
             logger.info(
-                f"Running TBA evaluation for {self.model_name} / {split if split != '' else 'all'}"
+                f"Running TBA bias analysis for {self.model_name} / {split if split != '' else 'all'} "
+                f"@ {confidence_threshold} confidence"
             )
             ground_truth_folder, prediction_folder = self._get_folders_for_split(split)
             evaluator = PerPixelEvaluator(
@@ -326,7 +331,7 @@ class YoloEvaluator:
             for target_class, group_categories in group_mapping.items():
                 for category in group_categories:
                     logger.info(
-                        f"Running TBA evaluation for class {target_class} vs category {category}"
+                        f"Running TBA bias analysis for class {target_class} vs category {category}"
                     )
                     key = f"{key_prefix}_class_{target_class}_vs_{category}"
                     tba_results[key] = evaluator.collect_results_per_class_and_size(
@@ -386,7 +391,8 @@ class YoloEvaluator:
         per_image_results = dict()
         for split in self.splits:
             logger.info(
-                f"Running per-image evaluation for {self.model_name} / {split if split != '' else 'all'}"
+                f"Running per-image evaluation for {self.model_name} / {split if split != '' else 'all'} "
+                f"@ {confidence_threshold} confidence"
             )
             ground_truth_folder, prediction_folder = self._get_folders_for_split(split)
             evaluator = PerImageEvaluator(
@@ -470,6 +476,7 @@ class YoloEvaluator:
             splits=self.splits,
             fixed_image_shape=self.predictions_image_shape,
             output_dir=gt_output_dir,
+            gt_labels_rel_path=self.gt_annotations_rel_path,
         )
         pred_json_files = convert_yolo_predictions_to_coco_json(
             predictions_dir=self.predictions_base_folder,
@@ -592,7 +599,12 @@ class YoloEvaluator:
         show_plot: bool = False,
     ):
         """Plot the precision and recall curves, and F-score curves."""
-        for split, eval_class in product(self.splits, eval_classes):
+        extended_eval_classes: List[Union[int, str]] = [
+            cls_id for cls_id in eval_classes
+        ]
+        if self.overall_stats_tba:
+            extended_eval_classes.insert(0, "all")
+        for split, eval_class in product(self.splits, extended_eval_classes):
             save_pr_curve(
                 results_df=pr_df,
                 split=(split if split != "" else "all"),
@@ -673,7 +685,7 @@ class YoloEvaluator:
 
 
 def _bias_analysis_result_to_df(
-    results: Dict[str, Dict[str, Dict[str, float]]]
+    results: Dict[str, Dict[str, Dict[str, float]]],
 ) -> pd.DataFrame:
     """
     Convert bias analysis results dictionary to Pandas DataFrame.
@@ -738,7 +750,7 @@ def _bias_analysis_result_to_df(
 
 
 def _default_result_to_df(
-    results: Dict[str, Dict[str, Dict[str, float]]]
+    results: Dict[str, Dict[str, Dict[str, float]]],
 ) -> pd.DataFrame:
     """
     Convert TBA or PerImage results dictionary to Pandas DataFrame.
@@ -777,7 +789,7 @@ def _default_result_to_df(
 
 
 def bias_analysis_tba_result_to_df(
-    results: Dict[str, Dict[str, Dict[str, float]]]
+    results: Dict[str, Dict[str, Dict[str, float]]],
 ) -> pd.DataFrame:
     """
     Convert TBA results dictionary to Pandas DataFrame.
@@ -793,7 +805,7 @@ def tba_result_to_df(results: Dict[str, Dict[str, Dict[str, float]]]) -> pd.Data
 
 
 def per_image_result_to_df(
-    results: Dict[str, Dict[str, Dict[str, float]]]
+    results: Dict[str, Dict[str, Dict[str, float]]],
 ) -> pd.DataFrame:
     """
     Convert Per Image results dictionary to Pandas DataFrame.
@@ -802,7 +814,7 @@ def per_image_result_to_df(
 
 
 def custom_coco_result_to_df(
-    results: Dict[str, Dict[str, Dict[str, float]]]
+    results: Dict[str, Dict[str, Dict[str, float]]],
 ) -> pd.DataFrame:
     """
     Convert custom COCO results dictionary to Pandas DataFrame.
