@@ -58,8 +58,8 @@ model_export = [
     "ultralytics[export]>=8.3.0",
 ]
 
-[tool.setuptools]
-py-modules = ["yolo_model_development_kit"]
+[tool.setuptools.packages.find]
+include=['yolo_model_development_kit.*']
 
 [tool.isort]
 profile = "black"
