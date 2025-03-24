@@ -59,7 +59,7 @@ model_export = [
 ]
 
 [tool.setuptools.packages.find]
-include=['yolo_model_development_kit.*']
+include=["yolo_model_development_kit", "yolo_model_development_kit.*"]
 
 [tool.isort]
 profile = "black"
