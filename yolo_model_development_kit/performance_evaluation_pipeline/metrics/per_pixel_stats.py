@@ -254,6 +254,7 @@ class PerPixelEvaluator:
         self,
         classes: List[int] = None,
         single_size_only: bool = False,
+        include_overall_stats: bool = False,
         use_group_mapping: bool = False,
         group_mapping: Optional[Dict[int, List[int]]] = None,
     ) -> Dict[str, Dict[str, float]]:
@@ -268,6 +269,12 @@ class PerPixelEvaluator:
         single_size_only: bool = False,
             Whether to differentiate bounding box sizes (small, medium, large)
             or simply provide overall scores.
+        include_overall_stats: bool = False
+            Whether to include overall stats across all object classes.
+        use_group_mapping: bool = False
+            Whether to use group mappings for bias analysis.
+        group_mapping: Optional[Dict[int, List[int]]] = None
+            Group mapping for bias analysis.
 
         Returns
         -------
@@ -289,6 +296,23 @@ class PerPixelEvaluator:
             classes = self.category_manager.all_ids()
 
         results = {}
+
+        if include_overall_stats:
+            self.pred_dataset.reset_filter()
+            predicted_target_class = self.pred_dataset.filter_by_class(
+                class_to_keep=classes,
+            ).get_filtered_labels()
+
+            self.gt_dataset.reset_filter()
+            true_target_class = self.gt_dataset.filter_by_class(
+                class_to_keep=classes
+            ).get_filtered_labels()
+
+            results["all_all"] = self._get_per_pixel_statistics(
+                true_labels=true_target_class,
+                predicted_labels=predicted_target_class,
+                size_all=True,
+            )
 
         for target_class in classes:
             self.pred_dataset.reset_filter()

@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -92,10 +92,24 @@ def _generate_plot_title_and_filename(
     return title, filename
 
 
+def _get_target_class_name(
+    target_class: Union[int, str],
+    category_manager: CategoryManager,
+) -> str:
+    if isinstance(target_class, str):
+        target_class_name = target_class
+    else:
+        target_class_name = category_manager.get_name(target_class)
+        if target_class_name == "Unknown":
+            raise ValueError(f"Class ID {target_class} not found in loaded categories.")
+
+    return target_class_name
+
+
 def save_pr_curve(
     results_df: pd.DataFrame,
     split: str,
-    target_class: int,
+    target_class: Union[int, str],
     category_manager: CategoryManager,
     model_name: str,
     result_type: str,
@@ -110,9 +124,10 @@ def save_pr_curve(
     Plot and save the precision and recall curve for a particular split and target_class.
     """
 
-    target_class_name = category_manager.get_name(target_class)
-    if target_class_name == "Unknown":
-        raise ValueError(f"Class ID {target_class} not found in loaded categories.")
+    target_class_name = _get_target_class_name(
+        target_class=target_class,
+        category_manager=category_manager,
+    )
 
     plot_df = _extract_plot_df(
         results_df=results_df, split=split, target_class_name=target_class_name
@@ -142,7 +157,7 @@ def save_fscore_curve(
     results_df: pd.DataFrame,
     split: str,
     category_manager: CategoryManager,
-    target_class: int,
+    target_class: Union[int, str],
     model_name: str,
     result_type: str,
     dataset: str = "",
@@ -155,9 +170,10 @@ def save_fscore_curve(
     Plot and save the F-score curve for a particular split and target_class.
     """
 
-    target_class_name = category_manager.get_name(target_class)
-    if target_class_name == "Unknown":
-        raise ValueError(f"Class ID {target_class} not found in loaded categories.")
+    target_class_name = _get_target_class_name(
+        target_class=target_class,
+        category_manager=category_manager,
+    )
 
     plot_df = _extract_plot_df(
         results_df=results_df, split=split, target_class_name=target_class_name

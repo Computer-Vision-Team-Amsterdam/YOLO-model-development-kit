@@ -4,14 +4,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "yolo-model-development-kit"
-version = "1.4.1"
+version = "1.4.2"
 description = "Project to develop a YOLO model using AzureML platform."
 authors = [
-    "Sebastian Davrieux <s.davrieux@amsterdam.nl>",
-    "Diana Epureanu <d.epureanu@amsterdam.nl>",
-    "Niek IJzerman <n.ijzerman@amsterdam.nl>",
-    "Andrea Lombardo <a.lombardo@amsterdam.nl>",
-    "Daan Bloembergen <d.bloembergen@amsterdam.nl>"
+    {name = "Sebastian Davrieux", email = "s.davrieux@amsterdam.nl"},
+    {name = "Diana Epureanu", email = "d.epureanu@amsterdam.nl"},
+    {name = "Niek IJzerman", email = "n.ijzerman@amsterdam.nl"},
+    {name = "Andrea Lombardo", email = "a.lombardo@amsterdam.nl"},
+    {name = "Daan Bloembergen", email = "d.bloembergen@amsterdam.nl"},
 ]
 maintainers = [
     { name = "Computer Vision Team, Gemeente Amsterdam", email = "cvt@amsterdam.nl" },
@@ -22,13 +22,14 @@ dependencies = [
     "aml_interface@git+https://github.com/Computer-Vision-Team-Amsterdam/AML-Interface.git@v1.1.3",
     "azure-ai-ml>=1.20",
     "azure-storage-blob>=12.23",
-    "cvtoolkit@git+https://github.com/Computer-Vision-Team-Amsterdam/CVToolkit.git@v2.0.5",
+    "cvtoolkit@git+https://github.com/Computer-Vision-Team-Amsterdam/CVToolkit.git@v2.0.6",
     "matplotlib>=3.9.0",
     "mldesigner>=0.1.0b16",
     "numpy>=1.24.2",
     "opencv-python>=4.6.0",
     "pandas>=2.0",
     "pycocotools>=2.0.8",
+    "pydantic>=1.8.2",
     "sahi>=0.11.20",
     "ultralytics>=8.3.0",
     "wandb>=0.18.0",
@@ -52,6 +53,9 @@ model_export = [
     "tensorrt-cu12-libs>7.0.0,!=10.1.*,<10.5.0",
     "ultralytics[export]>=8.3.0",
 ]
+
+[tool.setuptools]
+py-modules = ["yolo_model_development_kit"]
 
 [tool.isort]
 profile = "black"
