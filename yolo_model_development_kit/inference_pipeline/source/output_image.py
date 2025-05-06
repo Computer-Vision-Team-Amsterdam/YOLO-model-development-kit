@@ -35,7 +35,7 @@ class OutputImage:
 
     def blur_inside_boxes(
         self,
-        boxes: Union[List[Tuple[float, float, float, float]], npt.NDArray[np.float_]],
+        boxes: Union[List[Tuple[float, float, float, float]], npt.NDArray[np.float64]],
         blur_kernel_size: int = 165,
         box_padding: int = 0,
     ) -> None:
@@ -76,7 +76,7 @@ class OutputImage:
 
     def draw_bounding_boxes(
         self,
-        boxes: Union[List[Tuple[float, float, float, float]], npt.NDArray[np.float_]],
+        boxes: Union[List[Tuple[float, float, float, float]], npt.NDArray[np.float64]],
         categories: Optional[List[int]] = None,
         colour_map: Dict[int, Tuple[int, int, int]] = DEFAULT_COLORS,
         box_padding: int = 0,
