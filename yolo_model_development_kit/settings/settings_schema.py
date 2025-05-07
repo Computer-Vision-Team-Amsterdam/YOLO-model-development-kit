@@ -20,7 +20,6 @@ class LoggingSpec(SettingsSpecModel):
     loglevel_own: str = "INFO"
     own_packages: List[str] = [
         "__main__",
-        "objectherkenning_openbare_ruimte",
     ]
     extra_loglevels: Dict[str, str] = {}
     basic_config: Dict[str, Any] = {
