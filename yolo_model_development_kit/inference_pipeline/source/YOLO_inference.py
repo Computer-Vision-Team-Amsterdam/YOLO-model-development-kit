@@ -91,6 +91,8 @@ class YOLOInference:
                 save_all_images: bool = False
                     Whether to save all processed images (TRue) or only those containing
                     objects belonging to one of the target classes (False).
+                draw_bounding_boxes: bool = True
+                    Whether to draw bounding boxes of target classes.
                 save_images_subfolder: Optional[str] = None
                     Optional: sub-folder in which to store output images.
                 save_labels_subfolder: Optional[str] = None
@@ -149,6 +151,7 @@ class YOLOInference:
         self.save_detections = inference_settings["save_detection_images"]
         self.save_labels = inference_settings["save_detection_labels"]
         self.save_all_images = inference_settings["save_all_images"]
+        self.draw_bounding_boxes = inference_settings["draw_bounding_boxes"]
         self.detections_subfolder = (
             inference_settings["outputs"]["detections_subfolder"]
             if inference_settings["outputs"]["detections_subfolder"]
