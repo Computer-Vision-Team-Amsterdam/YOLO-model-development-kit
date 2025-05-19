@@ -126,42 +126,62 @@ class ModelResult:
         if not labels_output_folder:
             labels_output_folder = output_folder
 
-        target_idxs = np.where(
-            np.in1d(self.boxes.cls, self.target_classes)
-            & (self.boxes.conf >= self.target_classes_conf)
-        )[0]
-        if len(target_idxs) == 0 and not self.save_all_images:
+        self.calculate_bounding_boxes()
+
+        if len(self.target_idxs) == 0 and not self.save_all_images:
             logger.debug("No target class detected, not storing the image.")
             return 0
 
-        sensitive_idxs = np.where(
-            np.in1d(self.boxes.cls, self.sensitive_classes)
-            & (self.boxes.conf >= self.sensitive_classes_conf)
-        )[0]
-
         if self.save_image or self.save_all_images:
-            if len(sensitive_idxs) > 0:
-                sensitive_bounding_boxes = self.boxes[sensitive_idxs].xyxy
-                self.output_image.blur_inside_boxes(boxes=sensitive_bounding_boxes)
+            if len(self.sensitive_idxs) > 0:
+                self.output_image.blur_inside_boxes(boxes=self.sensitive_bounding_boxes)
 
-            if self.draw_bounding_boxes and (len(target_idxs) > 0):
-                target_bounding_boxes = self.boxes[target_idxs].xyxy
-                target_categories = [int(box.cls) for box in self.boxes[target_idxs]]
+            if self.draw_bounding_boxes and (len(self.target_idxs) > 0):
                 self.output_image.draw_bounding_boxes(
-                    boxes=target_bounding_boxes,
-                    categories=target_categories,
+                    boxes=self.target_bounding_boxes,
+                    categories=self.target_categories,
                     colour_map=self.category_colors,
                 )
 
             self._save_image(output_folder, image_file_name)
 
-        if self.save_labels and len(target_idxs) > 0:
-            annotation_str = self._get_annotation_string_from_boxes(
-                self.boxes[target_idxs]
+        if self.save_labels and len(self.target_idxs) > 0:
+            self._save_labels(
+                self.annotation_str, labels_output_folder, image_file_name
             )
-            self._save_labels(annotation_str, labels_output_folder, image_file_name)
 
-        return len(target_idxs)
+        return len(self.target_idxs)
+
+    def calculate_bounding_boxes(self) -> None:
+        """Calculate the bounding boxes for target and sensitive classes."""
+        self.target_idxs = np.where(
+            np.in1d(self.boxes.cls, self.target_classes)
+            & (self.boxes.conf >= self.target_classes_conf)
+        )[0]
+
+        self.sensitive_idxs = np.where(
+            np.in1d(self.boxes.cls, self.sensitive_classes)
+            & (self.boxes.conf >= self.sensitive_classes_conf)
+        )[0]
+
+        self.target_bounding_boxes = (
+            self.boxes[self.target_idxs].xyxy if len(self.target_idxs) > 0 else None
+        )
+        self.sensitive_bounding_boxes = (
+            self.boxes[self.sensitive_idxs].xyxy
+            if len(self.sensitive_idxs) > 0
+            else None
+        )
+        self.target_categories = (
+            [int(box.cls) for box in self.boxes[self.target_idxs]]
+            if len(self.target_idxs) > 0
+            else None
+        )
+        self.annotation_str = (
+            self._get_annotation_string_from_boxes(self.boxes[self.target_idxs])
+            if len(self.target_idxs) > 0
+            else None
+        )
 
     def _save_image(
         self,
