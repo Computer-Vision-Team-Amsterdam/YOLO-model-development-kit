@@ -1,9 +1,9 @@
 customer: ""
 
 aml_experiment_details:
-  compute_name: cpu-cluster
+  compute_name: gpu-inference-cluster
   env_name: yolo-environment
-  env_version: 19
+  env_version: 20
   src_dir: "."
 
 inference_pipeline:
@@ -35,6 +35,7 @@ inference_pipeline:
   save_detection_images: False
   save_detection_labels: True
   save_all_images: False  # If True, all images will be saved regardless of whether they contain target class objects
+  draw_bounding_boxes: True
   use_sahi: False
 
 model_conversion:

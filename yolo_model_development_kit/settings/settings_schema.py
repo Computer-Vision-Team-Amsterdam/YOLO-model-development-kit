@@ -60,6 +60,7 @@ class InferencePipelineSpec(SettingsSpecModel):
     save_detection_images: bool = False
     save_detection_labels: bool = True
     save_all_images: bool = False
+    draw_bounding_boxes: bool = True
     use_sahi: bool = False
 
 

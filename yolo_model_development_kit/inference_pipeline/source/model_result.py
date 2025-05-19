@@ -26,6 +26,7 @@ class ModelResult:
         save_image: bool = False,
         save_labels: bool = True,
         save_all_images: bool = False,
+        draw_bounding_boxes: bool = True,
     ) -> None:
         """
         This class is used to process a Results object from YOLO inference.
@@ -64,6 +65,8 @@ class ModelResult:
         save_all_images: bool = False
             Whether to save all processed images (True) or only those containing
             objects belonging to one of the target classes (False).
+        draw_bounding_boxes: bool = True
+            Whether to draw bounding boxes of target classes.
         """
         self.result = model_result.cpu()
         self.output_image = OutputImage(self.result.orig_img.copy())
@@ -77,6 +80,7 @@ class ModelResult:
         self.save_image = save_image
         self.save_labels = save_labels
         self.save_all_images = save_all_images
+        self.draw_bounding_boxes = draw_bounding_boxes
 
         # Initialize the category_colors dictionary with predefined colors and add random colors for new categories
         self.category_colors = defaultdict(
@@ -132,7 +136,7 @@ class ModelResult:
             if len(self.sensitive_idxs) > 0:
                 self.output_image.blur_inside_boxes(boxes=self.sensitive_bounding_boxes)
 
-            if len(self.target_idxs) > 0:
+            if self.draw_bounding_boxes and (len(self.target_idxs) > 0):
                 self.output_image.draw_bounding_boxes(
                     boxes=self.target_bounding_boxes,
                     categories=self.target_categories,
