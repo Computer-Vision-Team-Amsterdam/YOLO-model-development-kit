@@ -353,6 +353,7 @@ class YOLOInference:
                 save_image=self.save_detections,
                 save_labels=self.save_labels,
                 save_all_images=self.save_all_images,
+                draw_bounding_boxes=self.draw_bounding_boxes,
             )
 
             # Get the relative path of the image w.r.t. the input folder. This
