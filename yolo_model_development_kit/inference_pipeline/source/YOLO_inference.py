@@ -1,7 +1,7 @@
 import logging
 import os
 from types import NoneType
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import torch
@@ -163,7 +163,7 @@ class YOLOInference:
             else ""
         )
         self.batch_size = inference_settings["model_params"]["batch_size"]
-        self.folders_and_frames: Dict[str, List[str]] = {}
+        self.folders_and_frames: Optional[Dict[str, List[str]]] = None
 
     def run_pipeline(self) -> None:
         """
@@ -176,7 +176,7 @@ class YOLOInference:
             - target classes bounding boxes drawn;
         """
         logger.info(f"Running detection pipeline on {self.images_folder}..")
-        if not self.folders_and_frames:  # type: ignore
+        if self.folders_and_frames is None:
             self.folders_and_frames = self._find_image_paths_and_group_by_folder(
                 root_folder=self.images_folder
             )
