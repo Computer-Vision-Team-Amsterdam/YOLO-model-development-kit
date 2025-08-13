@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "yolo-model-development-kit"
-version = "1.4.5"
+version = "1.4.6"
 description = "Project to develop a YOLO model using AzureML platform."
 authors = [
     {name = "Sebastian Davrieux", email = "s.davrieux@amsterdam.nl"},
@@ -36,7 +36,7 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-aml_interface = { git = "https://github.com/Computer-Vision-Team-Amsterdam/AML-Interface.git", tag = "v1.1.4" }
+aml_interface = { git = "https://github.com/Computer-Vision-Team-Amsterdam/AML-Interface.git", tag = "v1.1.5" }
 cvtoolkit = { git = "https://github.com/Computer-Vision-Team-Amsterdam/CVToolkit.git", tag = "v2.0.7" }
 
 [project.optional-dependencies]
