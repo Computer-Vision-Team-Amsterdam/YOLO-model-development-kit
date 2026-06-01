@@ -75,11 +75,11 @@ aml_interface = { git = "https://github.com/Computer-Vision-Team-Amsterdam/AML-I
 cvtoolkit = { git = "https://github.com/Computer-Vision-Team-Amsterdam/CVToolkit.git", tag = "v2.0.7" }
 torch = [
   { index = "pytorch-cpu", extra = "cpu" },
-  { index = "pytorch-cu130", extra = "cu128" },
+  { index = "pytorch-cu128", extra = "cu128" },
 ]
 torchvision = [
   { index = "pytorch-cpu", extra = "cpu" },
-  { index = "pytorch-cu130", extra = "cu128" },
+  { index = "pytorch-cu128", extra = "cu128" },
 ]
 
 [[tool.uv.index]]
@@ -88,8 +88,8 @@ url = "https://download.pytorch.org/whl/cpu"
 explicit = true
 
 [[tool.uv.index]]
-name = "pytorch-cu130"
-url = "https://download.pytorch.org/whl/cu130"
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
 explicit = true
 
 [tool.setuptools.packages.find]
