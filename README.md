@@ -47,7 +47,7 @@ To update dependencies (e.g. when pyproject.toml dependencies change):
 
 ```bash
 uv lock --upgrade
-uv sync --extra dev
+uv sync --extra dev --extra cpu
 ```
     
 ### 4. Install pre-commit hooks
@@ -73,8 +73,8 @@ Modify the `config.yml` to your needs and run the required pipelines. For exampl
 
 ```bash
 # Create AzureML environment
-uv run yolo_model_development_kit/create_aml_environment/create_azure_env.py
+uv run --extra dev --extra cpu yolo_model_development_kit/create_aml_environment/create_azure_env.py
 
 # Train a YOLO model
-uv run yolo_model_development_kit/training_pipeline/submit_training_pipeline.py
+uv run --extra dev --extra yolo_model_development_kit/training_pipeline/submit_training_pipeline.py
 ```
