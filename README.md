@@ -36,8 +36,11 @@ uv venv --python 3.11
 # Activate the environment
 source .venv/bin/activate 
 
-# Install dependencies
-uv pip install -r pyproject.toml --extra dev [--extra model_export]
+# Install dependencies for local development
+uv pip install -r pyproject.toml --extra dev --extra cpu
+
+# Alternatively, install CUDA with CUDA acceleration [and optional model export capabilities]
+uv pip install -r pyproject.toml --extra dev --extra cu128 [--extra model_export]
 ```
 
 To update dependencies (e.g. when pyproject.toml dependencies change):
