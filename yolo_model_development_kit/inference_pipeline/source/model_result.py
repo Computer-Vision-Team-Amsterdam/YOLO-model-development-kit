@@ -155,12 +155,12 @@ class ModelResult:
     def calculate_bounding_boxes(self) -> None:
         """Calculate the bounding boxes for target and sensitive classes."""
         self.target_idxs = np.where(
-            np.in1d(self.boxes.cls, self.target_classes)
+            np.isin(self.boxes.cls, self.target_classes)
             & (self.boxes.conf >= self.target_classes_conf)
         )[0]
 
         self.sensitive_idxs = np.where(
-            np.in1d(self.boxes.cls, self.sensitive_classes)
+            np.isin(self.boxes.cls, self.sensitive_classes)
             & (self.boxes.conf >= self.sensitive_classes_conf)
         )[0]
 
@@ -173,7 +173,7 @@ class ModelResult:
             else None
         )
         self.target_categories = (
-            [int(box.cls) for box in self.boxes[self.target_idxs]]
+            [int(box.cls.squeeze()) for box in self.boxes[self.target_idxs]]
             if len(self.target_idxs) > 0
             else None
         )
