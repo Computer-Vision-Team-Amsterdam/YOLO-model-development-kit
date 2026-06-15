@@ -9,6 +9,7 @@ class SettingsSpecModel(BaseModel):
 
 
 class AMLExperimentDetailsSpec(SettingsSpecModel):
+    experiment_name: str
     compute_name: str = None
     env_name: str = None
     env_version: int = None

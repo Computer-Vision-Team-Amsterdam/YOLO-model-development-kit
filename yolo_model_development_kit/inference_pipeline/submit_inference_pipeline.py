@@ -51,9 +51,11 @@ def inference_pipeline():
 
 
 def main() -> None:
-    default_compute = settings["aml_experiment_details"]["compute_name"]
     aml_interface.submit_pipeline_experiment(
-        inference_pipeline, "inference_pipeline", default_compute
+        pipeline_function=inference_pipeline,
+        experiment_name=settings["aml_experiment_details"]["experiment_name"],
+        default_compute=settings["aml_experiment_details"]["compute_name"],
+        show_log=False,
     )
 
 
