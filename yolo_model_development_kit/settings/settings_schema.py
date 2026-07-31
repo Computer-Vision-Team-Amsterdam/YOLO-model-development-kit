@@ -52,7 +52,7 @@ class InferencePipelineSpec(SettingsSpecModel):
     model_params: InferenceModelParameters
     inputs: Dict[str, str] = None
     outputs: Dict[str, str] = None
-    sahi_params: InferenceSAHIParameters
+    sahi_params: Optional[InferenceSAHIParameters] = None
     target_classes: List[int] = None
     sensitive_classes: List[int] = []
     target_classes_conf: Optional[float] = None
