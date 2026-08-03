@@ -36,15 +36,18 @@ uv venv --python 3.11
 # Activate the environment
 source .venv/bin/activate 
 
-# Install dependencies
-uv pip install -r pyproject.toml --extra dev [--extra model_export]
+# Install dependencies for local development
+uv pip install -r pyproject.toml --extra dev --extra cpu
+
+# Alternatively, install CUDA with CUDA acceleration [and optional model export capabilities]
+uv pip install -r pyproject.toml --extra dev --extra cu128 [--extra model_export]
 ```
 
 To update dependencies (e.g. when pyproject.toml dependencies change):
 
 ```bash
 uv lock --upgrade
-uv sync --extra dev
+uv sync --extra dev --extra cpu
 ```
     
 ### 4. Install pre-commit hooks
@@ -70,8 +73,8 @@ Modify the `config.yml` to your needs and run the required pipelines. For exampl
 
 ```bash
 # Create AzureML environment
-uv run yolo_model_development_kit/create_aml_environment/create_azure_env.py
+uv run --extra dev --extra cpu yolo_model_development_kit/create_aml_environment/create_azure_env.py
 
 # Train a YOLO model
-uv run yolo_model_development_kit/training_pipeline/submit_training_pipeline.py
+uv run --extra dev --extra yolo_model_development_kit/training_pipeline/submit_training_pipeline.py
 ```

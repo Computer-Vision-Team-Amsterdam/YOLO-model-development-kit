@@ -9,6 +9,7 @@ class SettingsSpecModel(BaseModel):
 
 
 class AMLExperimentDetailsSpec(SettingsSpecModel):
+    experiment_name: str
     compute_name: str = None
     env_name: str = None
     env_version: int = None
@@ -51,7 +52,7 @@ class InferencePipelineSpec(SettingsSpecModel):
     model_params: InferenceModelParameters
     inputs: Dict[str, str] = None
     outputs: Dict[str, str] = None
-    sahi_params: InferenceSAHIParameters
+    sahi_params: Optional[InferenceSAHIParameters] = None
     target_classes: List[int] = None
     sensitive_classes: List[int] = []
     target_classes_conf: Optional[float] = None

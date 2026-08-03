@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.4-ubuntu22.04 AS base-image
+FROM mcr.microsoft.com/azureml/openmpi5.0-cuda12.8-ubuntu24.04 AS base-image
 
 # Upgrade and install system libraries
 RUN apt update -y \
@@ -20,4 +20,5 @@ COPY pyproject.toml .
 
 # Install requirements
 # Note: model_export requires python <= 3.11
-RUN uv pip install --system -r pyproject.toml --extra model_export
+RUN uv pip install --system -r pyproject.toml --extra cu128
+# RUN uv pip install --system -r pyproject.toml --extra cu128 --extra model_export

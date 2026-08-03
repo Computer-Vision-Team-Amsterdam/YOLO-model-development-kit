@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "yolo-model-development-kit"
-version = "1.4.6"
+version = "1.4.7"
 description = "Project to develop a YOLO model using AzureML platform."
 authors = [
     {name = "Sebastian Davrieux", email = "s.davrieux@amsterdam.nl"},
@@ -17,7 +17,7 @@ maintainers = [
     { name = "Computer Vision Team, Gemeente Amsterdam", email = "cvt@amsterdam.nl" },
 ]
 readme = "README.md"
-requires-python = ">=3.10, <=3.12"
+requires-python = ">=3.10"
 dependencies = [
     "aml_interface",
     "azure-ai-ml>=1.20",
@@ -34,10 +34,6 @@ dependencies = [
     "ultralytics>=8.3.0",
     "wandb>=0.18.0",
 ]
-
-[tool.uv.sources]
-aml_interface = { git = "https://github.com/Computer-Vision-Team-Amsterdam/AML-Interface.git", tag = "v1.1.5" }
-cvtoolkit = { git = "https://github.com/Computer-Vision-Team-Amsterdam/CVToolkit.git", tag = "v2.0.7" }
 
 [project.optional-dependencies]
 dev = [
@@ -57,6 +53,44 @@ model_export = [
     "tensorrt-cu12-libs>7.0.0,!=10.1.*,<10.5.0",
     "ultralytics[export]>=8.3.0",
 ]
+cpu = [
+  "torch>=2.11.0",
+  "torchvision>=0.26.0",
+]
+cu128 = [
+  "torch>=2.11.0",
+  "torchvision>=0.26.0",
+]
+
+[tool.uv]
+conflicts = [
+  [
+    { extra = "cpu" },
+    { extra = "cu128" },
+  ],
+]
+
+[tool.uv.sources]
+aml_interface = { git = "https://github.com/Computer-Vision-Team-Amsterdam/AML-Interface.git", tag = "v1.1.5" }
+cvtoolkit = { git = "https://github.com/Computer-Vision-Team-Amsterdam/CVToolkit.git", tag = "v2.0.7" }
+torch = [
+  { index = "pytorch-cpu", extra = "cpu" },
+  { index = "pytorch-cu128", extra = "cu128" },
+]
+torchvision = [
+  { index = "pytorch-cpu", extra = "cpu" },
+  { index = "pytorch-cu128", extra = "cu128" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
 
 [tool.setuptools.packages.find]
 include=["yolo_model_development_kit", "yolo_model_development_kit.*"]
