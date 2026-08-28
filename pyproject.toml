@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=70.0.0"]
+requires = ["setuptools>=83.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -54,11 +54,11 @@ model_export = [
     "ultralytics[export]>=8.3.0",
 ]
 cpu = [
-  "torch>=2.11.0",
+  "torch>=2.13.0",
   "torchvision>=0.26.0",
 ]
-cu128 = [
-  "torch>=2.11.0",
+cu126 = [
+  "torch>=2.13.0",
   "torchvision>=0.26.0",
 ]
 
@@ -66,7 +66,7 @@ cu128 = [
 conflicts = [
   [
     { extra = "cpu" },
-    { extra = "cu128" },
+    { extra = "cu126" },
   ],
 ]
 
@@ -75,11 +75,11 @@ aml_interface = { git = "https://github.com/Computer-Vision-Team-Amsterdam/AML-I
 cvtoolkit = { git = "https://github.com/Computer-Vision-Team-Amsterdam/CVToolkit.git", tag = "v2.0.7" }
 torch = [
   { index = "pytorch-cpu", extra = "cpu" },
-  { index = "pytorch-cu128", extra = "cu128" },
+  { index = "pytorch-cu126", extra = "cu126" },
 ]
 torchvision = [
   { index = "pytorch-cpu", extra = "cpu" },
-  { index = "pytorch-cu128", extra = "cu128" },
+  { index = "pytorch-cu126", extra = "cu126" },
 ]
 
 [[tool.uv.index]]
@@ -88,8 +88,8 @@ url = "https://download.pytorch.org/whl/cpu"
 explicit = true
 
 [[tool.uv.index]]
-name = "pytorch-cu128"
-url = "https://download.pytorch.org/whl/cu128"
+name = "pytorch-cu126"
+url = "https://download.pytorch.org/whl/cu126"
 explicit = true
 
 [tool.setuptools.packages.find]
