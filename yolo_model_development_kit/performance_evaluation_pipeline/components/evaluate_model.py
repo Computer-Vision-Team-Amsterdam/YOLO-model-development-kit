@@ -8,7 +8,7 @@ from mldesigner import Input, Output, command_component
 
 sys.path.append("../../..")
 
-from yolo_model_development_kit import settings  # noqa: E402
+from yolo_model_development_kit import aml_env_string, settings  # noqa: E402
 from yolo_model_development_kit.performance_evaluation_pipeline.metrics import (  # noqa: E402
     CategoryManager,
 )
@@ -26,7 +26,7 @@ aml_experiment_settings = settings["aml_experiment_details"]
 @command_component(
     name="evaluate_model",
     display_name="Evaluate model predictions.",
-    environment=f"azureml:{aml_experiment_settings['env_name']}:{aml_experiment_settings['env_version']}",
+    environment=aml_env_string,
     code="../../../",
     is_deterministic=False,
 )
