@@ -71,7 +71,7 @@ conflicts = [
 ]
 
 [tool.uv.sources]
-aml_interface = { git = "https://github.com/Computer-Vision-Team-Amsterdam/AML-Interface.git", branch = "feature/BCV-2367_env_string" }
+aml_interface = { git = "https://github.com/Computer-Vision-Team-Amsterdam/AML-Interface.git", tag = "v1.1.6" }
 cvtoolkit = { git = "https://github.com/Computer-Vision-Team-Amsterdam/CVToolkit.git", tag = "v2.0.7" }
 torch = [
   { index = "pytorch-cpu", extra = "cpu" },
