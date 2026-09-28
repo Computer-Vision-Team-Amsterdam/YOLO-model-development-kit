@@ -14,7 +14,7 @@ from ultralytics import YOLO  # noqa: E402
 
 sys.path.append("../../..")
 
-from yolo_model_development_kit import settings  # noqa: E402
+from yolo_model_development_kit import aml_env_string, settings  # noqa: E402
 
 aml_experiment_settings = settings["aml_experiment_details"]
 
@@ -60,7 +60,7 @@ def _wandb_config_callback(trainer):
 @command_component(
     name="train_model",
     display_name="Train a YOLO model.",
-    environment=f"azureml:{aml_experiment_settings['env_name']}:{aml_experiment_settings['env_version']}",
+    environment=aml_env_string,
     code="../../../",
     is_deterministic=False,
 )

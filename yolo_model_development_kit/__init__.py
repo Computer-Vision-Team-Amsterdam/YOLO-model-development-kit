@@ -15,6 +15,11 @@ config_path = os.path.abspath(
 try:
     YoloModelDevelopmentKitSettings.set_from_yaml(config_path)
     settings = YoloModelDevelopmentKitSettings.get_settings()
+
+    aml_env_string = aml_interface.get_aml_environment_string(
+        env_name=settings["aml_experiment_details"]["env_name"],
+        env_version=settings["aml_experiment_details"]["env_version"],
+    )
 except FileNotFoundError:
     logger.warning(
         "Config file for YoloModelDevelopmentKit not found. If the project was extended this warning can be ignored."

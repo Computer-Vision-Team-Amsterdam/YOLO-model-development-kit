@@ -12,7 +12,7 @@ class AMLExperimentDetailsSpec(SettingsSpecModel):
     experiment_name: str
     compute_name: str = None
     env_name: str = None
-    env_version: int = None
+    env_version: Union[int, str] = None
     src_dir: str = None
     ai_instrumentation_key: str = None
 

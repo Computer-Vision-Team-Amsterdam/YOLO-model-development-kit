@@ -15,7 +15,7 @@ from wandb.integration.ultralytics import add_wandb_callback  # noqa: E402
 
 sys.path.append("../../..")
 
-from yolo_model_development_kit import settings  # noqa: E402
+from yolo_model_development_kit import aml_env_string, settings  # noqa: E402
 
 aml_experiment_settings = settings["aml_experiment_details"]
 
@@ -35,7 +35,7 @@ def load_sweep_configuration(json_file: str) -> Dict[str, Any]:
 @command_component(
     name="sweep_model",
     display_name="Perform HP sweep with wandb on a YOLO model.",
-    environment=f"azureml:{aml_experiment_settings['env_name']}:{aml_experiment_settings['env_version']}",
+    environment=aml_env_string,
     code="../../../",
     is_deterministic=False,
 )
