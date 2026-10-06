@@ -8,7 +8,7 @@ from mldesigner import Input, Output, command_component
 
 sys.path.append("../../..")
 
-from yolo_model_development_kit import settings  # noqa: E402
+from yolo_model_development_kit import aml_env_string, settings  # noqa: E402
 from yolo_model_development_kit.performance_evaluation_pipeline.metrics import (  # noqa: E402
     CategoryManager,
 )
@@ -28,7 +28,7 @@ aml_experiment_settings = settings["aml_experiment_details"]
 @command_component(
     name="perform_bias_analysis",
     display_name="Perform Bias Analysis on a model.",
-    environment=f"azureml:{aml_experiment_settings['env_name']}:{aml_experiment_settings['env_version']}",
+    environment=aml_env_string,
     code="../../../",
     is_deterministic=False,
 )
@@ -99,7 +99,7 @@ def perform_bias_analysis(
             f"Mapping classes in the group {group_name} to class: {maps_to_class}"
         )
 
-        new_labels_path = os.path.join(ground_truth_base_dir, group_name)
+        new_labels_path = os.path.join(ground_truth_base_dir, group_name)  # type: ignore[call-overload]
         logger.info(f"Creating new labels folder: {new_labels_path}")
         os.makedirs(new_labels_path, exist_ok=True)
 
@@ -142,5 +142,5 @@ def perform_bias_analysis(
         # Total Blurred Area evaluation
         tba_results = yolo_eval.evaluate_tba_bias_analysis(grouping=grouping)
         yolo_eval.save_tba_results_to_csv(
-            results=tba_results, use_groupings=True, group_id=group_id
+            results=tba_results, use_groupings=True, group_id=group_id  # type: ignore[arg-type]
         )

@@ -9,7 +9,7 @@ from ultralytics import YOLO
 
 sys.path.append("../../..")
 
-from yolo_model_development_kit import settings  # noqa: E402
+from yolo_model_development_kit import aml_env_string, settings  # noqa: E402
 
 logger = logging.getLogger("model_conversion_pipeline")
 
@@ -19,7 +19,7 @@ aml_experiment_settings = settings["aml_experiment_details"]
 @command_component(
     name="model_conversion_pipeline",
     display_name="Convert a YOLO model to TensorRT.",
-    environment=f"azureml:{aml_experiment_settings['env_name']}:{aml_experiment_settings['env_version']}",
+    environment=aml_env_string,
     code="../../../",
     is_deterministic=False,
 )

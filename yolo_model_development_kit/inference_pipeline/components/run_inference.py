@@ -7,20 +7,18 @@ from mldesigner import Input, Output, command_component
 
 sys.path.append("../../..")
 
-from yolo_model_development_kit import settings  # noqa: E402
+from yolo_model_development_kit import aml_env_string, settings  # noqa: E402
 from yolo_model_development_kit.inference_pipeline.source.YOLO_inference import (  # noqa: E402
     YOLOInference,
 )
 
 logger = logging.getLogger("inference_pipeline")
 
-aml_experiment_settings = settings["aml_experiment_details"]
-
 
 @command_component(
     name="inference_pipeline",
     display_name="Run inference using YOLO model.",
-    environment=f"azureml:{aml_experiment_settings['env_name']}:{aml_experiment_settings['env_version']}",
+    environment=aml_env_string,
     code="../../../",
     is_deterministic=False,
 )
